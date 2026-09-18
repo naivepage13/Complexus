@@ -46,6 +46,7 @@ backend/           nucleo Java (Spring Boot)
   src/main/resources/
     application.yml
     static/        frontend (html, css/app.css, js/*.js)
+      admin/       console administrativo, fora do menu do jogo
   src/test/        testes unitarios e de integracao
 analytics/         servico analitico em Python + testes
 docs/              esta documentacao
@@ -129,7 +130,19 @@ Cada gravação de auditoria abre transação nova e é sincronizada, garantindo
 o hash anterior lido já esteja confirmado. Consequência: o evento sobrevive
 mesmo que a operação de negócio falhe depois — desejável para auditoria.
 
-### ADR-07 — Frontend sem framework
+### ADR-07 — Visibilidade separada por publico
+O que o jogador ve e o que a administracao ve sao contratos diferentes:
+
+- o jogador consome `/api/atualizacoes`, um feed traduzido e filtrado;
+- a administracao consome `/api/admin/auditoria/**`, protegido por token.
+
+As listagens de mercado tambem usam uma projecao publica da empresa
+(`Mapeadores.empresaPublica`), sem lucro, custo, caixa nem patrimonio. Resultado
+de empresa e assunto da pagina da propria empresa, exibido ali em grafico.
+Excecao deliberada: empresa de capital aberto publica o resultado na vitrine de
+investimentos, porque o investidor precisa dele para decidir.
+
+### ADR-08 — Frontend sem framework
 Uma página por arquivo, um CSS único, um JS por página. Sem build, sem
 dependência externa: abrir o backend já entrega a interface pronta.
 
@@ -144,6 +157,7 @@ dependência externa: abrir o backend já entrega a interface pronta.
 | `jogo.analitico.habilitado` | true | Usa o serviço Python |
 | `jogo.analitico.url` | http://localhost:8100 | Endereço do serviço |
 | `jogo.analitico.timeout-ms` | 1500 | Tempo máximo de espera |
+| `jogo.admin.token` | `admin-local` (env `JOGO_ADMIN_TOKEN`) | Credencial das rotas `/api/admin/**` |
 
 Em teste (`src/test/resources/application.yml`) o banco é em memória, o
 agendador fica desligado e o serviço Python é dispensado.

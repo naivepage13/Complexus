@@ -10,13 +10,17 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Consulta da linha de auditoria e do livro-razao.
+ * Consulta administrativa da linha de auditoria e do livro-razao.
+ *
+ * Nao e material de jogador: expoe atores, hashes e detalhes internos. Fica sob
+ * /api/admin, protegido por {@code FiltroAdmin}, e o jogador ve apenas o canal
+ * de atualizacoes em /api/atualizacoes.
  *
  * A verificacao de integridade recalcula a cadeia de hashes e aponta qualquer
  * evento alterado depois do registro.
  */
 @RestController
-@RequestMapping("/api/auditoria")
+@RequestMapping("/api/admin/auditoria")
 public class AuditoriaController {
 
     private final ServicoAuditoria servico;

@@ -27,6 +27,10 @@ jogo:
     habilitado: true
     url: http://localhost:8100
     timeout-ms: 1500
+  admin:
+    # Credencial das rotas /api/admin (auditoria e livro-razao).
+    # Em producao, sobrescrever pela variavel de ambiente JOGO_ADMIN_TOKEN.
+    token: ${JOGO_ADMIN_TOKEN:admin-local}
 
 logging:
   level:

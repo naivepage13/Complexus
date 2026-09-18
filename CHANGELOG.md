@@ -4,6 +4,37 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 Este arquivo é a linha de auditoria do desenvolvimento: nenhuma entrega entra
 sem uma linha aqui. Ver também [docs/RELATORIO.md](docs/RELATORIO.md).
 
+## [0.2.1] - 2026-09-18
+
+Ajuste de visibilidade: o que cada publico enxerga.
+
+### Adicionado
+- **Canal de atualizacoes** (`/api/atualizacoes`, pagina `atualizacoes.html`):
+  feed com os fatos publicos do mundo mais as acoes do proprio jogador,
+  com filtro por categoria e sem hash, ator ou detalhe interno.
+- `ServicoAtualizacoes`, que traduz a linha de auditoria em noticia de jogo.
+- `FiltroAdmin`: qualquer rota `/api/admin/**` exige o cabecalho
+  `X-Admin-Token`, com valor em `jogo.admin.token` (env `JOGO_ADMIN_TOKEN`).
+- `Mapeadores.empresaPublica`: visao de empresa sem lucro, custo, caixa e
+  patrimonio, usada nas listagens de mercado.
+- Graficos de receita e de margem liquida na pagina da empresa, ao lado do
+  grafico de lucro, cada um com legenda de ultimo, maior e menor valor.
+- 5 testes cobrindo a separacao: 403 sem credencial, 200 com credencial,
+  feed sem dado interno e movimento privado restrito ao dono.
+
+### Alterado
+- **Painel inicial** deixou de ser relatorio: agora traz saudacao, turno, caixa,
+  atalhos com contagem e o canal de atualizacoes. Sem lucro, carteira detalhada
+  nem feed tecnico.
+- **Lucro saiu das listagens** e vive na pagina da empresa, em grafico por turno.
+  Tambem saiu do ranking de estatisticas e da resposta de `/api/empresas`.
+- Rotas de auditoria migraram de `/api/auditoria/**` para
+  `/api/admin/auditoria/**`.
+- Pagina de auditoria saiu do menu e virou `admin/auditoria.html`, com campo de
+  token guardado apenas na sessao do navegador.
+- `Interface.grafico` passou a aceitar formato (dinheiro ou percentual),
+  rotulos de turno e elemento de legenda.
+
 ## [0.2.0] - 2026-09-18
 
 ### Adicionado

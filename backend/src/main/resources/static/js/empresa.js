@@ -85,11 +85,18 @@ function desenharBalanco(empresa) {
         .join('');
 }
 
+/*
+ * O desempenho da empresa e mostrado por grafico: lucro, receita e margem
+ * liquida, um ponto por turno. A tabela abaixo fica como detalhamento.
+ */
 function desenharHistorico(historico) {
     const corpo = document.querySelector('#lista-historico');
     if (!historico || !historico.length) {
         corpo.innerHTML = '<tr><td colspan="8" class="suave">Nenhum turno processado ainda.</td></tr>';
-        Interface.grafico('#grafico-lucro', []);
+        Interface.grafico('#grafico-lucro', [], { legenda: '#legenda-lucro' });
+        Interface.grafico('#grafico-receita', [], { legenda: '#legenda-receita' });
+        Interface.grafico('#grafico-margem', [], { formato: 'percentual', legenda: '#legenda-margem' });
+        document.querySelector('#legenda-periodo').textContent = 'aguardando o primeiro fechamento';
         return;
     }
     corpo.innerHTML = historico.slice().reverse().map((linha) => `
@@ -104,9 +111,17 @@ function desenharHistorico(historico) {
             <td class="direita">${Formato.percentual(linha.marketShare, 1)}</td>
         </tr>`).join('');
 
-    Interface.grafico('#grafico-lucro', historico.map((linha) => linha.lucro));
-    document.querySelector('#legenda-grafico').textContent =
-        `${historico.length} turnos registrados, do turno ${historico[0].turno} ao ${historico[historico.length - 1].turno}.`;
+    const turnos = historico.map((linha) => linha.turno);
+    Interface.grafico('#grafico-lucro', historico.map((linha) => linha.lucro),
+        { rotulos: turnos, legenda: '#legenda-lucro' });
+    Interface.grafico('#grafico-receita', historico.map((linha) => linha.receita),
+        { rotulos: turnos, legenda: '#legenda-receita' });
+    Interface.grafico('#grafico-margem',
+        historico.map((linha) => (linha.receita > 0 ? linha.lucro / linha.receita : 0)),
+        { rotulos: turnos, formato: 'percentual', legenda: '#legenda-margem' });
+
+    document.querySelector('#legenda-periodo').textContent =
+        `${historico.length} turnos, do turno ${turnos[0]} ao ${turnos[turnos.length - 1]}`;
 }
 
 function desenharObras(empresa) {

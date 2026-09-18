@@ -106,7 +106,7 @@ function desenharSerie(serie) {
 function desenharRanking(ranking) {
     const corpo = document.querySelector('#lista-ranking');
     if (!ranking.length) {
-        corpo.innerHTML = '<tr><td colspan="8" class="suave">Sem empresas ativas.</td></tr>';
+        corpo.innerHTML = '<tr><td colspan="7" class="suave">Sem empresas ativas.</td></tr>';
         return;
     }
     corpo.innerHTML = ranking.map((empresa, indice) => `
@@ -115,7 +115,6 @@ function desenharRanking(ranking) {
             <td><a href="empresa.html?id=${empresa.empresaId}">${empresa.nome}</a></td>
             <td><span class="etiqueta">${empresa.setor}</span></td>
             <td class="direita">${Formato.dinheiroCurto(empresa.valuation)}</td>
-            <td class="direita ${Formato.classe(empresa.lucroMensal)}">${Formato.dinheiroCurto(empresa.lucroMensal)}</td>
             <td class="direita ${Formato.classe(empresa.crescimentoLucro)}">${Formato.percentual(empresa.crescimentoLucro)}</td>
             <td class="direita">${Formato.percentual(empresa.marketShare, 1)}</td>
             <td class="direita">${Formato.percentual(empresa.indiceLastro, 0)}</td>

@@ -373,6 +373,76 @@ input:focus, select:focus, textarea:focus {
 
 .grafico div.negativa { background: var(--cor-negativa); }
 
+/* ------------------------------------------------- canal de atualizacoes */
+
+.linha-tempo {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.item-tempo {
+    display: grid;
+    grid-template-columns: 150px 1fr;
+    gap: var(--espaco);
+    padding: 12px 0;
+    border-bottom: 1px solid var(--cor-borda);
+}
+
+.item-tempo:last-child {
+    border-bottom: none;
+}
+
+.marca-tempo {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    align-items: flex-start;
+}
+
+.conteudo-tempo p {
+    margin: 4px 0;
+}
+
+.filtro.ativo {
+    background: var(--cor-primaria);
+    color: #ffffff;
+    border-color: var(--cor-primaria);
+}
+
+/* --------------------------------------------------------------- atalhos */
+
+.atalhos {
+    display: grid;
+    gap: var(--espaco);
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+}
+
+.atalho {
+    display: block;
+    padding: 14px var(--espaco);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    background: var(--cor-superficie);
+    color: var(--cor-texto);
+}
+
+.atalho:hover {
+    background: var(--cor-superficie-alt);
+    border-color: var(--cor-primaria);
+    text-decoration: none;
+}
+
+.atalho strong {
+    display: block;
+    font-size: 15px;
+}
+
+.atalho span {
+    font-size: 13px;
+    color: var(--cor-texto-suave);
+}
+
 /* ---------------------------------------------------------------- login page */
 
 .caixa-login {
@@ -391,4 +461,6 @@ input:focus, select:focus, textarea:focus {
 @media (max-width: 640px) {
     .cabecalho-conteudo { flex-direction: column; align-items: flex-start; }
     .titulo-pagina { flex-direction: column; }
+    .item-tempo { grid-template-columns: 1fr; }
+    .marca-tempo { flex-direction: row; align-items: center; }
 }

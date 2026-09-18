@@ -5,11 +5,11 @@
 
 | Campo | Valor |
 |---|---|
-| Versão atual | **0.2.0** |
+| Versão atual | **0.2.1** |
 | Data da última atualização | 18/09/2026 |
 | Branch | `claude/business-country-management-game-4bbe6e` |
 | Estado | Núcleo jogável: economia, política, investimentos, turnos e auditoria |
-| Cobertura de testes | 15 testes Java + 9 testes Python, todos verdes |
+| Cobertura de testes | 20 testes Java + 9 testes Python, todos verdes |
 
 ---
 
@@ -25,7 +25,8 @@ Simulador de administração de **empresas** e de **países**. O jogador:
 4. acompanha o mundo evoluir **a cada hora de tempo real = 1 mês de jogo**.
 
 Toda ação relevante entra em uma **linha de auditoria encadeada por hash**, o
-que permite reconstruir e provar o histórico da partida.
+que permite reconstruir e provar o histórico da partida. Essa linha é material
+administrativo: o jogador acompanha o mundo pelo **canal de atualizações**.
 
 ## 2. Arquitetura entregue
 
@@ -41,7 +42,7 @@ Regras e fórmulas em [REGRAS-DO-JOGO.md](REGRAS-DO-JOGO.md).
 Endpoints em [API.md](API.md).
 Linha de auditoria em [AUDITORIA.md](AUDITORIA.md).
 
-## 3. Entregue na versão 0.2.0
+## 3. Entregue até aqui
 
 ### 3.1 Economia e empresas
 - Três setores parametrizados (`Setor`): margem bruta, volatilidade, giro do
@@ -86,20 +87,33 @@ Linha de auditoria em [AUDITORIA.md](AUDITORIA.md).
 - Endpoint de verificação de integridade que aponta o elo divergente.
 
 ### 3.6 Frontend
-- Sete páginas, cada uma em seu arquivo: login, painel, empresas, empresa,
-  investimentos, política, estatísticas e auditoria.
+- Oito páginas, cada uma em seu arquivo: login, painel, empresas, empresa,
+  investimentos, política, estatísticas e atualizações; mais o console
+  administrativo em `admin/auditoria.html`, fora do menu.
 - Um único arquivo de estilo (`css/app.css`) com paleta clara e sólida.
 - Um arquivo JS por página mais um compartilhado (`js/app.js`).
+
+### 3.7 Visibilidade da informacao (entregue na 0.2.1)
+- **Painel inicial enxuto**: saudação, turno, caixa, atalhos com contagem e o
+  canal de atualizações. Deixou de repetir lucro, carteira e feed técnico.
+- **Resultado de empresa vive na página da empresa**, em três gráficos por
+  turno (lucro, receita e margem líquida), com legenda de último, maior e menor.
+  Lucro saiu das listagens, do ranking e da resposta de `/api/empresas`.
+- **Canal de atualizações** substitui a auditoria no menu: fatos públicos do
+  mundo mais as ações do próprio jogador, com filtro por categoria.
+- **Auditoria virou área administrativa**: rotas em `/api/admin/auditoria/**`
+  exigem `X-Admin-Token` e a página saiu para `admin/auditoria.html`.
 
 ## 4. Verificações executadas
 
 | Verificação | Resultado |
 |---|---|
-| `mvn test` (backend) | 15 testes, 0 falhas |
+| `mvn test` (backend) | 20 testes, 0 falhas |
 | `python -m unittest` (analytics) | 9 testes, 0 falhas |
 | Subida da aplicação + carga do mundo | OK |
 | Fluxo ponta a ponta pela API | Empresa → turno → IPO → compra → dividendo → lei sancionada → auditoria íntegra |
 | Integração Java ↔ Python | `fonteModificadores: PYTHON` com o serviço no ar; `FALLBACK_JAVA` com ele desligado |
+| Separação de visibilidade | `/api/admin/auditoria` responde 403 sem token e 200 com token; canal de atualizações sem hash, ator ou detalhe interno |
 
 Balanceamento observado após a calibragem (7 empresas do mundo inicial):
 receita agregada ≈ R$ 3,9 mi/mês, lucro agregado ≈ R$ 150–235 mil/mês,
@@ -117,6 +131,9 @@ margem líquida de 4% a 6% e retorno sobre o capital investido entre 8% e 13% ao
 | D-06 | Auditoria em transação própria e sincronizada | Mantém a cadeia de hashes encadeada na ordem dos identificadores |
 | D-07 | Valores monetários em `double` | Simulação de jogo, não contabilidade real; simplifica o motor. Revisar se houver economia entre servidores |
 | D-08 | Serviço Python opcional com fallback em Java | O turno nunca deixa de ser processado por indisponibilidade de um serviço |
+| D-09 | Jogador vê o canal de atualizações; auditoria é administrativa | A linha de auditoria expõe ator, hash e detalhes internos de todas as partidas |
+| D-10 | Resultado de empresa só na página da empresa, em gráfico | Evita transformar painel e listagens em relatório e mantém o número no contexto certo |
+| D-11 | Empresa de capital aberto publica resultado na vitrine de investimentos | Quem vende ação divulga balanço; sem isso o investidor decide no escuro |
 
 ## 6. Limitações conhecidas
 
@@ -128,6 +145,7 @@ margem líquida de 4% a 6% e retorno sobre o capital investido entre 8% e 13% ao
 | L-04 | Eleições simplificadas (posse por vaga ou desafio a NPC fraco) | Sem campanha nem urna | RF-10 |
 | L-05 | Cadeia de auditoria depende de escrita em processo único | Vários servidores exigiriam trava distribuída | RNF-03 |
 | L-06 | Balanceamento é inicial | Pode exigir ajuste com jogadores reais | Parâmetros centralizados em `Setor` e `MotorSimulacao` |
+| L-07 | `GET /api/empresas/{id}` devolve o balanço completo de qualquer empresa | Um jogador curioso pode consultar o detalhe de um concorrente pela API | Depende de RNF-01: com autenticação, o detalhe completo fica restrito ao dono |
 
 ## 7. Como rodar
 
@@ -140,11 +158,14 @@ cd backend && mvn spring-boot:run
 ```
 
 Interface em <http://localhost:8080>. Conta de demonstração: `demo` / `demo1234`.
+Console administrativo em <http://localhost:8080/admin/auditoria.html>, com o
+token de `jogo.admin.token` (padrão `admin-local`).
 
 ## 8. Histórico de versões
 
 | Versão | Data | Entrega |
 |---|---|---|
+| 0.2.1 | 18/09/2026 | Separação de visibilidade: painel inicial enxuto, resultado de empresa em gráfico na própria página, canal de atualizações para o jogador e auditoria restrita à administração com token |
 | 0.2.0 | 18/09/2026 | Núcleo completo em Spring Boot: economia dos três setores, política das três esferas, investimentos lastreados, turnos automáticos, estatísticas, linha de auditoria e sete painéis novos |
 | 0.1.0 | — | Protótipo em HTML/CSS/JS e scripts Python soltos (preservado em `legado/`) |
 

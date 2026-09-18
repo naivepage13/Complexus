@@ -167,22 +167,49 @@ const Interface = {
             alvo.textContent = 'Servidor indisponivel';
         }
     },
-    /** Grafico de barras simples, sem dependencia externa. */
-    grafico(seletor, valores) {
+    /**
+     * Grafico de barras simples, sem dependencia externa.
+     *
+     * @param opcoes {formato: 'dinheiro'|'percentual', rotulos: [], legenda: '#seletor'}
+     *               Barras negativas saem em vermelho; o titulo de cada barra
+     *               traz o turno e o valor formatado.
+     */
+    grafico(seletor, valores, opcoes = {}) {
         const alvo = document.querySelector(seletor);
         if (!alvo) return;
+
+        const formatar = (valor) => (opcoes.formato === 'percentual'
+            ? Formato.percentual(valor, 1)
+            : Formato.dinheiroCurto(valor));
+
         if (!valores || valores.length === 0) {
             alvo.innerHTML = '<p class="suave pequeno">Sem dados suficientes.</p>';
+            if (opcoes.legenda) {
+                const legenda = document.querySelector(opcoes.legenda);
+                if (legenda) legenda.textContent = 'O primeiro turno processado ja gera o grafico.';
+            }
             return;
         }
-        const maximo = Math.max(...valores.map((v) => Math.abs(v)), 1);
+
+        const maximo = Math.max(...valores.map((v) => Math.abs(v)), Number.EPSILON);
         alvo.innerHTML = valores
-            .map((valor) => {
+            .map((valor, indice) => {
                 const altura = Math.max((Math.abs(valor) / maximo) * 100, 2);
                 const classe = valor < 0 ? ' class="negativa"' : '';
-                return `<div${classe} style="height:${altura}%" title="${Formato.dinheiroCurto(valor)}"></div>`;
+                const rotulo = opcoes.rotulos ? `turno ${opcoes.rotulos[indice]}: ` : '';
+                return `<div${classe} style="height:${altura}%" title="${rotulo}${formatar(valor)}"></div>`;
             })
             .join('');
+
+        if (opcoes.legenda) {
+            const legenda = document.querySelector(opcoes.legenda);
+            if (legenda) {
+                const menor = Math.min(...valores);
+                const maior = Math.max(...valores);
+                const ultimo = valores[valores.length - 1];
+                legenda.textContent = `ultimo ${formatar(ultimo)} | maior ${formatar(maior)} | menor ${formatar(menor)}`;
+            }
+        }
     }
 };
 

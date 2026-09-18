@@ -11,6 +11,19 @@ O projeto tem duas linhas de auditoria, com propósitos distintos:
 
 ## 1. Auditoria do jogo
 
+### 1.0 Quem pode ver
+
+A linha de auditoria **não é material de jogador**: ela expõe ator, hash e os
+detalhes internos de todas as partidas. Por isso:
+
+| Público | O que enxerga | Onde |
+|---|---|---|
+| Jogador | Canal de atualizações: fatos públicos do mundo mais as próprias ações | `/api/atualizacoes`, página `atualizacoes.html` |
+| Administração | Linha de auditoria completa e livro-razão | `/api/admin/auditoria/**` com `X-Admin-Token`, página `admin/auditoria.html` |
+
+A barreira é do servidor, não do menu: `FiltroAdmin` recusa com **403** qualquer
+chamada a `/api/admin/**` sem a credencial de `jogo.admin.token`.
+
 ### 1.1 Como funciona
 
 Todo fato relevante vira um `EventoAuditoria`:
@@ -34,7 +47,7 @@ hash_n = SHA256( hash_{n-1} | momento | turno | ator | acao | entidade
 ```
 
 Alterar qualquer campo de um evento antigo muda o hash dele e quebra o elo com
-todos os seguintes. `GET /api/auditoria/integridade` recalcula a cadeia inteira
+todos os seguintes. `GET /api/admin/auditoria/integridade` recalcula a cadeia inteira
 e devolve o primeiro elo divergente.
 
 ### 1.2 Garantias de ordem
@@ -76,23 +89,41 @@ Tipos: `APORTE_FUNDACAO`, `COMPRA_ACOES`, `VENDA_ACOES`, `DIVIDENDO`,
 ### 1.5 Consultas
 
 ```bash
+TOKEN='X-Admin-Token: admin-local'
+
 # ultimos 100 eventos
-curl -s localhost:8080/api/auditoria/eventos?limite=100
+curl -s -H "$TOKEN" localhost:8080/api/admin/auditoria/eventos?limite=100
 
 # tudo o que aconteceu no turno 7
-curl -s 'localhost:8080/api/auditoria/eventos?turno=7'
+curl -s -H "$TOKEN" 'localhost:8080/api/admin/auditoria/eventos?turno=7'
 
 # historico de uma empresa
-curl -s 'localhost:8080/api/auditoria/eventos?entidade=Empresa&entidadeId=8'
+curl -s -H "$TOKEN" 'localhost:8080/api/admin/auditoria/eventos?entidade=Empresa&entidadeId=8'
 
 # verificar se a cadeia foi adulterada
-curl -s localhost:8080/api/auditoria/integridade
+curl -s -H "$TOKEN" localhost:8080/api/admin/auditoria/integridade
 
 # livro-razao de um jogador
-curl -s 'localhost:8080/api/auditoria/razao?jogadorId=1&limite=50'
+curl -s -H "$TOKEN" 'localhost:8080/api/admin/auditoria/razao?jogadorId=1&limite=50'
 ```
 
-A página `auditoria.html` expõe tudo isso com um botão de verificação.
+A página `admin/auditoria.html` expõe tudo isso: pede o token, guarda apenas na
+sessão do navegador e traz o botão de verificação da cadeia.
+
+### 1.6 Canal de atualizações
+
+`ServicoAtualizacoes` lê a mesma base e devolve ao jogador uma versão
+filtrada e traduzida:
+
+- **Públicos**: fechamento de turno, lei sancionada, projeto aprovado,
+  rejeitado, vetado ou com veto derrubado, posse e fim de mandato, empresa
+  fundada, abertura de capital, falência e obra entregue.
+- **Privados** (só para o próprio autor): aporte de capital, contratação,
+  demissão, ajuste de gestão, compra e venda de ações, obra iniciada ou
+  atrasada, protocolo, pauta e voto de projeto.
+
+O item do feed carrega turno, momento, categoria, título e mensagem. Hash, ator
+e detalhes internos ficam de fora.
 
 ---
 

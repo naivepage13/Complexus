@@ -11,6 +11,7 @@ public class PropriedadesJogo {
 
     private Turno turno = new Turno();
     private Analitico analitico = new Analitico();
+    private Admin admin = new Admin();
 
     public Turno getTurno() {
         return turno;
@@ -26,6 +27,14 @@ public class PropriedadesJogo {
 
     public void setAnalitico(Analitico analitico) {
         this.analitico = analitico;
+    }
+
+    public Admin getAdmin() {
+        return admin;
+    }
+
+    public void setAdmin(Admin admin) {
+        this.admin = admin;
     }
 
     public static class Turno {
@@ -48,6 +57,23 @@ public class PropriedadesJogo {
 
         public void setProcessamentoAutomatico(boolean processamentoAutomatico) {
             this.processamentoAutomatico = processamentoAutomatico;
+        }
+    }
+
+    /** Acesso administrativo, usado pelas rotas /api/admin. */
+    public static class Admin {
+        /**
+         * Credencial exigida no cabecalho X-Admin-Token. Em producao deve vir
+         * de variavel de ambiente, nunca do arquivo versionado.
+         */
+        private String token = "admin-local";
+
+        public String getToken() {
+            return token;
+        }
+
+        public void setToken(String token) {
+            this.token = token;
         }
     }
 

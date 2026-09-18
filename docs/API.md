@@ -41,7 +41,7 @@ Erros seguem um formato único:
 | Método | Rota | Corpo |
 |---|---|---|
 | GET | `/empresas/setores` | — (catálogo com parâmetros de cada setor) |
-| GET | `/empresas?setor=&jogadorId=` | — |
+| GET | `/empresas?setor=&jogadorId=` | — (visão pública: sem lucro, custo, caixa ou patrimônio; com `jogadorId` devolve a visão completa das empresas do próprio jogador) |
 | GET | `/empresas/{id}` | — (inclui histórico, obras e diagnóstico de capacidade) |
 | GET | `/empresas/{id}/historico?limite=36` | — |
 | POST | `/empresas` | `{jogadorId, nome, setor, municipioId, capitalInicial, funcionarios}` |
@@ -81,6 +81,15 @@ Erros seguem um formato único:
 | POST | `/politica/projetos/{id}/sancionar` | `{jogadorId, sancionar, justificativa}` |
 | POST | `/politica/projetos/{id}/derrubar-veto` | `{jogadorId, mandatoId}` |
 
+## Atualizações (canal do jogador)
+
+| Método | Rota | Descrição |
+|---|---|---|
+| GET | `/atualizacoes?jogadorId=&limite=30` | Feed de fatos públicos do mundo. Com `jogadorId`, inclui também as ações privadas do próprio jogador |
+
+Cada item traz `turno`, `momento`, `categoria` (`ECONOMIA`, `POLITICA`, `SISTEMA`),
+`titulo`, `mensagem` e `propria`. Não traz hash, ator nem detalhes internos.
+
 ## Estatísticas
 
 | Método | Rota | Descrição |
@@ -90,13 +99,17 @@ Erros seguem um formato único:
 | GET | `/estatisticas/setores?setor=&limite=24` | Série de um setor ou fotografia do último turno |
 | GET | `/estatisticas/ranking?limite=20` | Ranking de empresas por valor de mercado |
 
-## Auditoria
+## Auditoria (administrativo)
+
+> **Não é rota de jogador.** Todas exigem o cabeçalho `X-Admin-Token` com o
+> valor de `jogo.admin.token` (variável de ambiente `JOGO_ADMIN_TOKEN`).
+> Sem ele a resposta é **403**. O jogador vê apenas `/api/atualizacoes`.
 
 | Método | Rota | Descrição |
 |---|---|---|
-| GET | `/auditoria/eventos?limite=&turno=&entidade=&entidadeId=` | Eventos da linha de auditoria |
-| GET | `/auditoria/integridade` | Recalcula a cadeia de hashes e aponta elos divergentes |
-| GET | `/auditoria/razao?limite=&empresaId=&jogadorId=&turno=` | Livro-razão financeiro |
+| GET | `/admin/auditoria/eventos?limite=&turno=&entidade=&entidadeId=` | Eventos da linha de auditoria |
+| GET | `/admin/auditoria/integridade` | Recalcula a cadeia de hashes e aponta elos divergentes |
+| GET | `/admin/auditoria/razao?limite=&empresaId=&jogadorId=&turno=` | Livro-razão financeiro |
 
 ---
 
@@ -124,6 +137,9 @@ curl -s -X POST localhost:8080/api/empresas \
 # rodar um turno e ler o relatorio
 curl -s -X POST 'localhost:8080/api/jogo/turno/avancar?origem=MANUAL'
 
-# conferir a linha de auditoria
-curl -s localhost:8080/api/auditoria/integridade
+# canal de atualizacoes do jogador
+curl -s 'localhost:8080/api/atualizacoes?jogadorId=1&limite=10'
+
+# linha de auditoria (administrativo)
+curl -s -H 'X-Admin-Token: admin-local' localhost:8080/api/admin/auditoria/integridade
 ```

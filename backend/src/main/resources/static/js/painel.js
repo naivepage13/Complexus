@@ -1,103 +1,71 @@
-/* Painel inicial: consolida jogador, empresas, carteira, mandatos e auditoria. */
+/*
+ * Painel inicial.
+ *
+ * Mostra apenas orientacao: onde o jogador esta, quantos ativos ele tem e o
+ * que aconteceu no mundo. Desempenho de empresa (lucro, margem, valuation)
+ * fica na pagina da propria empresa, em grafico.
+ */
 
 const jogadorPainel = Sessao.exigir();
 
 async function carregarPainel() {
     if (!jogadorPainel) return;
     try {
-        const [painel, estatisticas, eventos] = await Promise.all([
+        const [painel, estado, feed] = await Promise.all([
             API.get(`/jogadores/${jogadorPainel.id}/painel`),
-            API.get('/estatisticas/gerais'),
-            API.get('/auditoria/eventos?limite=8')
+            API.get('/jogo/estado'),
+            API.get(`/atualizacoes?jogadorId=${jogadorPainel.id}&limite=8`)
         ]);
 
-        document.querySelector('#patrimonio-total').textContent = Formato.dinheiroCurto(painel.patrimonioTotal);
-        document.querySelector('#saldo').textContent = Formato.dinheiroCurto(painel.jogador.saldo);
-        document.querySelector('#detalhe-patrimonio').textContent =
-            `empresas ${Formato.dinheiroCurto(painel.valorEmpresas)} | carteira ${Formato.dinheiroCurto(painel.valorCarteira)}`;
+        document.querySelector('#saudacao').textContent = `Ola, ${painel.jogador.nome}`;
+        document.querySelector('#resumo-turno').textContent =
+            `Turno ${estado.turnoAtual} | ${Formato.dataJogo(estado.dataJogo)} | `
+            + `caixa disponivel ${Formato.dinheiroCurto(painel.jogador.saldo)}`;
 
-        const lucro = document.querySelector('#lucro-empresas');
-        lucro.textContent = Formato.dinheiroCurto(painel.lucroMensalEmpresas);
-        lucro.className = `valor ${Formato.classe(painel.lucroMensalEmpresas)}`;
-
-        const fechamento = estatisticas.ultimoFechamento;
-        document.querySelector('#indice-mercado').textContent = fechamento
-            ? Formato.numero(fechamento.indiceMercado, 1)
-            : Formato.numero(estatisticas.estadoJogo.indiceMercado, 1);
-        if (fechamento) {
-            const detalhe = document.querySelector('#detalhe-indice');
-            detalhe.textContent = `variacao ${Formato.percentual(fechamento.variacaoIndice)} no ultimo turno`;
-            detalhe.className = `detalhe ${Formato.classe(fechamento.variacaoIndice)}`;
-        }
-
-        preencherEmpresas(painel.empresas);
-        preencherCarteira(painel.carteira);
-        preencherMandatos(painel.mandatos);
-        preencherEventos(eventos);
+        preencherAtalhos(painel);
+        desenharFeed(feed);
     } catch (erro) {
         Interface.mensagem('#mensagem', erro.message);
     }
 }
 
-function preencherEmpresas(empresas) {
-    const corpo = document.querySelector('#lista-empresas');
-    if (!empresas.length) {
-        corpo.innerHTML = '<tr><td colspan="5" class="suave">Voce ainda nao fundou empresas.</td></tr>';
-        return;
-    }
-    corpo.innerHTML = empresas.map((empresa) => `
-        <tr>
-            <td><a href="empresa.html?id=${empresa.id}">${empresa.nome}</a></td>
-            <td><span class="etiqueta">${empresa.setorRotulo}</span></td>
-            <td class="direita ${Formato.classe(empresa.lucroMensal)}">${Formato.dinheiroCurto(empresa.lucroMensal)}</td>
-            <td class="direita ${Formato.classe(empresa.crescimentoLucro)}">${Formato.percentual(empresa.crescimentoLucro)}</td>
-            <td class="direita">${Formato.dinheiroCurto(empresa.valuation)}</td>
-        </tr>`).join('');
+/** Os atalhos mostram contagem, nao resultado: servem para navegar. */
+function preencherAtalhos(painel) {
+    const empresas = painel.empresas.length;
+    const posicoes = painel.carteira.length;
+    const mandatos = painel.mandatos.length;
+
+    document.querySelector('#atalho-empresas').textContent = empresas === 0
+        ? 'funde a sua primeira empresa'
+        : `${empresas} ${empresas === 1 ? 'empresa sua' : 'empresas suas'} para administrar`;
+
+    document.querySelector('#atalho-carteira').textContent = posicoes === 0
+        ? 'nenhuma posicao aberta'
+        : `${posicoes} ${posicoes === 1 ? 'posicao aberta' : 'posicoes abertas'}`;
+
+    document.querySelector('#atalho-mandatos').textContent = mandatos === 0
+        ? 'assuma um cargo publico'
+        : `${mandatos} ${mandatos === 1 ? 'mandato ativo' : 'mandatos ativos'}`;
 }
 
-function preencherCarteira(carteira) {
-    const corpo = document.querySelector('#lista-carteira');
-    if (!carteira.length) {
-        corpo.innerHTML = '<tr><td colspan="4" class="suave">Nenhuma posicao aberta.</td></tr>';
+function desenharFeed(feed) {
+    const lista = document.querySelector('#feed');
+    if (!feed.length) {
+        lista.innerHTML = '<li class="suave">Nenhuma atualizacao ainda.</li>';
         return;
     }
-    corpo.innerHTML = carteira.map((posicao) => `
-        <tr>
-            <td>${posicao.empresa}</td>
-            <td class="direita">${Formato.inteiro(posicao.acoes)}</td>
-            <td class="direita">${Formato.dinheiroCurto(posicao.valorAtual)}</td>
-            <td class="direita ${Formato.classe(posicao.retornoTotal)}">${Formato.dinheiroCurto(posicao.retornoTotal)}</td>
-        </tr>`).join('');
-}
-
-function preencherMandatos(mandatos) {
-    const corpo = document.querySelector('#lista-mandatos');
-    if (!mandatos.length) {
-        corpo.innerHTML = '<tr><td colspan="5" class="suave">Voce nao ocupa cargos publicos.</td></tr>';
-        return;
-    }
-    corpo.innerHTML = mandatos.map((mandato) => `
-        <tr>
-            <td>${mandato.cargoRotulo}</td>
-            <td>${mandato.esfera}</td>
-            <td>${mandato.partido || '-'}</td>
-            <td class="direita">${Formato.numero(mandato.aprovacao, 1)}</td>
-            <td class="direita">turno ${mandato.turnoFim}</td>
-        </tr>`).join('');
-}
-
-function preencherEventos(eventos) {
-    const corpo = document.querySelector('#lista-eventos');
-    if (!eventos.length) {
-        corpo.innerHTML = '<tr><td colspan="3" class="suave">Sem eventos registrados.</td></tr>';
-        return;
-    }
-    corpo.innerHTML = eventos.map((evento) => `
-        <tr>
-            <td>${evento.turno}</td>
-            <td><span class="etiqueta">${evento.acao}</span></td>
-            <td class="pequeno">${evento.descricao || '-'}</td>
-        </tr>`).join('');
+    lista.innerHTML = feed.map((item) => `
+        <li class="item-tempo">
+            <div class="marca-tempo">
+                <span class="etiqueta">${item.categoria}</span>
+                <span class="suave pequeno">turno ${item.turno}</span>
+            </div>
+            <div class="conteudo-tempo">
+                <strong>${item.titulo}</strong>
+                ${item.propria ? '<span class="etiqueta etiqueta-primaria">sua acao</span>' : ''}
+                <p class="pequeno">${item.mensagem || ''}</p>
+            </div>
+        </li>`).join('');
 }
 
 document.querySelector('#avancar-turno').addEventListener('click', async (evento) => {
@@ -106,10 +74,9 @@ document.querySelector('#avancar-turno').addEventListener('click', async (evento
     Interface.mensagem('#mensagem', 'Processando turno...', 'sucesso');
     try {
         const relatorio = await API.post('/jogo/turno/avancar?origem=PAINEL');
-        Interface.mensagem('#mensagem',
-            `Turno ${relatorio.turno} processado: ${relatorio.empresasProcessadas} empresas, `
-            + `lucro agregado ${Formato.dinheiroCurto(relatorio.lucroAgregado)}.`, 'sucesso');
+        Interface.mensagem('#mensagem', `Turno ${relatorio.turno} processado.`, 'sucesso');
         await carregarPainel();
+        await Interface.montarCabecalho();
     } catch (erro) {
         Interface.mensagem('#mensagem', erro.message);
     } finally {

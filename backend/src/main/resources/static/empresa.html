@@ -7,6 +7,10 @@
     <link rel="stylesheet" href="css/app.css">
 </head>
 <body>
+<!--
+  Pagina da empresa: e aqui que o desempenho aparece, em grafico por turno.
+  O painel inicial e as listagens nao exibem lucro.
+-->
 <header class="cabecalho">
     <div class="cabecalho-conteudo">
         <span class="marca">GeoHistoricalSim</span>
@@ -16,7 +20,7 @@
             <a href="investimentos.html">Investimentos</a>
             <a href="politica.html">Politica</a>
             <a href="estatisticas.html">Estatisticas</a>
-            <a href="auditoria.html">Auditoria</a>
+            <a href="atualizacoes.html">Atualizacoes</a>
         </nav>
         <div class="identificacao" id="relogio-turno"></div>
         <div class="identificacao" id="identificacao"></div>
@@ -36,16 +40,40 @@
 
     <div id="mensagem" class="oculto"></div>
 
+    <section class="cartao">
+        <div class="cartao-cabecalho">
+            <h2>Desempenho por turno</h2>
+            <span class="suave pequeno" id="legenda-periodo"></span>
+        </div>
+        <div class="grade">
+            <div>
+                <h3>Lucro mensal</h3>
+                <div class="grafico" id="grafico-lucro"></div>
+                <p class="suave pequeno espacado" id="legenda-lucro"></p>
+            </div>
+            <div>
+                <h3>Receita mensal</h3>
+                <div class="grafico" id="grafico-receita"></div>
+                <p class="suave pequeno espacado" id="legenda-receita"></p>
+            </div>
+            <div>
+                <h3>Margem liquida</h3>
+                <div class="grafico" id="grafico-margem"></div>
+                <p class="suave pequeno espacado" id="legenda-margem"></p>
+            </div>
+        </div>
+    </section>
+
     <section class="grade">
         <div class="cartao indicador">
-            <span class="rotulo">Receita mensal</span>
-            <span class="valor" id="receita">-</span>
-            <span class="detalhe" id="detalhe-custo"></span>
-        </div>
-        <div class="cartao indicador">
-            <span class="rotulo">Lucro mensal</span>
+            <span class="rotulo">Lucro do ultimo turno</span>
             <span class="valor" id="lucro">-</span>
             <span class="detalhe" id="detalhe-crescimento"></span>
+        </div>
+        <div class="cartao indicador">
+            <span class="rotulo">Receita do ultimo turno</span>
+            <span class="valor" id="receita">-</span>
+            <span class="detalhe" id="detalhe-custo"></span>
         </div>
         <div class="cartao indicador">
             <span class="rotulo">Valor de mercado</span>
@@ -59,17 +87,12 @@
         </div>
     </section>
 
-    <section class="grade-2">
-        <div class="cartao">
-            <h2>Balanco</h2>
+    <section class="cartao">
+        <h2>Balanco e capacidade</h2>
+        <div class="tabela-rolagem">
             <table class="tabela">
                 <tbody id="tabela-balanco"></tbody>
             </table>
-        </div>
-        <div class="cartao">
-            <h2>Lucro por turno</h2>
-            <div class="grafico" id="grafico-lucro"></div>
-            <p class="suave pequeno espacado" id="legenda-grafico"></p>
         </div>
     </section>
 

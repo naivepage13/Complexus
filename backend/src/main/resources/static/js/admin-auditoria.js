@@ -1,21 +1,54 @@
-/* Consulta da linha de auditoria, verificacao da cadeia e livro-razao. */
+/*
+ * Console administrativo da linha de auditoria.
+ *
+ * Fora do menu do jogo: todas as chamadas vao para /api/admin/auditoria e
+ * levam o cabecalho X-Admin-Token. Sem token valido o servidor devolve 403.
+ */
 
-Sessao.exigir();
+const CHAVE_TOKEN = 'ghs.admin.token';
+
+function token() {
+    return sessionStorage.getItem(CHAVE_TOKEN) || '';
+}
+
+async function apiAdmin(caminho) {
+    const resposta = await fetch(`/api/admin${caminho}`, {
+        headers: { 'Content-Type': 'application/json', 'X-Admin-Token': token() }
+    });
+    const texto = await resposta.text();
+    const corpo = texto ? JSON.parse(texto) : null;
+    if (!resposta.ok) {
+        throw new Error(corpo && corpo.mensagem ? corpo.mensagem : `Erro ${resposta.status}`);
+    }
+    return corpo;
+}
+
+function mostrarConteudo(visivel) {
+    document.querySelector('#area-conteudo').classList.toggle('oculto', !visivel);
+    document.querySelector('#area-credencial').classList.toggle('oculto', visivel);
+}
 
 async function carregar(turno) {
+    if (!token()) {
+        mostrarConteudo(false);
+        return;
+    }
     try {
         const consulta = turno ? `?turno=${turno}` : '?limite=100';
         const [eventos, razao] = await Promise.all([
-            API.get(`/auditoria/eventos${consulta}`),
-            API.get('/auditoria/razao?limite=100')
+            apiAdmin(`/auditoria/eventos${consulta}`),
+            apiAdmin('/auditoria/razao?limite=100')
         ]);
+        mostrarConteudo(true);
+        Interface.mensagem('#mensagem', '');
         desenharEventos(eventos);
         desenharRazao(razao);
         document.querySelector('#total-eventos').textContent = Formato.inteiro(eventos.length);
         if (eventos.length) {
-            document.querySelector('#ultimo-hash').textContent = eventos[0].hash.slice(0, 32) + '...';
+            document.querySelector('#ultimo-hash').textContent = `${eventos[0].hash.slice(0, 32)}...`;
         }
     } catch (erro) {
+        mostrarConteudo(false);
         Interface.mensagem('#mensagem', erro.message);
     }
 }
@@ -57,10 +90,23 @@ function desenharRazao(razao) {
         </tr>`).join('');
 }
 
+document.querySelector('#formulario-token').addEventListener('submit', (evento) => {
+    evento.preventDefault();
+    sessionStorage.setItem(CHAVE_TOKEN, document.querySelector('#token').value);
+    document.querySelector('#token').value = '';
+    carregar(null);
+});
+
+document.querySelector('#esquecer').addEventListener('click', () => {
+    sessionStorage.removeItem(CHAVE_TOKEN);
+    mostrarConteudo(false);
+    Interface.mensagem('#mensagem', 'Token removido deste navegador.', 'sucesso');
+});
+
 document.querySelector('#verificar').addEventListener('click', async () => {
     Interface.mensagem('#mensagem', '');
     try {
-        const resultado = await API.get('/auditoria/integridade');
+        const resultado = await apiAdmin('/auditoria/integridade');
         document.querySelector('#total-eventos').textContent = Formato.inteiro(resultado.totalEventos);
         const estado = document.querySelector('#estado-cadeia');
         estado.textContent = resultado.cadeiaIntegra ? 'integra' : 'violada';
@@ -68,7 +114,7 @@ document.querySelector('#verificar').addEventListener('click', async () => {
         document.querySelector('#detalhe-cadeia').textContent = resultado.cadeiaIntegra
             ? `${resultado.totalEventos} eventos verificados`
             : `${resultado.falhas.length} elo(s) divergente(s)`;
-        document.querySelector('#ultimo-hash').textContent = resultado.ultimoHash.slice(0, 32) + '...';
+        document.querySelector('#ultimo-hash').textContent = `${resultado.ultimoHash.slice(0, 32)}...`;
         Interface.mensagem('#mensagem',
             resultado.cadeiaIntegra
                 ? 'Cadeia de auditoria integra.'

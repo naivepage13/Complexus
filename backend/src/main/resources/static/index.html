@@ -7,6 +7,10 @@
     <link rel="stylesheet" href="css/app.css">
 </head>
 <body>
+<!--
+  Painel inicial enxuto: serve de ponto de partida, nao de relatorio.
+  Numeros de desempenho ficam na pagina de cada empresa e em estatisticas.
+-->
 <header class="cabecalho">
     <div class="cabecalho-conteudo">
         <span class="marca">GeoHistoricalSim</span>
@@ -16,7 +20,7 @@
             <a href="investimentos.html">Investimentos</a>
             <a href="politica.html">Politica</a>
             <a href="estatisticas.html">Estatisticas</a>
-            <a href="auditoria.html">Auditoria</a>
+            <a href="atualizacoes.html">Atualizacoes</a>
         </nav>
         <div class="identificacao" id="relogio-turno"></div>
         <div class="identificacao" id="identificacao"></div>
@@ -26,8 +30,8 @@
 <main class="pagina">
     <div class="titulo-pagina">
         <div>
-            <h1>Painel do jogador</h1>
-            <p>Resumo do seu patrimonio, das suas empresas e dos seus mandatos.</p>
+            <h1 id="saudacao">Painel do jogador</h1>
+            <p id="resumo-turno">Carregando a partida...</p>
         </div>
         <div class="acoes">
             <button class="botao botao-secundario" id="avancar-turno">Avancar turno agora</button>
@@ -36,117 +40,33 @@
 
     <div id="mensagem" class="oculto"></div>
 
-    <section class="grade">
-        <div class="cartao indicador">
-            <span class="rotulo">Patrimonio total</span>
-            <span class="valor" id="patrimonio-total">-</span>
-            <span class="detalhe" id="detalhe-patrimonio">caixa + empresas + carteira</span>
-        </div>
-        <div class="cartao indicador">
-            <span class="rotulo">Caixa disponivel</span>
-            <span class="valor" id="saldo">-</span>
-            <span class="detalhe">livre para investir</span>
-        </div>
-        <div class="cartao indicador">
-            <span class="rotulo">Lucro mensal das empresas</span>
-            <span class="valor" id="lucro-empresas">-</span>
-            <span class="detalhe" id="detalhe-lucro">ultimo turno processado</span>
-        </div>
-        <div class="cartao indicador">
-            <span class="rotulo">Indice de mercado</span>
-            <span class="valor" id="indice-mercado">-</span>
-            <span class="detalhe" id="detalhe-indice">base 1000</span>
-        </div>
+    <section class="atalhos">
+        <a class="atalho" href="empresas.html">
+            <strong>Empresas</strong>
+            <span id="atalho-empresas">-</span>
+        </a>
+        <a class="atalho" href="investimentos.html">
+            <strong>Investimentos</strong>
+            <span id="atalho-carteira">-</span>
+        </a>
+        <a class="atalho" href="politica.html">
+            <strong>Politica</strong>
+            <span id="atalho-mandatos">-</span>
+        </a>
+        <a class="atalho" href="estatisticas.html">
+            <strong>Estatisticas</strong>
+            <span id="atalho-estatisticas">indicadores do mundo</span>
+        </a>
     </section>
 
-    <section class="grade-2">
-        <div class="cartao">
-            <div class="cartao-cabecalho">
-                <h2>Minhas empresas</h2>
-                <a href="empresas.html" class="pequeno">gerenciar</a>
-            </div>
-            <div class="tabela-rolagem">
-                <table class="tabela">
-                    <thead>
-                    <tr>
-                        <th>Empresa</th>
-                        <th>Setor</th>
-                        <th class="direita">Lucro/mes</th>
-                        <th class="direita">Crescimento</th>
-                        <th class="direita">Valor</th>
-                    </tr>
-                    </thead>
-                    <tbody id="lista-empresas">
-                    <tr><td colspan="5" class="suave">Carregando...</td></tr>
-                    </tbody>
-                </table>
-            </div>
+    <section class="cartao espacado">
+        <div class="cartao-cabecalho">
+            <h2>Canal de atualizacoes</h2>
+            <a href="atualizacoes.html" class="pequeno">ver tudo</a>
         </div>
-
-        <div class="cartao">
-            <div class="cartao-cabecalho">
-                <h2>Minha carteira</h2>
-                <a href="investimentos.html" class="pequeno">negociar</a>
-            </div>
-            <div class="tabela-rolagem">
-                <table class="tabela">
-                    <thead>
-                    <tr>
-                        <th>Empresa</th>
-                        <th class="direita">Acoes</th>
-                        <th class="direita">Valor atual</th>
-                        <th class="direita">Retorno</th>
-                    </tr>
-                    </thead>
-                    <tbody id="lista-carteira">
-                    <tr><td colspan="4" class="suave">Carregando...</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </section>
-
-    <section class="grade-2">
-        <div class="cartao">
-            <div class="cartao-cabecalho">
-                <h2>Meus mandatos</h2>
-                <a href="politica.html" class="pequeno">atuar</a>
-            </div>
-            <div class="tabela-rolagem">
-                <table class="tabela">
-                    <thead>
-                    <tr>
-                        <th>Cargo</th>
-                        <th>Esfera</th>
-                        <th>Partido</th>
-                        <th class="direita">Aprovacao</th>
-                        <th class="direita">Fim</th>
-                    </tr>
-                    </thead>
-                    <tbody id="lista-mandatos">
-                    <tr><td colspan="5" class="suave">Carregando...</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <div class="cartao">
-            <h2>Ultimos fatos do sistema</h2>
-            <div class="tabela-rolagem">
-                <table class="tabela">
-                    <thead>
-                    <tr>
-                        <th>Turno</th>
-                        <th>Acao</th>
-                        <th>Descricao</th>
-                    </tr>
-                    </thead>
-                    <tbody id="lista-eventos">
-                    <tr><td colspan="3" class="suave">Carregando...</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
+        <ul class="linha-tempo" id="feed">
+            <li class="suave">Carregando...</li>
+        </ul>
     </section>
 </main>
 

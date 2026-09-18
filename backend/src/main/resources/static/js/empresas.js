@@ -89,7 +89,7 @@ async function carregarEmpresas() {
     const empresas = await API.get(`/empresas${consulta}`);
     const corpo = document.querySelector('#lista-empresas');
     if (!empresas.length) {
-        corpo.innerHTML = '<tr><td colspan="9" class="suave">Nenhuma empresa encontrada.</td></tr>';
+        corpo.innerHTML = '<tr><td colspan="8" class="suave">Nenhuma empresa encontrada.</td></tr>';
         return;
     }
     corpo.innerHTML = empresas.map((empresa) => `
@@ -99,7 +99,6 @@ async function carregarEmpresas() {
             <td class="pequeno">${empresa.municipio}/${empresa.estado}</td>
             <td class="pequeno">${empresa.dono}</td>
             <td class="direita">${Formato.dinheiroCurto(empresa.receitaMensal)}</td>
-            <td class="direita ${Formato.classe(empresa.lucroMensal)}">${Formato.dinheiroCurto(empresa.lucroMensal)}</td>
             <td class="direita">${Formato.percentual(empresa.marketShare, 1)}</td>
             <td class="direita">${Formato.dinheiroCurto(empresa.valuation)}</td>
             <td class="direita">

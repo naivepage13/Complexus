@@ -68,18 +68,18 @@ public class EmpresaController {
         return setores;
     }
 
+    /**
+     * Listagem do mercado. Devolve a visao publica da empresa; o resultado
+     * financeiro aparece apenas no detalhe, na pagina da propria empresa.
+     */
     @GetMapping
     public List<Map<String, Object>> listar(@RequestParam(required = false) Setor setor,
                                             @RequestParam(required = false) Long jogadorId) {
-        List<Empresa> empresas;
         if (jogadorId != null) {
-            empresas = servico.listarDoJogador(jogadorId);
-        } else if (setor != null) {
-            empresas = servico.listarPorSetor(setor);
-        } else {
-            empresas = servico.listar();
+            return Mapeadores.lista(servico.listarDoJogador(jogadorId), Mapeadores::empresa);
         }
-        return Mapeadores.lista(empresas, Mapeadores::empresa);
+        List<Empresa> empresas = setor != null ? servico.listarPorSetor(setor) : servico.listar();
+        return Mapeadores.lista(empresas, Mapeadores::empresaPublica);
     }
 
     @GetMapping("/{id}")

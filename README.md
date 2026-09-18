@@ -56,8 +56,13 @@ cd analytics && python -m unittest discover -p "testes_*.py"
   dividendos mensais lastreados no lucro e acompanhar o retorno da carteira.
 - **Estatísticas** — PIB, inflação, juros, desemprego, aprovação do governo,
   índice de mercado e séries históricas por turno e por setor.
-- **Auditoria** — toda ação vira um evento encadeado por hash, com verificação
-  de integridade e livro-razão financeiro.
+- **Atualizações** — canal com o que acontece no mundo: fechamentos de turno,
+  leis, empresas e cargos, mais as suas próprias ações.
+
+Nos bastidores, toda ação vira um evento encadeado por hash com livro-razão
+financeiro. Essa linha de auditoria é administrativa: fica em
+`/api/admin/auditoria` (cabeçalho `X-Admin-Token`) e na página
+`admin/auditoria.html`, fora do menu do jogo.
 
 ## Documentação
 

@@ -13,7 +13,7 @@
 
     <groupId>com.geohistoricalsim</groupId>
     <artifactId>geohistoricalsim-backend</artifactId>
-    <version>0.2.0</version>
+    <version>0.2.1</version>
     <name>GeoHistoricalSim Backend</name>
     <description>Nucleo de simulacao economica e politica do GeoHistoricalSim</description>
 

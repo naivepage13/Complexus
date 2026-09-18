@@ -82,6 +82,34 @@ public final class Mapeadores {
         return mapa;
     }
 
+    /**
+     * Visao publica de uma empresa, usada nas listagens.
+     *
+     * Nao traz lucro, custo, caixa nem patrimonio: resultado de empresa e
+     * assunto da pagina da propria empresa, exibido ali em grafico.
+     */
+    public static Map<String, Object> empresaPublica(Empresa empresa) {
+        Map<String, Object> mapa = new LinkedHashMap<>();
+        mapa.put("id", empresa.getId());
+        mapa.put("nome", empresa.getNome());
+        mapa.put("setor", empresa.getSetor().name());
+        mapa.put("setorRotulo", empresa.getSetor().getRotulo());
+        mapa.put("donoId", empresa.getDono() == null ? null : empresa.getDono().getId());
+        mapa.put("dono", empresa.getDono() == null ? "Sistema" : empresa.getDono().getNome());
+        mapa.put("municipioId", empresa.getMunicipio().getId());
+        mapa.put("municipio", empresa.getMunicipio().getNome());
+        mapa.put("estado", empresa.getMunicipio().getEstado().getSigla());
+        mapa.put("ativa", empresa.isAtiva());
+        mapa.put("receitaMensal", empresa.getReceitaMensal());
+        mapa.put("funcionarios", empresa.getFuncionarios());
+        mapa.put("marketShare", empresa.getMarketShare());
+        mapa.put("valuation", empresa.getValuation());
+        mapa.put("precoAcao", empresa.getPrecoAcao());
+        mapa.put("capitalAberto", empresa.isCapitalAberto());
+        mapa.put("turnoFundacao", empresa.getTurnoFundacao());
+        return mapa;
+    }
+
     public static Map<String, Object> historico(HistoricoEmpresa historico) {
         Map<String, Object> mapa = new LinkedHashMap<>();
         mapa.put("turno", historico.getTurno());

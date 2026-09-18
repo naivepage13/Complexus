@@ -169,7 +169,7 @@ public class ServicoEstatistica {
                     linha.put("nome", empresa.getNome());
                     linha.put("setor", empresa.getSetor().name());
                     linha.put("valuation", empresa.getValuation());
-                    linha.put("lucroMensal", empresa.getLucroMensal());
+                    // Sem lucro absoluto: o numero pertence a pagina da empresa.
                     linha.put("crescimentoLucro", empresa.getCrescimentoLucro());
                     linha.put("marketShare", empresa.getMarketShare());
                     linha.put("indiceLastro", empresa.indiceLastro());
