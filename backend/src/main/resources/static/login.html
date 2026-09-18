@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Entrar - GeoHistoricalSim</title>
+    <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+<header class="cabecalho">
+    <div class="cabecalho-conteudo">
+        <span class="marca">GeoHistoricalSim</span>
+        <div class="identificacao" id="relogio-turno"></div>
+    </div>
+</header>
+
+<main class="pagina">
+    <section class="cartao caixa-login">
+        <h1>Entrar na partida</h1>
+        <p class="suave pequeno">
+            Administre empresas, dispute cargos publicos e invista no mercado.
+            Cada hora real equivale a um mes no jogo.
+        </p>
+
+        <div id="mensagem" class="oculto"></div>
+
+        <form class="formulario" id="formulario-login">
+            <div class="campo">
+                <label for="usuario">Usuario</label>
+                <input type="text" id="usuario" name="usuario" autocomplete="username" required>
+            </div>
+            <div class="campo">
+                <label for="senha">Senha</label>
+                <input type="password" id="senha" name="senha" autocomplete="current-password" required>
+            </div>
+            <div class="acoes">
+                <button type="submit" class="botao">Entrar</button>
+                <button type="button" class="botao botao-secundario" id="abrir-cadastro">Criar conta</button>
+            </div>
+        </form>
+
+        <form class="formulario espacado oculto" id="formulario-cadastro">
+            <h2>Nova conta</h2>
+            <div class="campo">
+                <label for="novo-usuario">Usuario</label>
+                <input type="text" id="novo-usuario" required>
+            </div>
+            <div class="campo">
+                <label for="novo-nome">Nome de exibicao</label>
+                <input type="text" id="novo-nome">
+            </div>
+            <div class="campo">
+                <label for="nova-senha">Senha</label>
+                <input type="password" id="nova-senha" required>
+            </div>
+            <div class="acoes">
+                <button type="submit" class="botao">Cadastrar e entrar</button>
+                <button type="button" class="botao botao-neutro" id="cancelar-cadastro">Cancelar</button>
+            </div>
+        </form>
+
+        <p class="suave pequeno espacado">
+            Conta de demonstracao: <strong>demo</strong> / <strong>demo1234</strong>
+        </p>
+    </section>
+</main>
+
+<script src="js/app.js"></script>
+<script src="js/login.js"></script>
+</body>
+</html>

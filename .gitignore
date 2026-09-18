@@ -1,0 +1,27 @@
+# Build Java
+backend/target/
+*.class
+*.jar
+*.war
+
+# Banco de dados local (H2)
+backend/data/
+data/
+*.mv.db
+*.trace.db
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# IDE e sistema
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log

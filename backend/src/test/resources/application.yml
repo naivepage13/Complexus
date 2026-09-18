@@ -1,0 +1,24 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:geohistoricalsim-teste;DB_CLOSE_DELAY=-1
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    open-in-view: false
+
+jogo:
+  turno:
+    duracao-minutos: 60
+    # Nos testes o turno so avanca quando o teste manda.
+    processamento-automatico: false
+  analitico:
+    # Testes nao dependem do servico Python: usam o calculo local do Java.
+    habilitado: false
+
+logging:
+  level:
+    com.geohistoricalsim: WARN
+    org.hibernate: WARN

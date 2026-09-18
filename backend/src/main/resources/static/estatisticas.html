@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Estatisticas - GeoHistoricalSim</title>
+    <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+<header class="cabecalho">
+    <div class="cabecalho-conteudo">
+        <span class="marca">GeoHistoricalSim</span>
+        <nav class="menu">
+            <a href="index.html">Painel</a>
+            <a href="empresas.html">Empresas</a>
+            <a href="investimentos.html">Investimentos</a>
+            <a href="politica.html">Politica</a>
+            <a href="estatisticas.html">Estatisticas</a>
+            <a href="auditoria.html">Auditoria</a>
+        </nav>
+        <div class="identificacao" id="relogio-turno"></div>
+        <div class="identificacao" id="identificacao"></div>
+    </div>
+</header>
+
+<main class="pagina">
+    <div class="titulo-pagina">
+        <div>
+            <h1>Estatisticas gerais</h1>
+            <p>Fechamento consolidado a cada turno, com recorte por setor e ranking de empresas.</p>
+        </div>
+    </div>
+
+    <div id="mensagem" class="oculto"></div>
+
+    <section class="grade">
+        <div class="cartao indicador">
+            <span class="rotulo">PIB anualizado</span>
+            <span class="valor" id="pib">-</span>
+            <span class="detalhe" id="detalhe-turno"></span>
+        </div>
+        <div class="cartao indicador">
+            <span class="rotulo">Inflacao</span>
+            <span class="valor" id="inflacao">-</span>
+            <span class="detalhe" id="detalhe-juros"></span>
+        </div>
+        <div class="cartao indicador">
+            <span class="rotulo">Desemprego</span>
+            <span class="valor" id="desemprego">-</span>
+            <span class="detalhe" id="detalhe-empregos"></span>
+        </div>
+        <div class="cartao indicador">
+            <span class="rotulo">Aprovacao do governo</span>
+            <span class="valor" id="aprovacao">-</span>
+            <span class="detalhe" id="detalhe-estabilidade"></span>
+        </div>
+    </section>
+
+    <section class="grade">
+        <div class="cartao indicador">
+            <span class="rotulo">Receita agregada</span>
+            <span class="valor" id="receita-agregada">-</span>
+            <span class="detalhe" id="detalhe-lucro-agregado"></span>
+        </div>
+        <div class="cartao indicador">
+            <span class="rotulo">Impostos arrecadados</span>
+            <span class="valor" id="impostos">-</span>
+            <span class="detalhe" id="detalhe-dividendos"></span>
+        </div>
+        <div class="cartao indicador">
+            <span class="rotulo">Indice de mercado</span>
+            <span class="valor" id="indice">-</span>
+            <span class="detalhe" id="detalhe-variacao"></span>
+        </div>
+        <div class="cartao indicador">
+            <span class="rotulo">Capital investido</span>
+            <span class="valor" id="capital-investido">-</span>
+            <span class="detalhe" id="detalhe-investidores"></span>
+        </div>
+    </section>
+
+    <section class="grade-2">
+        <div class="cartao">
+            <h2>Lucro agregado por turno</h2>
+            <div class="grafico" id="grafico-lucro"></div>
+        </div>
+        <div class="cartao">
+            <h2>Indice de mercado por turno</h2>
+            <div class="grafico" id="grafico-indice"></div>
+        </div>
+    </section>
+
+    <section class="cartao">
+        <h2>Setores no ultimo fechamento</h2>
+        <div class="tabela-rolagem">
+            <table class="tabela">
+                <thead>
+                <tr>
+                    <th>Setor</th>
+                    <th class="direita">Empresas</th>
+                    <th class="direita">Receita</th>
+                    <th class="direita">Lucro</th>
+                    <th class="direita">Margem</th>
+                    <th class="direita">Crescimento medio</th>
+                    <th class="direita">Empregos</th>
+                    <th>Lider</th>
+                </tr>
+                </thead>
+                <tbody id="lista-setores"></tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="cartao">
+        <h2>Ranking de empresas</h2>
+        <div class="tabela-rolagem">
+            <table class="tabela">
+                <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Empresa</th>
+                    <th>Setor</th>
+                    <th class="direita">Valor de mercado</th>
+                    <th class="direita">Lucro/mes</th>
+                    <th class="direita">Crescimento</th>
+                    <th class="direita">Mercado</th>
+                    <th class="direita">Lastro</th>
+                </tr>
+                </thead>
+                <tbody id="lista-ranking"></tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="cartao">
+        <h2>Serie historica</h2>
+        <div class="tabela-rolagem">
+            <table class="tabela">
+                <thead>
+                <tr>
+                    <th>Turno</th>
+                    <th>Data</th>
+                    <th class="direita">Empresas</th>
+                    <th class="direita">Receita</th>
+                    <th class="direita">Lucro</th>
+                    <th class="direita">Impostos</th>
+                    <th class="direita">Indice</th>
+                    <th class="direita">Inflacao</th>
+                    <th class="direita">Juros</th>
+                    <th class="direita">Desemprego</th>
+                </tr>
+                </thead>
+                <tbody id="lista-serie"></tbody>
+            </table>
+        </div>
+    </section>
+</main>
+
+<script src="js/app.js"></script>
+<script src="js/estatisticas.js"></script>
+</body>
+</html>

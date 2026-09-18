@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Investimentos - GeoHistoricalSim</title>
+    <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+<header class="cabecalho">
+    <div class="cabecalho-conteudo">
+        <span class="marca">GeoHistoricalSim</span>
+        <nav class="menu">
+            <a href="index.html">Painel</a>
+            <a href="empresas.html">Empresas</a>
+            <a href="investimentos.html">Investimentos</a>
+            <a href="politica.html">Politica</a>
+            <a href="estatisticas.html">Estatisticas</a>
+            <a href="auditoria.html">Auditoria</a>
+        </nav>
+        <div class="identificacao" id="relogio-turno"></div>
+        <div class="identificacao" id="identificacao"></div>
+    </div>
+</header>
+
+<main class="pagina">
+    <div class="titulo-pagina">
+        <div>
+            <h1>Investimentos</h1>
+            <p>
+                Compre acoes de empresas com capital aberto. O aporte entra no caixa da
+                empresa e o retorno vem de dividendos mensais e da valorizacao da acao.
+            </p>
+        </div>
+    </div>
+
+    <div id="mensagem" class="oculto"></div>
+
+    <section class="grade">
+        <div class="cartao indicador">
+            <span class="rotulo">Valor da carteira</span>
+            <span class="valor" id="valor-carteira">-</span>
+            <span class="detalhe">posicoes marcadas a mercado</span>
+        </div>
+        <div class="cartao indicador">
+            <span class="rotulo">Retorno acumulado</span>
+            <span class="valor" id="retorno-carteira">-</span>
+            <span class="detalhe">dividendos + variacao + realizado</span>
+        </div>
+        <div class="cartao indicador">
+            <span class="rotulo">Caixa disponivel</span>
+            <span class="valor" id="caixa-investidor">-</span>
+            <span class="detalhe">para novas ordens</span>
+        </div>
+    </section>
+
+    <section class="cartao">
+        <h2>Ordem de compra ou venda</h2>
+        <form class="formulario" id="formulario-ordem">
+            <div class="linha-campos">
+                <div class="campo">
+                    <label for="empresa-ordem">Empresa</label>
+                    <select id="empresa-ordem" required></select>
+                </div>
+                <div class="campo">
+                    <label for="quantidade-ordem">Quantidade (lotes de 100)</label>
+                    <input type="number" id="quantidade-ordem" min="100" step="100" value="100" required>
+                </div>
+            </div>
+            <p class="suave pequeno" id="resumo-ordem"></p>
+            <div class="acoes">
+                <button type="button" class="botao" id="botao-comprar">Comprar</button>
+                <button type="button" class="botao botao-neutro" id="botao-vender">Vender</button>
+            </div>
+        </form>
+    </section>
+
+    <section class="cartao">
+        <h2>Mercado</h2>
+        <div class="tabela-rolagem">
+            <table class="tabela">
+                <thead>
+                <tr>
+                    <th>Empresa</th>
+                    <th>Setor</th>
+                    <th class="direita">Preco</th>
+                    <th class="direita">Disponiveis</th>
+                    <th class="direita">Lucro/mes</th>
+                    <th class="direita">Crescimento</th>
+                    <th class="direita">Lastro</th>
+                    <th class="direita">Dividendo/acao</th>
+                </tr>
+                </thead>
+                <tbody id="lista-mercado">
+                <tr><td colspan="8" class="suave">Carregando...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="cartao">
+        <h2>Minha carteira</h2>
+        <div class="tabela-rolagem">
+            <table class="tabela">
+                <thead>
+                <tr>
+                    <th>Empresa</th>
+                    <th class="direita">Acoes</th>
+                    <th class="direita">Preco medio</th>
+                    <th class="direita">Preco atual</th>
+                    <th class="direita">Valor</th>
+                    <th class="direita">Nao realizado</th>
+                    <th class="direita">Dividendos</th>
+                    <th class="direita">Retorno total</th>
+                </tr>
+                </thead>
+                <tbody id="lista-carteira">
+                <tr><td colspan="8" class="suave">Carregando...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="cartao">
+        <h2>Extrato financeiro</h2>
+        <div class="tabela-rolagem">
+            <table class="tabela">
+                <thead>
+                <tr>
+                    <th>Turno</th>
+                    <th>Tipo</th>
+                    <th>Origem</th>
+                    <th>Destino</th>
+                    <th class="direita">Valor</th>
+                    <th>Descricao</th>
+                </tr>
+                </thead>
+                <tbody id="lista-extrato"></tbody>
+            </table>
+        </div>
+    </section>
+</main>
+
+<script src="js/app.js"></script>
+<script src="js/investimentos.js"></script>
+</body>
+</html>

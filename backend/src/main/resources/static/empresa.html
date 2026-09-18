@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Gestao da empresa - GeoHistoricalSim</title>
+    <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+<header class="cabecalho">
+    <div class="cabecalho-conteudo">
+        <span class="marca">GeoHistoricalSim</span>
+        <nav class="menu">
+            <a href="index.html">Painel</a>
+            <a href="empresas.html">Empresas</a>
+            <a href="investimentos.html">Investimentos</a>
+            <a href="politica.html">Politica</a>
+            <a href="estatisticas.html">Estatisticas</a>
+            <a href="auditoria.html">Auditoria</a>
+        </nav>
+        <div class="identificacao" id="relogio-turno"></div>
+        <div class="identificacao" id="identificacao"></div>
+    </div>
+</header>
+
+<main class="pagina">
+    <div class="titulo-pagina">
+        <div>
+            <h1 id="titulo-empresa">Empresa</h1>
+            <p id="subtitulo-empresa">Carregando dados...</p>
+        </div>
+        <div class="acoes">
+            <a href="empresas.html" class="botao botao-neutro">Voltar</a>
+        </div>
+    </div>
+
+    <div id="mensagem" class="oculto"></div>
+
+    <section class="grade">
+        <div class="cartao indicador">
+            <span class="rotulo">Receita mensal</span>
+            <span class="valor" id="receita">-</span>
+            <span class="detalhe" id="detalhe-custo"></span>
+        </div>
+        <div class="cartao indicador">
+            <span class="rotulo">Lucro mensal</span>
+            <span class="valor" id="lucro">-</span>
+            <span class="detalhe" id="detalhe-crescimento"></span>
+        </div>
+        <div class="cartao indicador">
+            <span class="rotulo">Valor de mercado</span>
+            <span class="valor" id="valuation">-</span>
+            <span class="detalhe" id="detalhe-acao"></span>
+        </div>
+        <div class="cartao indicador">
+            <span class="rotulo">Indice de lastro</span>
+            <span class="valor" id="lastro">-</span>
+            <span class="detalhe">patrimonio liquido sobre valor de mercado</span>
+        </div>
+    </section>
+
+    <section class="grade-2">
+        <div class="cartao">
+            <h2>Balanco</h2>
+            <table class="tabela">
+                <tbody id="tabela-balanco"></tbody>
+            </table>
+        </div>
+        <div class="cartao">
+            <h2>Lucro por turno</h2>
+            <div class="grafico" id="grafico-lucro"></div>
+            <p class="suave pequeno espacado" id="legenda-grafico"></p>
+        </div>
+    </section>
+
+    <section class="grade-2" id="area-gestao">
+        <div class="cartao">
+            <h2>Capital e equipe</h2>
+            <form class="formulario" id="formulario-capital">
+                <div class="campo">
+                    <label for="valor-capital">Aportar capital (R$)</label>
+                    <input type="number" id="valor-capital" min="10000" step="10000" value="100000">
+                </div>
+                <div class="acoes">
+                    <button type="submit" class="botao">Investir</button>
+                </div>
+            </form>
+            <form class="formulario espacado" id="formulario-equipe">
+                <div class="linha-campos">
+                    <div class="campo">
+                        <label for="quantidade-equipe">Funcionarios</label>
+                        <input type="number" id="quantidade-equipe" min="1" step="1" value="5">
+                    </div>
+                </div>
+                <div class="acoes">
+                    <button type="button" class="botao" id="botao-contratar">Contratar</button>
+                    <button type="button" class="botao botao-neutro" id="botao-demitir">Demitir</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="cartao">
+            <h2>Parametros de gestao</h2>
+            <form class="formulario" id="formulario-gestao">
+                <div class="linha-campos">
+                    <div class="campo">
+                        <label for="marketing">Marketing mensal (R$)</label>
+                        <input type="number" id="marketing" min="0" step="1000">
+                    </div>
+                    <div class="campo">
+                        <label for="salario">Salario medio (R$)</label>
+                        <input type="number" id="salario" min="1200" step="100">
+                    </div>
+                    <div class="campo">
+                        <label for="payout">Payout de dividendos (0 a 0,9)</label>
+                        <input type="number" id="payout" min="0" max="0.9" step="0.05">
+                    </div>
+                </div>
+                <div class="acoes">
+                    <button type="submit" class="botao">Salvar</button>
+                </div>
+            </form>
+
+            <h3 class="espacado">Abertura de capital</h3>
+            <form class="formulario" id="formulario-ipo">
+                <div class="campo">
+                    <label for="fracao-ipo">Fracao ofertada (0,05 a 0,49)</label>
+                    <input type="number" id="fracao-ipo" min="0.05" max="0.49" step="0.01" value="0.2">
+                </div>
+                <div class="acoes">
+                    <button type="submit" class="botao botao-secundario">Abrir capital</button>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <section class="cartao" id="area-obras">
+        <div class="cartao-cabecalho">
+            <h2>Empreendimentos</h2>
+            <span class="suave pequeno">exclusivo dos setores imobiliario e de construcao</span>
+        </div>
+        <form class="formulario" id="formulario-obra">
+            <div class="linha-campos">
+                <div class="campo">
+                    <label for="nome-obra">Nome do empreendimento</label>
+                    <input type="text" id="nome-obra">
+                </div>
+                <div class="campo">
+                    <label for="tipo-obra">Tipo</label>
+                    <select id="tipo-obra">
+                        <option value="RESIDENCIAL">Residencial</option>
+                        <option value="COMERCIAL">Comercial</option>
+                        <option value="INDUSTRIAL">Industrial</option>
+                        <option value="INFRAESTRUTURA">Infraestrutura</option>
+                    </select>
+                </div>
+                <div class="campo">
+                    <label for="custo-obra">Custo total (R$)</label>
+                    <input type="number" id="custo-obra" min="10000" step="50000" value="1000000">
+                </div>
+                <div class="campo">
+                    <label for="prazo-obra">Prazo (turnos)</label>
+                    <input type="number" id="prazo-obra" min="1" max="36" value="6">
+                </div>
+            </div>
+            <div class="acoes">
+                <button type="submit" class="botao">Iniciar obra</button>
+            </div>
+        </form>
+
+        <div class="tabela-rolagem espacado">
+            <table class="tabela">
+                <thead>
+                <tr>
+                    <th>Obra</th>
+                    <th>Tipo</th>
+                    <th>Status</th>
+                    <th class="direita">Custo</th>
+                    <th class="direita">Valor estimado</th>
+                    <th class="direita">Conclusao</th>
+                </tr>
+                </thead>
+                <tbody id="lista-obras"></tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="cartao">
+        <h2>Historico de resultados</h2>
+        <div class="tabela-rolagem">
+            <table class="tabela">
+                <thead>
+                <tr>
+                    <th>Turno</th>
+                    <th class="direita">Receita</th>
+                    <th class="direita">Custo</th>
+                    <th class="direita">Impostos</th>
+                    <th class="direita">Lucro</th>
+                    <th class="direita">Crescimento</th>
+                    <th class="direita">Preco da acao</th>
+                    <th class="direita">Mercado</th>
+                </tr>
+                </thead>
+                <tbody id="lista-historico"></tbody>
+            </table>
+        </div>
+    </section>
+</main>
+
+<script src="js/app.js"></script>
+<script src="js/empresa.js"></script>
+</body>
+</html>
