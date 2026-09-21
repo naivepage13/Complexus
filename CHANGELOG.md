@@ -4,6 +4,36 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 Este arquivo é a linha de auditoria do desenvolvimento: nenhuma entrega entra
 sem uma linha aqui. Ver também [docs/RELATORIO.md](docs/RELATORIO.md).
 
+## [0.3.0] - 2026-09-21
+
+O projeto passa a se chamar **Complexus**. Sem mudanca de comportamento: e
+renomeacao de ponta a ponta, com testes rodados depois.
+
+### Alterado
+- Pacote Java `com.geohistoricalsim` -> `com.complexus`; classe principal
+  `GeoHistoricalSimApplication` -> `ComplexusApplication`.
+- Maven: `groupId` `com.complexus`, `artifactId` `complexus-backend`,
+  versao `0.3.0`.
+- Banco local H2: `./data/geohistoricalsim` -> `./data/complexus`
+  (o arquivo existente foi renomeado, entao a partida em andamento continua).
+- Titulos das paginas, marca do cabecalho, rodape e toda a documentacao.
+- Servico analitico em Python: cabecalho `Server` e textos.
+- Chaves do navegador: `ghs.jogador` -> `complexus.jogador` e
+  `ghs.admin.token` -> `complexus.admin.token`.
+- `origin` do Git apontando para o repositorio renomeado
+  (`naivepage13/Complexus`).
+
+### Adicionado
+- `CredencialEstavelTest`: trava o hash de senha, para que uma substituicao de
+  texto nao invalide de novo as contas ja existentes.
+
+### Nao alterado
+- **Sal do hash de senha** (`geohistoricalsim::v1::`): o valor entra no hash
+  gravado no banco. A renomeacao chegou a troca-lo e derrubou o login das
+  contas existentes; foi revertido, comentado no codigo e coberto por teste.
+- Prefixo `jogo.*` das propriedades: descreve o dominio, nao a marca.
+- Pasta `legado/`: e registro historico do prototipo e fica como estava.
+
 ## [0.2.1] - 2026-09-18
 
 Ajuste de visibilidade: o que cada publico enxerga.

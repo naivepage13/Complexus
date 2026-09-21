@@ -1,4 +1,4 @@
-# GeoHistoricalSim
+# Complexus
 
 Simulador de administração de **empresas** e de **países**. O jogador funda e
 administra companhias nos setores alimentício, imobiliário e de construção,

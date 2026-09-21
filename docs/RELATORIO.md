@@ -1,15 +1,16 @@
-# Relatório de desenvolvimento — GeoHistoricalSim
+# Relatório de desenvolvimento — Complexus
 
 > **Documento vivo.** É atualizado a cada entrega. Sempre que algo muda no
 > projeto, esta página e o [CHANGELOG](../CHANGELOG.md) mudam junto.
 
 | Campo | Valor |
 |---|---|
-| Versão atual | **0.2.1** |
-| Data da última atualização | 18/09/2026 |
+| Versão atual | **0.3.0** |
+| Data da última atualização | 21/09/2026 |
+| Repositório | [naivepage13/Complexus](https://github.com/naivepage13/Complexus) |
 | Branch | `claude/business-country-management-game-4bbe6e` |
 | Estado | Núcleo jogável: economia, política, investimentos, turnos e auditoria |
-| Cobertura de testes | 20 testes Java + 9 testes Python, todos verdes |
+| Cobertura de testes | 22 testes Java + 9 testes Python, todos verdes |
 
 ---
 
@@ -104,15 +105,29 @@ Linha de auditoria em [AUDITORIA.md](AUDITORIA.md).
 - **Auditoria virou área administrativa**: rotas em `/api/admin/auditoria/**`
   exigem `X-Admin-Token` e a página saiu para `admin/auditoria.html`.
 
+### 3.8 Identidade do projeto (entregue na 0.3.0)
+- O jogo passou a se chamar **Complexus**, em todas as camadas: pacote Java
+  (`com.complexus`), artefato Maven (`complexus-backend`), banco local,
+  títulos das páginas, serviço Python e documentação.
+- O banco existente foi renomeado em vez de recriado, então partidas em
+  andamento continuam de onde estavam.
+- Mantidos de propósito: o sal do hash de senha (`geohistoricalsim::v1::`),
+  que entra no hash gravado e derrubaria o login de todas as contas se mudasse;
+  o prefixo `jogo.*` das propriedades, que descreve o domínio e não a marca; e
+  a pasta `legado/`, registro do protótipo original.
+- O sal chegou a ser renomeado junto e quebrou o login das contas existentes.
+  Foi revertido e agora há teste (`CredencialEstavelTest`) travando o hash.
+
 ## 4. Verificações executadas
 
 | Verificação | Resultado |
 |---|---|
-| `mvn test` (backend) | 20 testes, 0 falhas |
+| `mvn test` (backend) | 22 testes, 0 falhas |
 | `python -m unittest` (analytics) | 9 testes, 0 falhas |
 | Subida da aplicação + carga do mundo | OK |
 | Fluxo ponta a ponta pela API | Empresa → turno → IPO → compra → dividendo → lei sancionada → auditoria íntegra |
 | Integração Java ↔ Python | `fonteModificadores: PYTHON` com o serviço no ar; `FALLBACK_JAVA` com ele desligado |
+| Renomeação para Complexus | Build, 22 testes, login de conta anterior e cadeia de auditoria íntegra após o rename |
 | Separação de visibilidade | `/api/admin/auditoria` responde 403 sem token e 200 com token; canal de atualizações sem hash, ator ou detalhe interno |
 
 Balanceamento observado após a calibragem (7 empresas do mundo inicial):
@@ -165,6 +180,7 @@ token de `jogo.admin.token` (padrão `admin-local`).
 
 | Versão | Data | Entrega |
 |---|---|---|
+| 0.3.0 | 21/09/2026 | Renomeação do projeto para Complexus em todas as camadas, com a partida local preservada |
 | 0.2.1 | 18/09/2026 | Separação de visibilidade: painel inicial enxuto, resultado de empresa em gráfico na própria página, canal de atualizações para o jogador e auditoria restrita à administração com token |
 | 0.2.0 | 18/09/2026 | Núcleo completo em Spring Boot: economia dos três setores, política das três esferas, investimentos lastreados, turnos automáticos, estatísticas, linha de auditoria e sete painéis novos |
 | 0.1.0 | — | Protótipo em HTML/CSS/JS e scripts Python soltos (preservado em `legado/`) |

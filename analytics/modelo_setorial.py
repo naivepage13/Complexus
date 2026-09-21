@@ -1,4 +1,4 @@
-"""Modelo de choques setoriais do GeoHistoricalSim.
+"""Modelo de choques setoriais do Complexus.
 
 Funcoes puras e deterministicas: o mesmo turno sempre produz os mesmos
 choques, o que torna o resultado de uma partida reproduzivel e auditavel.

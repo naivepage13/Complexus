@@ -3,9 +3,9 @@ server:
 
 spring:
   application:
-    name: geohistoricalsim
+    name: complexus
   datasource:
-    url: jdbc:h2:file:./data/geohistoricalsim;DB_CLOSE_DELAY=-1;AUTO_SERVER=TRUE
+    url: jdbc:h2:file:./data/complexus;DB_CLOSE_DELAY=-1;AUTO_SERVER=TRUE
     driver-class-name: org.h2.Driver
     username: sa
     password: ""
@@ -34,4 +34,4 @@ jogo:
 
 logging:
   level:
-    com.geohistoricalsim: INFO
+    com.complexus: INFO

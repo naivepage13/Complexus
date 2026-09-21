@@ -11,11 +11,11 @@
         <relativePath/>
     </parent>
 
-    <groupId>com.geohistoricalsim</groupId>
-    <artifactId>geohistoricalsim-backend</artifactId>
-    <version>0.2.1</version>
-    <name>GeoHistoricalSim Backend</name>
-    <description>Nucleo de simulacao economica e politica do GeoHistoricalSim</description>
+    <groupId>com.complexus</groupId>
+    <artifactId>complexus-backend</artifactId>
+    <version>0.3.0</version>
+    <name>Complexus Backend</name>
+    <description>Nucleo de simulacao economica e politica do Complexus</description>
 
     <properties>
         <java.version>21</java.version>

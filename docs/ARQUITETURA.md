@@ -32,7 +32,7 @@ Boot a partir de `backend/src/main/resources/static`.
 
 ```
 backend/           nucleo Java (Spring Boot)
-  src/main/java/com/geohistoricalsim/
+  src/main/java/com/complexus/
     auditoria/     linha de auditoria encadeada por hash
     comum/         excecoes, tratador de erros, mapeadores de resposta
     config/        propriedades do jogo e carga inicial do mundo

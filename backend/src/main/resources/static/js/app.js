@@ -27,7 +27,7 @@ const API = {
 };
 
 const Sessao = {
-    chave: 'ghs.jogador',
+    chave: 'complexus.jogador',
     obter() {
         const bruto = localStorage.getItem(Sessao.chave);
         return bruto ? JSON.parse(bruto) : null;

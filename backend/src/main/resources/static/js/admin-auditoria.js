@@ -5,7 +5,7 @@
  * levam o cabecalho X-Admin-Token. Sem token valido o servidor devolve 403.
  */
 
-const CHAVE_TOKEN = 'ghs.admin.token';
+const CHAVE_TOKEN = 'complexus.admin.token';
 
 function token() {
     return sessionStorage.getItem(CHAVE_TOKEN) || '';

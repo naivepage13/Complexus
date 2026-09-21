@@ -1,4 +1,4 @@
-"""Servico analitico do GeoHistoricalSim.
+"""Servico analitico do Complexus.
 
 Expoe o modelo setorial em HTTP para o backend Java. Usa apenas a biblioteca
 padrao do Python, entao roda com `python analytics/servico_analitico.py` sem
@@ -36,7 +36,7 @@ PORTA_PADRAO = 8100
 class Manipulador(BaseHTTPRequestHandler):
     """Roteamento minimo sobre o servidor HTTP da biblioteca padrao."""
 
-    server_version = "GeoHistoricalSimAnalytics/0.2"
+    server_version = "ComplexusAnalytics/0.2"
 
     def do_GET(self) -> None:  # noqa: N802 - assinatura exigida pela stdlib
         if self.path.startswith("/saude"):
@@ -121,7 +121,7 @@ def iniciar(porta: int = PORTA_PADRAO) -> None:
 
 
 if __name__ == "__main__":
-    interpretador = argparse.ArgumentParser(description="Servico analitico do GeoHistoricalSim")
+    interpretador = argparse.ArgumentParser(description="Servico analitico do Complexus")
     interpretador.add_argument("--porta", type=int, default=PORTA_PADRAO, help="porta HTTP")
     argumentos = interpretador.parse_args()
     iniciar(argumentos.porta)
