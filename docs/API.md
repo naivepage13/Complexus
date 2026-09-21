@@ -77,6 +77,23 @@ Todas as rotas ficam sob `/empresas/{empresaId}/estrutura` e exigem que o
 | GET | `/departamentos` | — |
 | POST | `/departamentos` | `{jogadorId, area, orcamentoMensal}` (orçamento zero desmonta a área) |
 
+## Finanças da empresa
+
+Rotas sob `/empresas/{empresaId}/financas`. As operações exigem que o
+`jogadorId` seja o dono da empresa.
+
+| Método | Rota | Corpo |
+|---|---|---|
+| GET | `` | — (avaliação de crédito, linhas com taxa e limite, contratos em aberto e histórico) |
+| GET | `/contratos` | — |
+| POST | `/contratos` | `{jogadorId, modalidade, valor, prazoTurnos}` |
+| POST | `/contratos/{contratoId}/amortizar` | `{jogadorId, valor}` |
+| POST | `/contratos/{contratoId}/renegociar` | `{jogadorId, novoPrazo}` |
+
+Modalidades: `CAPITAL_DE_GIRO`, `INVESTIMENTO`, `ANTECIPACAO_RECEBIVEIS`.
+`ROTATIVO` existe apenas como crédito automático de caixa negativo e é recusado
+na contratação.
+
 ## Investimentos
 
 | Método | Rota | Corpo |

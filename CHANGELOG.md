@@ -4,6 +4,58 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 Este arquivo é a linha de auditoria do desenvolvimento: nenhuma entrega entra
 sem uma linha aqui. Ver também [docs/RELATORIO.md](docs/RELATORIO.md).
 
+## [0.5.0] - 2026-09-21
+
+Divida com contrato: a empresa passa a tomar credito, pagar parcela, renegociar
+e responder por atraso. Segunda parte da administracao de empresas.
+
+### Adicionado
+- **Financiamentos** (`Financiamento`) com prazo, taxa travada na contratacao e
+  amortizacao constante (SAC). Quatro linhas: capital de giro, investimento,
+  antecipacao de recebiveis e o rotativo automatico.
+- **Nota de credito** de A a D (`NotaCredito`), calculada por alavancagem (35%),
+  cobertura de juros (30%), lastro (15%) e historico de pagamento (20%). A nota
+  define o spread de risco e o fator de limite.
+- **Limite agregado por empresa**: toda divida ja contratada consome o espaco
+  das demais linhas, e a antecipacao tem teto adicional de 3x a receita mensal.
+- **Amortizacao antecipada** e **renegociacao** (alonga o prazo, soma 1% de
+  comissao ao saldo, acrescenta 3% a.a. a taxa e zera a contagem de atraso).
+- **Inadimplencia**: multa de 2%, mora de 1% ao mes, reputacao em queda,
+  execucao da garantia na terceira parcela seguida e falencia na quarta.
+- **Garantia real** na linha de investimento: 1,3x o valor liberado, limitada ao
+  patrimonio livre; quando executada, a perda e rateada entre as unidades.
+- Pagina `financas.html` com nota, score decomposto em barras, vitrine de linhas,
+  simulacao da parcela antes de assinar e gestao dos contratos.
+- Rotas `/api/empresas/{id}/financas/**`.
+- `FinancasDaEmpresaTest`: 9 testes cobrindo avaliacao, limite, garantia,
+  cobranca no turno, quitacao antecipada, renegociacao e atraso.
+- `MigracaoEsquema`: converte colunas de enum do tipo ENUM do H2 para varchar na
+  subida da aplicacao.
+
+### Alterado
+- **Os juros do turno vem da taxa de cada contrato**, e nao da Selic corrente
+  aplicada sobre um saldo solto.
+- **Ordem do fechamento**: juros entram no resultado, o lucro cai no caixa, a
+  amortizacao sai antes do dividendo e so entao o caixa negativo vira rotativo.
+- `Empresa.divida` deixou de ser escrita direto: e sempre a soma dos contratos
+  em aberto, recalculada por `ServicoCredito.sincronizarDivida`.
+- Falencia passou a ter dois gatilhos: alavancagem acima de 2,5x o patrimonio ou
+  quatro parcelas seguidas sem pagamento.
+- A pagina da empresa ganhou o atalho para Financas e um resumo da alavancagem.
+
+### Corrigido
+- **Enum novo quebrava partida existente**: o H2 cria coluna de enum como tipo
+  ENUM nativo e o `ddl-auto=update` nao acrescenta valores a ele. Gravar um
+  lancamento `EMPRESTIMO` em um banco criado antes da 0.5.0 falhava com erro
+  22030. A migracao de esquema converte essas colunas para varchar, o que
+  tambem destrava qualquer enum novo daqui para frente. Reproduzido em uma
+  partida criada na 0.4.0 e reaberta na 0.5.0.
+
+### Migracao
+- Divida que existia solta em `Empresa.divida` vira um contrato de credito
+  rotativo com a taxa vigente, para que o servico da divida passe a ter origem
+  visivel em vez de um numero sem contrato.
+
 ## [0.4.0] - 2026-09-21
 
 A empresa deixa de ser uma caixa unica: passa a ter unidades, linhas de produto

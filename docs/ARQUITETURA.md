@@ -77,6 +77,7 @@ legado/            prototipo original preservado
 | `departamento` | Orçamento mensal por área administrativa |
 | `historico_empresa` | Resultado de cada empresa em cada turno |
 | `empreendimento` | Obras em andamento dos setores imobiliário e construção, ligadas à unidade que as toca |
+| `financiamento` | Contratos de dívida: saldo, taxa travada, prazo, garantia e atraso |
 | `investimento` | Posição acionária de cada jogador |
 | `lancamento_financeiro` | Livro-razão: toda movimentação de dinheiro |
 | `evento_auditoria` | Linha de auditoria encadeada por hash |
@@ -96,7 +97,9 @@ evita três colunas de chave estrangeira e mantém o mesmo código para as três
 3. rotina política: apuração, sanções pendentes, renovação de mandatos;
 4. gastos públicos recorrentes (programa social, infraestrutura);
 5. simulação das **unidades** agrupadas por município e setor, seguida do
-   fechamento de cada empresa (juros, estrutura, imposto de renda e dividendos);
+   fechamento de cada empresa: juros dos contratos e estrutura entram como
+   despesa, o imposto incide sobre o lucro, a amortização sai do caixa, o
+   dividendo vem depois e o caixa negativo vira crédito rotativo;
 6. andamento das obras;
 7. recálculo macroeconômico;
 8. consolidação das estatísticas e registro do evento `TURNO_PROCESSADO`.

@@ -14,6 +14,9 @@ public enum TipoLancamento {
     OBRA("Aporte em empreendimento"),
     ENTREGA_OBRA("Entrega de empreendimento"),
     JUROS("Juros sobre divida"),
+    EMPRESTIMO("Credito liberado"),
+    AMORTIZACAO("Amortizacao de divida"),
+    EXECUCAO_GARANTIA("Execucao de garantia"),
     TRANSFERENCIA_TESOURO("Transferencia do tesouro");
 
     private final String rotulo;

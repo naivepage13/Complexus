@@ -21,6 +21,8 @@ import com.complexus.economia.Setor;
 import com.complexus.economia.Unidade;
 import com.complexus.estatistica.ServicoEstatistica;
 import com.complexus.estatistica.SnapshotTurno;
+import com.complexus.financas.Financiamento;
+import com.complexus.financas.ServicoCredito;
 import com.complexus.integracao.ClienteAnalitico;
 import com.complexus.investimento.ServicoInvestimento;
 import com.complexus.investimento.ServicoRazao;
@@ -74,6 +76,7 @@ public class ServicoTurno {
     private static final double PRODUTIVIDADE_MINIMA = 0.4;
     private static final double PRODUTIVIDADE_MAXIMA = 2.0;
     private static final double LIMITE_ALAVANCAGEM_FALENCIA = 2.5;
+    private static final int PARCELAS_ATE_FALENCIA = 4;
 
     private final ServicoEstadoJogo estadoJogo;
     private final RepositorioEmpresa repositorioEmpresa;
@@ -85,6 +88,7 @@ public class ServicoTurno {
     private final RepositorioMunicipio repositorioMunicipio;
     private final MotorSimulacao motor;
     private final ServicoEstrutura servicoEstrutura;
+    private final ServicoCredito servicoCredito;
     private final ServicoPolitica servicoPolitica;
     private final ServicoInvestimento servicoInvestimento;
     private final ServicoEstatistica servicoEstatistica;
@@ -103,6 +107,7 @@ public class ServicoTurno {
                         RepositorioMunicipio repositorioMunicipio,
                         MotorSimulacao motor,
                         ServicoEstrutura servicoEstrutura,
+                        ServicoCredito servicoCredito,
                         ServicoPolitica servicoPolitica,
                         ServicoInvestimento servicoInvestimento,
                         ServicoEstatistica servicoEstatistica,
@@ -120,6 +125,7 @@ public class ServicoTurno {
         this.repositorioMunicipio = repositorioMunicipio;
         this.motor = motor;
         this.servicoEstrutura = servicoEstrutura;
+        this.servicoCredito = servicoCredito;
         this.servicoPolitica = servicoPolitica;
         this.servicoInvestimento = servicoInvestimento;
         this.servicoEstatistica = servicoEstatistica;
@@ -186,6 +192,8 @@ public class ServicoTurno {
         relatorio.put("lucroAgregado", economia.lucro);
         relatorio.put("impostosArrecadados", economia.impostos);
         relatorio.put("dividendosPagos", economia.dividendos);
+        relatorio.put("dividaAmortizada", economia.amortizacao);
+        relatorio.put("contratosEmAtraso", economia.inadimplencias);
         relatorio.put("indiceMercado", snapshot.getIndiceMercado());
         relatorio.put("variacaoIndice", snapshot.getVariacaoIndice());
         relatorio.put("fonteModificadores", analitico.origem().name());
@@ -332,7 +340,9 @@ public class ServicoTurno {
     private void fecharEmpresa(int turno, FechamentoEmpresa fechamento, ContextoMercado contexto,
                                Pais pais, EstruturaEmpresa estrutura, ResumoEconomico resumo) {
         Empresa empresa = fechamento.empresa;
-        double juros = empresa.getDivida() * contexto.taxaJurosAnual() / 12.0;
+        // Os juros vem da taxa travada em cada contrato, nao da Selic do turno:
+        // quem pegou credito barato continua pagando barato.
+        double juros = servicoCredito.jurosDoMes(empresa.getId());
         ResultadoMensal resultado = motor.consolidar(fechamento.operacoes, juros,
                 estrutura.custoEstrutura, pais.getAliquotaImpostoEmpresarial());
 
@@ -363,6 +373,9 @@ public class ServicoTurno {
                     "Departamentos no turno " + turno);
         }
 
+        // Credor antes de socio: a amortizacao sai do caixa antes do dividendo.
+        // Os juros ja foram deduzidos no resultado, entao so o principal desce aqui.
+        Map<String, Object> servicoDaDivida = servicoCredito.cobrarParcelas(empresa, turno);
         double dividendos = servicoInvestimento.distribuirDividendos(empresa, resultado.lucro(), turno);
         aplicarEndividamento(turno, empresa);
 
@@ -373,6 +386,8 @@ public class ServicoTurno {
         boolean faliu = verificarFalencia(empresa);
         repositorioEmpresa.save(empresa);
         registrarHistorico(turno, empresa, resultado, dividendos);
+        resumo.amortizacao += (double) servicoDaDivida.get("amortizado");
+        resumo.inadimplencias += (int) servicoDaDivida.get("contratosEmAtraso");
 
         razao.registrar(turno, TipoLancamento.RECEITA_OPERACIONAL, "mercado",
                 "empresa:" + empresa.getId(), resultado.receita(), empresa.getId(), null,
@@ -441,28 +456,36 @@ public class ServicoTurno {
                 "Tributos do turno " + turno + " em " + municipio.getNome());
     }
 
-    /** Caixa negativo vira divida automatica com juros de mercado. */
+    /** Caixa negativo vira credito rotativo: automatico, com contrato e taxa punitiva. */
     private void aplicarEndividamento(int turno, Empresa empresa) {
         if (empresa.getCaixa() >= 0) {
             return;
         }
         double emprestimo = -empresa.getCaixa();
-        empresa.setDivida(empresa.getDivida() + emprestimo);
         empresa.setCaixa(0);
-        razao.registrar(turno, TipoLancamento.JUROS, "mercado_de_credito",
-                "empresa:" + empresa.getId(), emprestimo, empresa.getId(), null,
-                "Credito automatico para cobrir caixa negativo");
+        servicoCredito.abrirRotativo(empresa, emprestimo, turno);
     }
 
+    /**
+     * Fecha a empresa quando a divida deixa de caber no patrimonio ou quando o
+     * atraso vira default: quatro parcelas seguidas sem pagamento.
+     */
     private boolean verificarFalencia(Empresa empresa) {
         double patrimonio = Math.max(empresa.getPatrimonio(), 1);
-        if (empresa.getDivida() <= patrimonio * LIMITE_ALAVANCAGEM_FALENCIA) {
+        boolean alavancada = empresa.getDivida() > patrimonio * LIMITE_ALAVANCAGEM_FALENCIA;
+        int piorAtraso = servicoCredito.emAberto(empresa.getId()).stream()
+                .mapToInt(Financiamento::getParcelasEmAtraso)
+                .max()
+                .orElse(0);
+        if (!alavancada && piorAtraso < PARCELAS_ATE_FALENCIA) {
             return false;
         }
         empresa.setAtiva(false);
         auditoria.registrarSistema("EMPRESA_FALENCIA", "Empresa", empresa.getId(),
                 "Empresa " + empresa.getNome() + " encerrou as atividades por insolvencia",
-                Map.of("divida", empresa.getDivida(), "patrimonio", empresa.getPatrimonio()));
+                Map.of("divida", empresa.getDivida(), "patrimonio", empresa.getPatrimonio(),
+                        "motivo", alavancada ? "ALAVANCAGEM" : "DEFAULT",
+                        "parcelasEmAtraso", piorAtraso));
         return true;
     }
 
@@ -626,5 +649,7 @@ public class ServicoTurno {
         private double lucro;
         private double impostos;
         private double dividendos;
+        private double amortizacao;
+        private int inadimplencias;
     }
 }

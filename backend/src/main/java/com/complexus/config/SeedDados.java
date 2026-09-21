@@ -7,6 +7,8 @@ import com.complexus.economia.RepositorioEmpresa;
 import com.complexus.economia.RepositorioUnidade;
 import com.complexus.economia.ServicoEstrutura;
 import com.complexus.economia.Setor;
+import com.complexus.financas.RepositorioFinanciamento;
+import com.complexus.financas.ServicoCredito;
 import com.complexus.jogador.RepositorioJogador;
 import com.complexus.jogador.ServicoJogador;
 import com.complexus.politica.CargoPolitico;
@@ -46,7 +48,9 @@ public class SeedDados implements ApplicationRunner {
     private final RepositorioEmpresa repositorioEmpresa;
     private final RepositorioJogador repositorioJogador;
     private final RepositorioUnidade repositorioUnidade;
+    private final RepositorioFinanciamento repositorioFinanciamento;
     private final ServicoEstrutura servicoEstrutura;
+    private final ServicoCredito servicoCredito;
     private final ServicoPolitica servicoPolitica;
     private final ServicoJogador servicoJogador;
     private final ServicoEstadoJogo estadoJogo;
@@ -58,7 +62,9 @@ public class SeedDados implements ApplicationRunner {
                      RepositorioEmpresa repositorioEmpresa,
                      RepositorioJogador repositorioJogador,
                      RepositorioUnidade repositorioUnidade,
+                     RepositorioFinanciamento repositorioFinanciamento,
                      ServicoEstrutura servicoEstrutura,
+                     ServicoCredito servicoCredito,
                      ServicoPolitica servicoPolitica,
                      ServicoJogador servicoJogador,
                      ServicoEstadoJogo estadoJogo,
@@ -69,7 +75,9 @@ public class SeedDados implements ApplicationRunner {
         this.repositorioEmpresa = repositorioEmpresa;
         this.repositorioJogador = repositorioJogador;
         this.repositorioUnidade = repositorioUnidade;
+        this.repositorioFinanciamento = repositorioFinanciamento;
         this.servicoEstrutura = servicoEstrutura;
+        this.servicoCredito = servicoCredito;
         this.servicoPolitica = servicoPolitica;
         this.servicoJogador = servicoJogador;
         this.estadoJogo = estadoJogo;
@@ -81,6 +89,7 @@ public class SeedDados implements ApplicationRunner {
     public void run(ApplicationArguments args) {
         estadoJogo.obter();
         abrirSedesFaltantes();
+        contratualizarDividaAntiga();
         if (repositorioPais.count() > 0) {
             log.info("Mundo ja inicializado; carga inicial ignorada.");
             return;
@@ -139,6 +148,31 @@ public class SeedDados implements ApplicationRunner {
             log.info("Sede criada para {} empresas anteriores as unidades.", migradas);
             auditoria.registrarSistema("ESTRUTURA_MIGRADA", "Empresa", null,
                     "Empresas existentes receberam unidade sede", Map.of("empresas", migradas));
+        }
+    }
+
+    /**
+     * Da contrato a divida que existia antes do credito ter contrato.
+     *
+     * O saldo solto em {@code Empresa.divida} vira um credito rotativo com a
+     * taxa vigente, para que o servico da divida passe a ser cobrado por um
+     * contrato visivel em vez de um numero sem origem.
+     */
+    private void contratualizarDividaAntiga() {
+        int migradas = 0;
+        int turno = estadoJogo.turnoAtual();
+        for (Empresa empresa : repositorioEmpresa.findAll()) {
+            if (empresa.getDivida() <= 0
+                    || !repositorioFinanciamento.findByEmpresaIdOrderByIdDesc(empresa.getId()).isEmpty()) {
+                continue;
+            }
+            servicoCredito.abrirRotativo(empresa, empresa.getDivida(), turno);
+            migradas++;
+        }
+        if (migradas > 0) {
+            log.info("Divida de {} empresas convertida em contrato rotativo.", migradas);
+            auditoria.registrarSistema("DIVIDA_CONTRATUALIZADA", "Empresa", null,
+                    "Divida anterior aos contratos virou credito rotativo", Map.of("empresas", migradas));
         }
     }
 

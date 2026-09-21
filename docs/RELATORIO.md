@@ -5,12 +5,12 @@
 
 | Campo | Valor |
 |---|---|
-| Versão atual | **0.4.0** |
+| Versão atual | **0.5.0** |
 | Data da última atualização | 21/09/2026 |
 | Repositório | [naivepage13/Complexus](https://github.com/naivepage13/Complexus) |
 | Branch | `claude/game-company-admin-system-331d1c` |
 | Estado | Núcleo jogável: economia, política, investimentos, turnos e auditoria, com administração de empresas por unidade |
-| Cobertura de testes | 31 testes Java + 9 testes Python, todos verdes |
+| Cobertura de testes | 40 testes Java + 9 testes Python, todos verdes |
 
 ---
 
@@ -54,6 +54,11 @@ Linha de auditoria em [AUDITORIA.md](AUDITORIA.md).
   `consolidar` fecha o mês da empresa (juros, estrutura e imposto sobre o lucro).
 - Ciclo completo de gestão: fundar, aportar capital, contratar, demitir,
   ajustar marketing/salário/payout, abrir capital, tocar empreendimentos.
+- **Crédito e dívida ativa** (0.5.0): quatro linhas com prazo, taxa travada na
+  contratação e amortização constante; nota de crédito de A a D calculada por
+  alavancagem, cobertura de juros, lastro e histórico; amortização antecipada,
+  renegociação, inadimplência com multa e mora, execução de garantia e falência
+  por default. O crédito rotativo automático substituiu o endividamento solto.
 - **Estrutura interna da empresa** (0.4.0):
   - **unidades** por município, com patrimônio, equipe e produtividade próprios;
     é a unidade que disputa mercado, e os totais da empresa são a soma delas;
@@ -132,7 +137,7 @@ Linha de auditoria em [AUDITORIA.md](AUDITORIA.md).
 
 | Verificação | Resultado |
 |---|---|
-| `mvn test` (backend) | 31 testes, 0 falhas |
+| `mvn test` (backend) | 40 testes, 0 falhas |
 | `python -m unittest` (analytics) | 9 testes, 0 falhas |
 | Subida da aplicação + carga do mundo | OK |
 | Fluxo ponta a ponta pela API | Empresa → turno → IPO → compra → dividendo → lei sancionada → auditoria íntegra |
@@ -142,6 +147,9 @@ Linha de auditoria em [AUDITORIA.md](AUDITORIA.md).
 | Estrutura por unidade (0.4.0) | Partida nova: empresa fundada com 2 unidades, turno processado com 8 empresas e 9 unidades, receita da empresa igual à soma das filiais (R$ 308 mil + R$ 66 mil) |
 | Migração da partida em andamento | Empresas anteriores às unidades recebem sede automática na subida, sem alterar nenhum número do balanço |
 | Interface da empresa | Abertura de filial pela página: caixa R$ 600 mil → R$ 262 mil, patrimônio R$ 1,4 mi → R$ 1,7 mi, equipe 40 → 50 |
+| Crédito ponta a ponta (0.5.0) | Contrato de R$ 200 mil em 12 turnos: o turno seguinte amortizou R$ 16.666,67 e cobrou R$ 2.408 de juros, prazo 12 → 11, nota caiu de A para B |
+| Atualização de banco existente | Partida criada na 0.4.0 e reaberta na 0.5.0: 17 colunas de enum convertidas, contrato gravado e turno processado sem erro |
+| Página de finanças | Nota, score decomposto, limites por linha, simulação da parcela e taxa travada (contrato a 14,45% enquanto o mercado oferecia 16,09%) |
 
 Balanceamento observado após a calibragem (7 empresas do mundo inicial):
 receita agregada ≈ R$ 3,9 mi/mês, lucro agregado ≈ R$ 150–235 mil/mês,
@@ -166,6 +174,11 @@ margem líquida de 4% a 6% e retorno sobre o capital investido entre 8% e 13% ao
 | D-13 | Totais da empresa recalculados a partir das unidades | Um único lugar define patrimônio, equipe e produtividade, então nenhuma operação faz o balanço divergir da estrutura |
 | D-14 | Elasticidade-preço dividida entre disputa e demanda | Só na demanda, baixar preço não tiraria cliente do concorrente; só na disputa, o mercado inteiro seria insensível a preço |
 | D-15 | Efeito de departamento satura pelo porte | Sem isso, orçamento grande em empresa pequena compraria vantagem infinita |
+| D-16 | Taxa travada na contratação | Faz do momento de tomar crédito uma decisão: quem pegou barato continua pagando barato quando a Selic sobe |
+| D-17 | Amortização antes do dividendo | Credor antes de sócio; sem isso a empresa distribuiria lucro e daria calote no mesmo turno |
+| D-18 | Só o principal sai do caixa na parcela | Os juros já foram deduzidos no resultado; cobrar a parcela inteira os descontaria duas vezes |
+| D-19 | Risco encarece em vez de bloquear | Alavancagem alta muda a nota, a taxa e o limite, não a permissão de tomar crédito |
+| D-20 | Colunas de enum em `varchar`, não no tipo ENUM do H2 | `ddl-auto=update` não acrescenta valor a um tipo ENUM existente: toda constante nova quebraria a gravação nas partidas já criadas |
 
 ## 6. Limitações conhecidas
 
@@ -180,6 +193,8 @@ margem líquida de 4% a 6% e retorno sobre o capital investido entre 8% e 13% ao
 | L-07 | `GET /api/empresas/{id}` devolve o balanço completo de qualquer empresa | Um jogador curioso pode consultar o detalhe de um concorrente pela API | Depende de RNF-01: com autenticação, o detalhe completo fica restrito ao dono |
 | L-08 | Marketing e esforço comercial são rateados entre unidades pelo patrimônio | O jogador não escolhe onde concentrar a verba | Verba por unidade, se a estrutura mostrar que faz diferença no jogo |
 | L-09 | O mix de linhas vale para a empresa inteira | Não dá para vender premium em uma cidade e popular em outra | Mix por unidade, se a demanda local justificar |
+| L-10 | A garantia executada é rateada entre as unidades | O jogador não escolhe qual ativo perde | Garantia por unidade, junto com o mix por unidade |
+| L-11 | Empresas do sistema não tomam crédito por decisão própria | Só recorrem ao rotativo automático | Política de crédito para NPC, quando houver estratégia de NPC |
 
 ## 7. Como rodar
 
@@ -199,6 +214,7 @@ token de `jogo.admin.token` (padrão `admin-local`).
 
 | Versão | Data | Entrega |
 |---|---|---|
+| 0.5.0 | 21/09/2026 | Crédito e dívida ativa: quatro linhas, nota de risco, amortização, renegociação, inadimplência e execução de garantia |
 | 0.4.0 | 21/09/2026 | Estrutura interna da empresa: unidades por município, linhas de produto e departamentos, com o motor separado em operação (unidade) e fechamento (empresa) |
 | 0.3.0 | 21/09/2026 | Renomeação do projeto para Complexus em todas as camadas, com a partida local preservada |
 | 0.2.1 | 18/09/2026 | Separação de visibilidade: painel inicial enxuto, resultado de empresa em gráfico na própria página, canal de atualizações para o jogador e auditoria restrita à administração com token |

@@ -39,6 +39,7 @@ function desenharCabecalho(empresa) {
     document.querySelector('#subtitulo-empresa').textContent =
         `${empresa.setorRotulo} | sede em ${empresa.municipio}/${empresa.estado} | `
         + `fundada no turno ${empresa.turnoFundacao} | dono: ${empresa.dono}`;
+    document.querySelector('#link-financas').href = `financas.html?id=${empresa.id}`;
 
     const ehDono = empresa.donoId === jogadorEmpresa.id;
     if (!ehDono) {
@@ -98,6 +99,13 @@ function desenharBalanco(empresa) {
     document.querySelector('#tabela-balanco').innerHTML = linhas
         .map(([rotulo, valor]) => `<tr><th>${rotulo}</th><td class="direita">${valor}</td></tr>`)
         .join('');
+
+    const alavancagem = empresa.patrimonioLiquido > 0 ? empresa.divida / empresa.patrimonioLiquido : 0;
+    document.querySelector('#resumo-divida').textContent = empresa.divida > 0
+        ? `Divida de ${Formato.dinheiroCurto(empresa.divida)}, `
+          + `${Formato.numero(alavancagem, 2)}x o patrimonio liquido. `
+          + 'Contratos, taxas e limites ficam na pagina de Financas.'
+        : 'Sem divida contratada. As linhas de credito disponiveis ficam na pagina de Financas.';
 }
 
 /*

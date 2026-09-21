@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Financas da empresa - Complexus</title>
+    <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+<!--
+  Financas da empresa: nota de credito, linhas disponiveis e divida contratada.
+  A pagina e do dono; quem nao controla a empresa so ve o cabecalho.
+-->
+<header class="cabecalho">
+    <div class="cabecalho-conteudo">
+        <span class="marca">Complexus</span>
+        <nav class="menu">
+            <a href="index.html">Painel</a>
+            <a href="empresas.html">Empresas</a>
+            <a href="investimentos.html">Investimentos</a>
+            <a href="politica.html">Politica</a>
+            <a href="estatisticas.html">Estatisticas</a>
+            <a href="atualizacoes.html">Atualizacoes</a>
+        </nav>
+        <div class="identificacao" id="relogio-turno"></div>
+        <div class="identificacao" id="identificacao"></div>
+    </div>
+</header>
+
+<main class="pagina">
+    <div class="titulo-pagina">
+        <div>
+            <h1 id="titulo-empresa">Financas</h1>
+            <p id="subtitulo-empresa">Carregando dados...</p>
+        </div>
+        <div class="acoes">
+            <a href="#" class="botao botao-neutro" id="link-empresa">Gestao da empresa</a>
+        </div>
+    </div>
+
+    <div id="mensagem" class="oculto"></div>
+
+    <section class="grade">
+        <div class="cartao indicador">
+            <span class="rotulo">Nota de credito</span>
+            <span class="valor" id="nota">-</span>
+            <span class="detalhe" id="detalhe-nota"></span>
+        </div>
+        <div class="cartao indicador">
+            <span class="rotulo">Divida total</span>
+            <span class="valor" id="divida">-</span>
+            <span class="detalhe" id="detalhe-alavancagem"></span>
+        </div>
+        <div class="cartao indicador">
+            <span class="rotulo">Servico da divida por turno</span>
+            <span class="valor" id="servico-divida">-</span>
+            <span class="detalhe" id="detalhe-juros"></span>
+        </div>
+        <div class="cartao indicador">
+            <span class="rotulo">Caixa</span>
+            <span class="valor" id="caixa">-</span>
+            <span class="detalhe" id="detalhe-patrimonio"></span>
+        </div>
+    </section>
+
+    <section class="cartao">
+        <div class="cartao-cabecalho">
+            <h2>Como o mercado avalia a empresa</h2>
+            <span class="suave pequeno" id="legenda-score"></span>
+        </div>
+        <div id="componentes-score"></div>
+        <ul class="suave pequeno espacado" id="observacoes"></ul>
+    </section>
+
+    <section class="cartao">
+        <div class="cartao-cabecalho">
+            <h2>Linhas de credito</h2>
+            <span class="suave pequeno">taxa = Selic do turno + spread da linha + spread da nota</span>
+        </div>
+        <div class="tabela-rolagem">
+            <table class="tabela">
+                <thead>
+                <tr>
+                    <th>Linha</th>
+                    <th>Para que serve</th>
+                    <th class="direita">Taxa ao ano</th>
+                    <th class="direita">Prazo</th>
+                    <th class="direita">Limite disponivel</th>
+                    <th>Garantia</th>
+                </tr>
+                </thead>
+                <tbody id="lista-linhas"></tbody>
+            </table>
+        </div>
+
+        <form class="formulario espacado" id="formulario-contrato">
+            <h3>Contratar credito</h3>
+            <div class="linha-campos">
+                <div class="campo">
+                    <label for="modalidade">Linha</label>
+                    <select id="modalidade"></select>
+                </div>
+                <div class="campo">
+                    <label for="valor-contrato">Valor (R$)</label>
+                    <input type="number" id="valor-contrato" min="10000" step="10000" value="200000">
+                </div>
+                <div class="campo">
+                    <label for="prazo-contrato">Prazo (turnos)</label>
+                    <input type="number" id="prazo-contrato" min="1" max="60" value="12">
+                </div>
+            </div>
+            <p class="suave pequeno" id="simulacao-contrato"></p>
+            <div class="acoes">
+                <button type="submit" class="botao">Contratar</button>
+            </div>
+        </form>
+    </section>
+
+    <section class="cartao">
+        <div class="cartao-cabecalho">
+            <h2>Divida contratada</h2>
+            <span class="suave pequeno">amortizacao constante: a parcela cai a cada turno</span>
+        </div>
+        <div class="tabela-rolagem">
+            <table class="tabela">
+                <thead>
+                <tr>
+                    <th>Linha</th>
+                    <th>Status</th>
+                    <th class="direita">Saldo devedor</th>
+                    <th class="direita">Taxa ao ano</th>
+                    <th class="direita">Parcela do turno</th>
+                    <th class="direita">Turnos restantes</th>
+                    <th class="direita">Garantia</th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody id="lista-contratos"></tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="cartao">
+        <h2>Contratos encerrados</h2>
+        <div class="tabela-rolagem">
+            <table class="tabela">
+                <thead>
+                <tr>
+                    <th>Linha</th>
+                    <th>Status</th>
+                    <th class="direita">Principal</th>
+                    <th class="direita">Juros pagos</th>
+                    <th class="direita">Amortizado</th>
+                    <th class="direita">Contratado no turno</th>
+                </tr>
+                </thead>
+                <tbody id="lista-encerrados"></tbody>
+            </table>
+        </div>
+    </section>
+</main>
+
+<script src="js/app.js"></script>
+<script src="js/financas.js"></script>
+</body>
+</html>

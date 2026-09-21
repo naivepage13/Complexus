@@ -9,6 +9,7 @@ import com.complexus.economia.HistoricoEmpresa;
 import com.complexus.economia.LinhaProduto;
 import com.complexus.economia.Unidade;
 import com.complexus.estatistica.EstatisticaSetor;
+import com.complexus.financas.Financiamento;
 import com.complexus.estatistica.SnapshotTurno;
 import com.complexus.investimento.LancamentoFinanceiro;
 import com.complexus.jogador.Jogador;
@@ -194,6 +195,32 @@ public final class Mapeadores {
         mapa.put("areaRotulo", departamento.getArea().getRotulo());
         mapa.put("unidadeEfeito", departamento.getArea().getUnidadeEfeito());
         mapa.put("orcamentoMensal", departamento.getOrcamentoMensal());
+        return mapa;
+    }
+
+    public static Map<String, Object> financiamento(Financiamento contrato) {
+        Map<String, Object> mapa = new LinkedHashMap<>();
+        mapa.put("id", contrato.getId());
+        mapa.put("empresaId", contrato.getEmpresa().getId());
+        mapa.put("modalidade", contrato.getModalidade().name());
+        mapa.put("modalidadeRotulo", contrato.getModalidade().getRotulo());
+        mapa.put("status", contrato.getStatus().name());
+        mapa.put("statusRotulo", contrato.getStatus().getRotulo());
+        mapa.put("principal", contrato.getPrincipal());
+        mapa.put("saldoDevedor", contrato.getSaldoDevedor());
+        mapa.put("taxaMensal", contrato.getTaxaMensal());
+        mapa.put("taxaAnual", contrato.taxaAnual());
+        mapa.put("notaNaContratacao", contrato.getNotaNaContratacao().name());
+        mapa.put("prazoTurnos", contrato.getPrazoTurnos());
+        mapa.put("turnosRestantes", contrato.getTurnosRestantes());
+        mapa.put("turnoContratacao", contrato.getTurnoContratacao());
+        mapa.put("garantia", contrato.getGarantia());
+        mapa.put("jurosPagos", contrato.getJurosPagos());
+        mapa.put("amortizado", contrato.getAmortizado());
+        mapa.put("parcelasEmAtraso", contrato.getParcelasEmAtraso());
+        mapa.put("jurosDoMes", contrato.jurosDoMes());
+        mapa.put("amortizacaoDoMes", contrato.amortizacaoDoMes());
+        mapa.put("parcelaDoMes", contrato.parcelaDoMes());
         return mapa;
     }
 

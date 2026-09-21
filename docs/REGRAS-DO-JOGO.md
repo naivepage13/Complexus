@@ -179,6 +179,54 @@ A suavização de 40% evita saltos de preço entre turnos.
 - Contratar custa meio salário por pessoa; demitir custa um salário e desgasta
   a reputação.
 
+### 2.7.1 Crédito e dívida (`ServicoCredito`)
+
+Toda dívida é um **contrato** com prazo, taxa travada na contratação e
+amortização constante (SAC): `amortização = saldo / turnos restantes`,
+`juros = saldo × taxa mensal`. A parcela começa alta e cai a cada turno.
+
+**Nota de crédito.** Um score de 0 a 100 define a faixa de risco:
+
+| Componente | Peso | Como pontua |
+|---|---|---|
+| Alavancagem | 35% | 100 pontos sem dívida, 0 com dívida em 2,5x o patrimônio líquido |
+| Cobertura de juros | 30% | 100 pontos quando o lucro anual cobre 6x os juros |
+| Lastro patrimonial | 15% | o índice de lastro da empresa |
+| Histórico de pagamento | 20% | −25 pontos por parcela em atraso |
+
+| Nota | Score | Spread de risco | Fator de limite |
+|---|---|---|---|
+| A | ≥ 75 | +2,0% a.a. | 100% |
+| B | ≥ 55 | +5,0% a.a. | 80% |
+| C | ≥ 35 | +9,0% a.a. | 50% |
+| D | < 35 | +15,0% a.a. | 25% |
+
+**Linhas.** `taxa = Selic do turno + spread da linha + spread da nota`:
+
+| Linha | Spread | Prazo | Limite | Garantia |
+|---|---|---|---|---|
+| Capital de giro | +4,0% | 3 a 18 turnos | 30% do PL | não |
+| Investimento | +2,0% | 12 a 60 turnos | 70% do PL | 1,3x em patrimônio |
+| Antecipação de recebíveis | +7,0% | 1 a 6 turnos | 25% do PL, teto de 3x a receita | não |
+| Crédito rotativo | +22,0% | 6 turnos | 40% do PL | não (só automático) |
+
+O limite é agregado: toda a dívida já contratada consome o espaço, em qualquer
+linha. Endividar demais não bloqueia o crédito — encarece.
+
+**Ordem no turno.** Os juros entram como despesa no resultado; depois o lucro
+cai no caixa; então a **amortização sai do caixa antes do dividendo** (credor
+antes de sócio); por último, caixa negativo vira crédito rotativo automático.
+
+**Inadimplência.** Sem caixa para a amortização, a parcela vira atraso: multa de
+2% mais mora de 1% sobre o saldo, reputação −2 por contrato atrasado. Na
+terceira parcela seguida, a linha com garantia executa o patrimônio dado em
+garantia (perda rateada entre as unidades, reputação −8). Na quarta, a empresa
+vai à falência.
+
+**Alívio.** Amortização antecipada reduz o saldo e, com ele, os juros futuros.
+Renegociar alonga o prazo, soma 1% de comissão ao saldo, acrescenta 3% a.a. à
+taxa e zera a contagem de atraso.
+
 ### 2.8 Empreendimentos (imobiliário e construção)
 - Custo total dividido em parcelas iguais pelos turnos de obra.
 - Sem caixa para a parcela, o prazo escorrega um turno.
