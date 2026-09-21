@@ -17,15 +17,17 @@ package com.complexus.economia;
  *       entrega (teto de producao pelo lado da equipe);</li>
  *   <li>{@code elasticidadeRenda} - sensibilidade da demanda a renda media;</li>
  *   <li>{@code elasticidadeJuros} - sensibilidade da demanda a taxa de juros;</li>
+ *   <li>{@code elasticidadePreco} - quanto a demanda recua quando a empresa
+ *       cobra acima do preco de referencia do setor;</li>
  *   <li>{@code multiploValuation} - multiplo de lucro anual usado no valuation;</li>
  *   <li>{@code capitalMinimo} - capital exigido para abrir a empresa.</li>
  * </ul>
  */
 public enum Setor {
 
-    ALIMENTICIO("Alimenticio", 0.42, 0.05, 0.22, 18_000.0, 0.35, 0.10, 9.0, 250_000.0),
-    IMOBILIARIO("Imobiliario", 0.34, 0.11, 0.06, 45_000.0, 0.70, 0.85, 12.0, 1_200_000.0),
-    CONSTRUCAO("Construcao", 0.33, 0.09, 0.12, 30_000.0, 0.45, 0.65, 8.0, 800_000.0);
+    ALIMENTICIO("Alimenticio", 0.42, 0.05, 0.22, 18_000.0, 0.35, 0.10, 1.60, 9.0, 250_000.0),
+    IMOBILIARIO("Imobiliario", 0.34, 0.11, 0.06, 45_000.0, 0.70, 0.85, 0.90, 12.0, 1_200_000.0),
+    CONSTRUCAO("Construcao", 0.33, 0.09, 0.12, 30_000.0, 0.45, 0.65, 1.20, 8.0, 800_000.0);
 
     private final String rotulo;
     private final double margemBase;
@@ -34,12 +36,13 @@ public enum Setor {
     private final double receitaPorFuncionario;
     private final double elasticidadeRenda;
     private final double elasticidadeJuros;
+    private final double elasticidadePreco;
     private final double multiploValuation;
     private final double capitalMinimo;
 
     Setor(String rotulo, double margemBase, double volatilidade, double giroAtivoMensal,
           double receitaPorFuncionario, double elasticidadeRenda, double elasticidadeJuros,
-          double multiploValuation, double capitalMinimo) {
+          double elasticidadePreco, double multiploValuation, double capitalMinimo) {
         this.rotulo = rotulo;
         this.margemBase = margemBase;
         this.volatilidade = volatilidade;
@@ -47,6 +50,7 @@ public enum Setor {
         this.receitaPorFuncionario = receitaPorFuncionario;
         this.elasticidadeRenda = elasticidadeRenda;
         this.elasticidadeJuros = elasticidadeJuros;
+        this.elasticidadePreco = elasticidadePreco;
         this.multiploValuation = multiploValuation;
         this.capitalMinimo = capitalMinimo;
     }
@@ -63,6 +67,12 @@ public enum Setor {
     }
     public double getElasticidadeRenda() { return elasticidadeRenda; }
     public double getElasticidadeJuros() { return elasticidadeJuros; }
+    public double getElasticidadePreco() { return elasticidadePreco; }
     public double getMultiploValuation() { return multiploValuation; }
     public double getCapitalMinimo() { return capitalMinimo; }
+
+    /** Capital minimo para abrir uma filial: um quarto do exigido para fundar a empresa. */
+    public double capitalMinimoUnidade() {
+        return capitalMinimo * 0.25;
+    }
 }

@@ -3,15 +3,22 @@ package com.complexus.core;
 import com.complexus.auditoria.ServicoAuditoria;
 import com.complexus.config.PropriedadesJogo;
 import com.complexus.economia.ContextoMercado;
+import com.complexus.economia.Departamento;
 import com.complexus.economia.Empreendimento;
 import com.complexus.economia.Empresa;
 import com.complexus.economia.HistoricoEmpresa;
+import com.complexus.economia.LinhaProduto;
 import com.complexus.economia.MotorSimulacao;
+import com.complexus.economia.PerfilOperacional;
 import com.complexus.economia.RepositorioEmpreendimento;
 import com.complexus.economia.RepositorioEmpresa;
 import com.complexus.economia.RepositorioHistoricoEmpresa;
+import com.complexus.economia.RepositorioUnidade;
 import com.complexus.economia.ResultadoMensal;
+import com.complexus.economia.ResultadoOperacional;
+import com.complexus.economia.ServicoEstrutura;
 import com.complexus.economia.Setor;
+import com.complexus.economia.Unidade;
 import com.complexus.estatistica.ServicoEstatistica;
 import com.complexus.estatistica.SnapshotTurno;
 import com.complexus.integracao.ClienteAnalitico;
@@ -48,10 +55,14 @@ import org.springframework.transaction.annotation.Transactional;
  *   <li>busca os choques setoriais no servico analitico (Python);</li>
  *   <li>executa a rotina politica (apuracao, sancao, mandatos);</li>
  *   <li>executa os gastos publicos recorrentes;</li>
- *   <li>simula todas as empresas e distribui dividendos;</li>
+ *   <li>simula todas as unidades e fecha o resultado de cada empresa;</li>
  *   <li>recalcula os agregados macroeconomicos;</li>
  *   <li>consolida as estatisticas e fecha a linha de auditoria do turno.</li>
  * </ol>
+ *
+ * A simulacao acontece por unidade: quem disputa o mercado de uma cidade e a
+ * filial instalada nela. O fechamento acontece por empresa, uma vez, com juros,
+ * estrutura administrativa, imposto sobre o lucro e dividendos.
  */
 @Service
 public class ServicoTurno {
@@ -60,16 +71,20 @@ public class ServicoTurno {
 
     private static final double RENDA_REFERENCIA = 3200.0;
     private static final double DEPRECIACAO_PRODUTIVIDADE = 0.995;
+    private static final double PRODUTIVIDADE_MINIMA = 0.4;
+    private static final double PRODUTIVIDADE_MAXIMA = 2.0;
     private static final double LIMITE_ALAVANCAGEM_FALENCIA = 2.5;
 
     private final ServicoEstadoJogo estadoJogo;
     private final RepositorioEmpresa repositorioEmpresa;
     private final RepositorioHistoricoEmpresa repositorioHistorico;
     private final RepositorioEmpreendimento repositorioEmpreendimento;
+    private final RepositorioUnidade repositorioUnidade;
     private final RepositorioPais repositorioPais;
     private final RepositorioEstado repositorioEstado;
     private final RepositorioMunicipio repositorioMunicipio;
     private final MotorSimulacao motor;
+    private final ServicoEstrutura servicoEstrutura;
     private final ServicoPolitica servicoPolitica;
     private final ServicoInvestimento servicoInvestimento;
     private final ServicoEstatistica servicoEstatistica;
@@ -82,10 +97,12 @@ public class ServicoTurno {
                         RepositorioEmpresa repositorioEmpresa,
                         RepositorioHistoricoEmpresa repositorioHistorico,
                         RepositorioEmpreendimento repositorioEmpreendimento,
+                        RepositorioUnidade repositorioUnidade,
                         RepositorioPais repositorioPais,
                         RepositorioEstado repositorioEstado,
                         RepositorioMunicipio repositorioMunicipio,
                         MotorSimulacao motor,
+                        ServicoEstrutura servicoEstrutura,
                         ServicoPolitica servicoPolitica,
                         ServicoInvestimento servicoInvestimento,
                         ServicoEstatistica servicoEstatistica,
@@ -97,10 +114,12 @@ public class ServicoTurno {
         this.repositorioEmpresa = repositorioEmpresa;
         this.repositorioHistorico = repositorioHistorico;
         this.repositorioEmpreendimento = repositorioEmpreendimento;
+        this.repositorioUnidade = repositorioUnidade;
         this.repositorioPais = repositorioPais;
         this.repositorioEstado = repositorioEstado;
         this.repositorioMunicipio = repositorioMunicipio;
         this.motor = motor;
+        this.servicoEstrutura = servicoEstrutura;
         this.servicoPolitica = servicoPolitica;
         this.servicoInvestimento = servicoInvestimento;
         this.servicoEstatistica = servicoEstatistica;
@@ -161,6 +180,7 @@ public class ServicoTurno {
         relatorio.put("dataJogo", estado.getDataJogo().toString());
         relatorio.put("origem", origem);
         relatorio.put("empresasProcessadas", economia.empresas);
+        relatorio.put("unidadesProcessadas", economia.unidades);
         relatorio.put("falencias", economia.falencias);
         relatorio.put("receitaAgregada", economia.receita);
         relatorio.put("lucroAgregado", economia.lucro);
@@ -211,49 +231,110 @@ public class ServicoTurno {
     }
 
     /**
-     * Simula todas as empresas ativas. As empresas do mesmo setor e municipio
-     * disputam o mesmo mercado: a participacao de cada uma sai da competitividade
-     * relativa dentro do grupo.
+     * Simula todas as unidades ativas e fecha o resultado das empresas.
+     *
+     * As unidades do mesmo setor e municipio disputam o mesmo mercado: a
+     * participacao de cada uma sai da competitividade relativa dentro do grupo.
+     * Duas filiais da mesma empresa em cidades diferentes nao competem entre si.
      */
     private ResumoEconomico simularEmpresas(int turno, ContextoMercado contexto, Pais pais) {
         ResumoEconomico resumo = new ResumoEconomico();
-        List<Empresa> empresas = repositorioEmpresa.findByAtivaTrue();
+        List<Unidade> unidades = repositorioUnidade.findByAtivaTrueAndEmpresaAtivaTrue();
 
-        Map<String, List<Empresa>> grupos = new HashMap<>();
-        for (Empresa empresa : empresas) {
-            String chave = empresa.getMunicipio().getId() + ":" + empresa.getSetor().name();
-            grupos.computeIfAbsent(chave, k -> new ArrayList<>()).add(empresa);
+        Map<Long, EstruturaEmpresa> estruturas = new HashMap<>();
+        Map<Long, FechamentoEmpresa> fechamentos = new LinkedHashMap<>();
+        Map<String, List<Unidade>> grupos = new HashMap<>();
+        for (Unidade unidade : unidades) {
+            String chave = unidade.getMunicipio().getId() + ":" + unidade.getEmpresa().getSetor().name();
+            grupos.computeIfAbsent(chave, k -> new ArrayList<>()).add(unidade);
         }
 
-        for (List<Empresa> grupo : grupos.values()) {
+        for (List<Unidade> grupo : grupos.values()) {
             Municipio municipio = grupo.get(0).getMunicipio();
             Estado estado = municipio.getEstado();
-            Setor setor = grupo.get(0).getSetor();
+            Setor setor = grupo.get(0).getEmpresa().getSetor();
             double mercadoPotencial = motor.mercadoPotencial(setor, municipio, estado, pais);
-            double somaCapacidades = grupo.stream().mapToDouble(motor::capacidadeProdutiva).sum();
+
+            Map<Long, PerfilOperacional> perfis = new LinkedHashMap<>();
+            double somaCapacidades = 0;
+            double somaCompetitividade = 0;
+            for (Unidade unidade : grupo) {
+                EstruturaEmpresa estrutura = estruturas.computeIfAbsent(unidade.getEmpresa().getId(),
+                        id -> EstruturaEmpresa.de(unidade.getEmpresa(), servicoEstrutura));
+                PerfilOperacional perfil = servicoEstrutura.perfil(unidade, unidade.getEmpresa(),
+                        estrutura.fatorPreco, estrutura.fatorCusto, estrutura.bonusComercial);
+                perfis.put(unidade.getId(), perfil);
+                somaCapacidades += motor.capacidadeProdutiva(perfil);
+                somaCompetitividade += motor.competitividade(perfil);
+            }
             double mercado = motor.mercadoDisputavel(mercadoPotencial, somaCapacidades);
 
-            double somaCompetitividade = grupo.stream().mapToDouble(motor::competitividade).sum();
-            for (Empresa empresa : grupo) {
+            for (Unidade unidade : grupo) {
+                PerfilOperacional perfil = perfis.get(unidade.getId());
                 double participacao = somaCompetitividade <= 0
                         ? 1.0 / grupo.size()
-                        : motor.competitividade(empresa) / somaCompetitividade;
-                processarEmpresa(turno, empresa, mercado, participacao, contexto, estado, municipio, pais, resumo);
+                        : motor.competitividade(perfil) / somaCompetitividade;
+                processarUnidade(turno, unidade, perfil, mercado, participacao, contexto,
+                        estado, municipio, pais, fechamentos, resumo);
             }
+        }
+
+        for (FechamentoEmpresa fechamento : fechamentos.values()) {
+            fecharEmpresa(turno, fechamento, contexto, pais,
+                    estruturas.get(fechamento.empresa.getId()), resumo);
         }
         repositorioPais.save(pais);
         return resumo;
     }
 
-    private void processarEmpresa(int turno, Empresa empresa, double mercado, double participacao,
-                                  ContextoMercado contexto, Estado estado, Municipio municipio,
-                                  Pais pais, ResumoEconomico resumo) {
+    /** Roda o mes de uma unidade e guarda o resultado para o fechamento da empresa. */
+    private void processarUnidade(int turno, Unidade unidade, PerfilOperacional perfil,
+                                  double mercado, double participacao, ContextoMercado contexto,
+                                  Estado estado, Municipio municipio, Pais pais,
+                                  Map<Long, FechamentoEmpresa> fechamentos, ResumoEconomico resumo) {
 
+        Empresa empresa = unidade.getEmpresa();
         double subsidio = servicoPolitica.subsidioVigente(empresa.getSetor(), estado.getId());
         double regulacao = servicoPolitica.regulacaoVigente(empresa.getSetor(), estado.getId());
 
-        ResultadoMensal resultado = motor.simularMes(empresa, mercado, participacao, contexto,
-                estado, municipio, pais, subsidio, regulacao);
+        ResultadoOperacional resultado = motor.simularOperacao(perfil, mercado, participacao,
+                contexto, estado, municipio, subsidio, regulacao);
+
+        unidade.setReceitaMensal(resultado.receita());
+        unidade.setCustoMensal(resultado.custoOperacional());
+        unidade.setMargemOperacional(resultado.margemOperacional());
+        unidade.setOcupacao(resultado.ocupacao());
+        unidade.setMarketShare(mercado <= 0 ? 0 : resultado.receita() / mercado);
+        // Produtividade se desgasta todo mes; P&D e capex sao o que a sustenta.
+        unidade.setProdutividade(Math.max(unidade.getProdutividade() * DEPRECIACAO_PRODUTIVIDADE,
+                PRODUTIVIDADE_MINIMA));
+        repositorioUnidade.save(unidade);
+
+        // Tributo indireto fica onde a unidade opera, nao onde fica a sede.
+        distribuirTributoIndireto(turno, empresa, resultado.impostoIndireto(), estado, municipio);
+        if (resultado.subsidioRecebido() > 0) {
+            pais.setTesouro(pais.getTesouro() - resultado.subsidioRecebido());
+            razao.registrar(turno, TipoLancamento.SUBSIDIO, "tesouro_nacional",
+                    "unidade:" + unidade.getId(), resultado.subsidioRecebido(), empresa.getId(),
+                    null, "Subsidio setorial no turno " + turno);
+        }
+
+        fechamentos.computeIfAbsent(empresa.getId(), id -> new FechamentoEmpresa(empresa))
+                .adicionar(resultado, mercado);
+        resumo.unidades++;
+        resumo.empregos += unidade.getFuncionarios();
+    }
+
+    /**
+     * Fecha o mes da empresa: soma as unidades, cobra juros e estrutura, apura o
+     * imposto sobre o lucro, distribui dividendos e reavalia a companhia.
+     */
+    private void fecharEmpresa(int turno, FechamentoEmpresa fechamento, ContextoMercado contexto,
+                               Pais pais, EstruturaEmpresa estrutura, ResumoEconomico resumo) {
+        Empresa empresa = fechamento.empresa;
+        double juros = empresa.getDivida() * contexto.taxaJurosAnual() / 12.0;
+        ResultadoMensal resultado = motor.consolidar(fechamento.operacoes, juros,
+                estrutura.custoEstrutura, pais.getAliquotaImpostoEmpresarial());
 
         double lucroAnterior = empresa.getLucroMensal();
         double impostosTotais = resultado.impostoIndireto() + resultado.impostoRenda();
@@ -264,17 +345,22 @@ public class ServicoTurno {
         empresa.setLucroMensal(resultado.lucro());
         empresa.setCrescimentoLucro(motor.calcularCrescimento(resultado.lucro(), lucroAnterior));
         empresa.setLucroAcumulado(empresa.getLucroAcumulado() + resultado.lucro());
-        empresa.setMarketShare(participacao);
+        empresa.setMarketShare(fechamento.mercadoTotal <= 0
+                ? 0 : resultado.receita() / fechamento.mercadoTotal);
         empresa.setCaixa(empresa.getCaixa() + resultado.lucro());
-        empresa.setProdutividade(Math.max(empresa.getProdutividade() * DEPRECIACAO_PRODUTIVIDADE, 0.4));
-        empresa.setReputacao(novaReputacao(empresa, resultado));
+        empresa.setReputacao(novaReputacao(empresa, resultado, estrutura));
+        aplicarPesquisa(empresa, estrutura);
 
-        distribuirTributos(turno, empresa, resultado, pais, estado, municipio);
-        if (resultado.subsidioRecebido() > 0) {
-            pais.setTesouro(pais.getTesouro() - resultado.subsidioRecebido());
-            razao.registrar(turno, TipoLancamento.SUBSIDIO, "tesouro_nacional",
-                    "empresa:" + empresa.getId(), resultado.subsidioRecebido(), empresa.getId(),
-                    null, "Subsidio setorial no turno " + turno);
+        if (resultado.impostoRenda() > 0) {
+            pais.setTesouro(pais.getTesouro() + resultado.impostoRenda());
+            razao.registrar(turno, TipoLancamento.IMPOSTO, "empresa:" + empresa.getId(),
+                    "tesouro_nacional", resultado.impostoRenda(), empresa.getId(), null,
+                    "Imposto sobre o lucro do turno " + turno);
+        }
+        if (estrutura.custoEstrutura > 0) {
+            razao.registrar(turno, TipoLancamento.CUSTO_OPERACIONAL, "empresa:" + empresa.getId(),
+                    "estrutura_administrativa", estrutura.custoEstrutura, empresa.getId(), null,
+                    "Departamentos no turno " + turno);
         }
 
         double dividendos = servicoInvestimento.distribuirDividendos(empresa, resultado.lucro(), turno);
@@ -300,44 +386,59 @@ public class ServicoTurno {
         resumo.lucro += resultado.lucro();
         resumo.impostos += impostosTotais;
         resumo.dividendos += dividendos;
-        resumo.empregos += empresa.getFuncionarios();
         if (faliu) {
             resumo.falencias++;
         }
     }
 
-    /** Reputacao sobe com operacao saudavel e marketing, e cai com ociosidade. */
-    private double novaReputacao(Empresa empresa, ResultadoMensal resultado) {
+    /**
+     * Reputacao sobe com operacao saudavel, marketing e qualidade, e cai com
+     * ociosidade ou prejuizo.
+     */
+    private double novaReputacao(Empresa empresa, ResultadoMensal resultado, EstruturaEmpresa estrutura) {
         double efeitoOcupacao = (resultado.ocupacao() - 0.75) * 3.0;
         double efeitoMarketing = resultado.receita() <= 0
                 ? 0
                 : Math.min(empresa.getMarketingMensal() / resultado.receita(), 0.15) * 20.0;
         double efeitoPrejuizo = resultado.lucro() < 0 ? -1.5 : 0.5;
-        double nova = empresa.getReputacao() + efeitoOcupacao + efeitoMarketing + efeitoPrejuizo;
+        double nova = empresa.getReputacao() + efeitoOcupacao + efeitoMarketing + efeitoPrejuizo
+                + estrutura.ganhoQualidade;
         return Math.clamp(nova, 0, 100);
     }
 
-    /** Divide os tributos entre os tres niveis de governo. */
-    private void distribuirTributos(int turno, Empresa empresa, ResultadoMensal resultado,
-                                    Pais pais, Estado estado, Municipio municipio) {
-        double indireto = resultado.impostoIndireto();
-        double renda = resultado.impostoRenda();
-        if (indireto <= 0 && renda <= 0) {
+    /**
+     * Pesquisa e desenvolvimento eleva a produtividade de todas as unidades,
+     * compensando o desgaste mensal.
+     */
+    private void aplicarPesquisa(Empresa empresa, EstruturaEmpresa estrutura) {
+        if (estrutura.ganhoPesquisa <= 0) {
             return;
         }
-        // Tributo indireto fica com estado e municipio; imposto de renda e federal.
+        for (Unidade unidade : servicoEstrutura.unidades(empresa.getId())) {
+            unidade.setProdutividade(Math.min(unidade.getProdutividade() + estrutura.ganhoPesquisa,
+                    PRODUTIVIDADE_MAXIMA));
+            repositorioUnidade.save(unidade);
+        }
+        servicoEstrutura.sincronizarAgregados(empresa);
+    }
+
+    /** Divide o tributo indireto entre o estado e o municipio da unidade. */
+    private void distribuirTributoIndireto(int turno, Empresa empresa, double indireto,
+                                           Estado estado, Municipio municipio) {
+        if (indireto <= 0) {
+            return;
+        }
         double parteEstadual = indireto * 0.7;
         double parteMunicipal = indireto * 0.3;
 
         estado.setTesouro(estado.getTesouro() + parteEstadual);
         municipio.setTesouro(municipio.getTesouro() + parteMunicipal);
-        pais.setTesouro(pais.getTesouro() + renda);
         repositorioEstado.save(estado);
         repositorioMunicipio.save(municipio);
 
         razao.registrar(turno, TipoLancamento.IMPOSTO, "empresa:" + empresa.getId(),
-                "tesouros_publicos", indireto + renda, empresa.getId(), null,
-                "Tributos do turno " + turno);
+                "tesouros_locais:" + municipio.getNome(), indireto, empresa.getId(), null,
+                "Tributos do turno " + turno + " em " + municipio.getNome());
     }
 
     /** Caixa negativo vira divida automatica com juros de mercado. */
@@ -413,7 +514,7 @@ public class ServicoTurno {
             if (obra.getTurnosRestantes() <= 0) {
                 obra.setStatus(Empreendimento.StatusEmpreendimento.CONCLUIDO);
                 obra.setTurnoConclusao(turno);
-                empresa.setPatrimonio(empresa.getPatrimonio() + obra.getValorEstimado());
+                entregarObra(obra, empresa);
                 razao.registrar(turno, TipoLancamento.ENTREGA_OBRA, "obra:" + obra.getId(),
                         "empresa:" + empresa.getId(), obra.getValorEstimado(), empresa.getId(), null,
                         "Entrega da obra " + obra.getNome());
@@ -424,6 +525,16 @@ public class ServicoTurno {
             repositorioEmpreendimento.save(obra);
             repositorioEmpresa.save(empresa);
         }
+    }
+
+    /** A obra entregue vira patrimonio da unidade que a tocou (ou da sede). */
+    private void entregarObra(Empreendimento obra, Empresa empresa) {
+        Unidade unidade = obra.getUnidade() != null && obra.getUnidade().isAtiva()
+                ? obra.getUnidade()
+                : servicoEstrutura.sede(empresa.getId());
+        unidade.setPatrimonio(unidade.getPatrimonio() + obra.getValorEstimado());
+        repositorioUnidade.save(unidade);
+        servicoEstrutura.sincronizarAgregados(empresa);
     }
 
     /**
@@ -458,9 +569,57 @@ public class ServicoTurno {
         repositorioPais.save(pais);
     }
 
+    // ------------------------------------------------------------------
+    // Estruturas internas do turno
+    // ------------------------------------------------------------------
+
+    /**
+     * Decisoes de estrutura da empresa ja convertidas em numero, calculadas uma
+     * vez por turno e reaproveitadas por todas as unidades da companhia.
+     */
+    private static final class EstruturaEmpresa {
+        private double fatorPreco = 1.0;
+        private double fatorCusto = 1.0;
+        private double bonusComercial;
+        private double custoEstrutura;
+        private double ganhoPesquisa;
+        private double ganhoQualidade;
+
+        private static EstruturaEmpresa de(Empresa empresa, ServicoEstrutura servico) {
+            List<LinhaProduto> linhas = servico.linhas(empresa.getId());
+            List<Departamento> departamentos = servico.departamentos(empresa.getId());
+            EstruturaEmpresa estrutura = new EstruturaEmpresa();
+            estrutura.fatorPreco = servico.fatorPrecoDoMix(linhas);
+            estrutura.fatorCusto = servico.fatorCustoDoMix(linhas)
+                    * (1 - servico.efeitoDepartamento(departamentos, Departamento.Area.LOGISTICA, empresa));
+            estrutura.bonusComercial = servico.efeitoDepartamento(departamentos, Departamento.Area.COMERCIAL, empresa);
+            estrutura.ganhoPesquisa = servico.efeitoDepartamento(departamentos, Departamento.Area.PESQUISA, empresa);
+            estrutura.ganhoQualidade = servico.efeitoDepartamento(departamentos, Departamento.Area.QUALIDADE, empresa);
+            estrutura.custoEstrutura = servico.custoEstrutura(departamentos);
+            return estrutura;
+        }
+    }
+
+    /** Resultados das unidades de uma empresa, aguardando o fechamento. */
+    private static final class FechamentoEmpresa {
+        private final Empresa empresa;
+        private final List<ResultadoOperacional> operacoes = new ArrayList<>();
+        private double mercadoTotal;
+
+        private FechamentoEmpresa(Empresa empresa) {
+            this.empresa = empresa;
+        }
+
+        private void adicionar(ResultadoOperacional resultado, double mercado) {
+            operacoes.add(resultado);
+            mercadoTotal += mercado;
+        }
+    }
+
     /** Acumulador interno do turno. */
     private static final class ResumoEconomico {
         private int empresas;
+        private int unidades;
         private int falencias;
         private int empregos;
         private double receita;

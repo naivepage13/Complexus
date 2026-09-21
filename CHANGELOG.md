@@ -4,6 +4,54 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 Este arquivo é a linha de auditoria do desenvolvimento: nenhuma entrega entra
 sem uma linha aqui. Ver também [docs/RELATORIO.md](docs/RELATORIO.md).
 
+## [0.4.0] - 2026-09-21
+
+A empresa deixa de ser uma caixa unica: passa a ter unidades, linhas de produto
+e departamentos. Primeira parte da administracao de empresas.
+
+### Adicionado
+- **Unidades** (`Unidade`): patrimonio, equipe e produtividade por municipio.
+  Quem disputa o mercado de uma cidade e a unidade instalada nela; os totais da
+  empresa sao sempre a soma das unidades ativas.
+  - abrir filial (capital + 8% de instalacao + meio salario por admissao);
+  - fechar filial (liquida 70% dos ativos, paga rescisao, custa 3 pontos de
+    reputacao) - a ultima unidade nao pode ser fechada;
+  - transferir capital (8% de perda na mudanca) e equipe (30% do salario de
+    ajuda de custo) entre unidades.
+- **Linhas de produto** (`LinhaProduto`) com posicionamento popular, medio ou
+  premium. O mix define o preco praticado e o custo de insumo; a fatia nao
+  declarada fica no padrao do setor.
+- **Departamentos** (`Departamento`): P&D, qualidade, comercial e logistica, com
+  orcamento mensal, efeito saturante calibrado pelo porte da empresa e custo
+  fixo cobrado todo turno.
+- **Elasticidade-preco por setor** (`Setor.elasticidadePreco`), dividida entre a
+  disputa por mercado e o tamanho da demanda capturada.
+- Rotas `/api/empresas/{id}/estrutura/**` para unidades, linhas e departamentos.
+- Secoes de unidades, linhas e departamentos na pagina da empresa, com
+  simulacao do desembolso antes de abrir uma filial.
+- `EstruturaDaEmpresaTest`: 9 testes cobrindo sede automatica, abertura e
+  fechamento de filial, limite do mix, saturacao de departamento e a igualdade
+  entre a receita da empresa e a soma das unidades.
+
+### Alterado
+- **Motor de simulacao separado em duas camadas**: `simularOperacao` fecha o mes
+  de cada unidade e `consolidar` fecha o mes da empresa. Juros, estrutura
+  administrativa e imposto sobre o lucro entram uma vez so, na companhia.
+- **Tributo indireto fica onde a unidade opera**, e nao onde fica a sede.
+- `POST /empresas/{id}/capital`, `/contratar`, `/demitir` e `/empreendimentos`
+  aceitam `unidadeId`; sem ele, a operacao vai para a sede.
+- Empreendimento passou a pertencer a uma unidade: a obra entregue vira
+  patrimonio da filial que a tocou, mantendo o balanco igual a soma das unidades.
+- Diagnostico de capacidade passou a somar o gargalo de cada unidade, em vez de
+  comparar os totais da empresa - equipe sobrando em uma cidade nao produz em outra.
+- `Empresa.exigirControleDe` centraliza a checagem de dono, usada por todos os
+  servicos que administram a empresa.
+
+### Migracao
+- Empresas criadas antes das unidades recebem uma sede automatica na subida da
+  aplicacao, carregando o patrimonio e a equipe que estavam na empresa. Nenhum
+  numero do balanco muda e a partida em andamento continua de onde parou.
+
 ## [0.3.0] - 2026-09-21
 
 O projeto passa a se chamar **Complexus**. Sem mudanca de comportamento: e

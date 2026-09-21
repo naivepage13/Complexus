@@ -71,9 +71,12 @@ legado/            prototipo original preservado
 | `pais`, `estado_federativo`, `municipio` | Territórios e seus indicadores fiscais e sociais |
 | `mandato` | Ocupação de cargo por jogador ou NPC, com prazo e aprovação |
 | `projeto_lei`, `voto_projeto` | Tramitação legislativa e votos nominais |
-| `empresa` | Balanço, operação e posição de mercado |
+| `empresa` | Balanço, operação e posição de mercado (totais = soma das unidades) |
+| `unidade` | Filial: patrimônio, equipe e produtividade em um município |
+| `linha_produto` | Mix de posicionamento que define preço e custo de insumo |
+| `departamento` | Orçamento mensal por área administrativa |
 | `historico_empresa` | Resultado de cada empresa em cada turno |
-| `empreendimento` | Obras em andamento dos setores imobiliário e construção |
+| `empreendimento` | Obras em andamento dos setores imobiliário e construção, ligadas à unidade que as toca |
 | `investimento` | Posição acionária de cada jogador |
 | `lancamento_financeiro` | Livro-razão: toda movimentação de dinheiro |
 | `evento_auditoria` | Linha de auditoria encadeada por hash |
@@ -92,7 +95,8 @@ evita três colunas de chave estrangeira e mantém o mesmo código para as três
 2. busca choques setoriais no Python (fallback local em caso de falha);
 3. rotina política: apuração, sanções pendentes, renovação de mandatos;
 4. gastos públicos recorrentes (programa social, infraestrutura);
-5. simulação das empresas agrupadas por município e setor, com dividendos;
+5. simulação das **unidades** agrupadas por município e setor, seguida do
+   fechamento de cada empresa (juros, estrutura, imposto de renda e dividendos);
 6. andamento das obras;
 7. recálculo macroeconômico;
 8. consolidação das estatísticas e registro do evento `TURNO_PROCESSADO`.

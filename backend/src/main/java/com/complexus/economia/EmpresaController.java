@@ -23,10 +23,11 @@ public class EmpresaController {
                                   @NotNull Long municipioId, double capitalInicial, int funcionarios) {
     }
 
-    public record ValorRequest(@NotNull Long jogadorId, double valor) {
+    /** {@code unidadeId} e opcional: sem ele a operacao vai para a sede. */
+    public record ValorRequest(@NotNull Long jogadorId, double valor, Long unidadeId) {
     }
 
-    public record QuantidadeRequest(@NotNull Long jogadorId, int quantidade) {
+    public record QuantidadeRequest(@NotNull Long jogadorId, int quantidade, Long unidadeId) {
     }
 
     public record GestaoRequest(@NotNull Long jogadorId, Double marketingMensal,
@@ -38,13 +39,15 @@ public class EmpresaController {
 
     public record ObraRequest(@NotNull Long jogadorId, String nome,
                               @NotNull Empreendimento.TipoEmpreendimento tipo,
-                              double custoTotal, int turnosTotais) {
+                              double custoTotal, int turnosTotais, Long unidadeId) {
     }
 
     private final ServicoEmpresa servico;
+    private final ServicoEstrutura estrutura;
 
-    public EmpresaController(ServicoEmpresa servico) {
+    public EmpresaController(ServicoEmpresa servico, ServicoEstrutura estrutura) {
         this.servico = servico;
+        this.estrutura = estrutura;
     }
 
     /** Catalogo de setores com os parametros que o jogador precisa conhecer. */
@@ -89,6 +92,10 @@ public class EmpresaController {
         resposta.put("empreendimentos",
                 Mapeadores.lista(servico.empreendimentos(id), Mapeadores::empreendimento));
         resposta.put("capacidade", servico.diagnosticoCapacidade(id));
+        resposta.put("unidades", Mapeadores.lista(estrutura.unidades(id), Mapeadores::unidade));
+        resposta.put("linhas", Mapeadores.lista(estrutura.linhas(id), Mapeadores::linhaProduto));
+        resposta.put("departamentos",
+                Mapeadores.lista(estrutura.departamentos(id), Mapeadores::departamento));
         return resposta;
     }
 
@@ -107,17 +114,20 @@ public class EmpresaController {
 
     @PostMapping("/{id}/capital")
     public Map<String, Object> investirCapital(@PathVariable Long id, @RequestBody ValorRequest requisicao) {
-        return Mapeadores.empresa(servico.investirCapital(id, requisicao.jogadorId(), requisicao.valor()));
+        return Mapeadores.empresa(servico.investirCapital(id, requisicao.jogadorId(),
+                requisicao.valor(), requisicao.unidadeId()));
     }
 
     @PostMapping("/{id}/contratar")
     public Map<String, Object> contratar(@PathVariable Long id, @RequestBody QuantidadeRequest requisicao) {
-        return Mapeadores.empresa(servico.contratar(id, requisicao.jogadorId(), requisicao.quantidade()));
+        return Mapeadores.empresa(servico.contratar(id, requisicao.jogadorId(),
+                requisicao.quantidade(), requisicao.unidadeId()));
     }
 
     @PostMapping("/{id}/demitir")
     public Map<String, Object> demitir(@PathVariable Long id, @RequestBody QuantidadeRequest requisicao) {
-        return Mapeadores.empresa(servico.demitir(id, requisicao.jogadorId(), requisicao.quantidade()));
+        return Mapeadores.empresa(servico.demitir(id, requisicao.jogadorId(),
+                requisicao.quantidade(), requisicao.unidadeId()));
     }
 
     @PostMapping("/{id}/gestao")
@@ -139,6 +149,7 @@ public class EmpresaController {
     @PostMapping("/{id}/empreendimentos")
     public Map<String, Object> iniciarEmpreendimento(@PathVariable Long id, @RequestBody ObraRequest requisicao) {
         return Mapeadores.empreendimento(servico.iniciarEmpreendimento(id, requisicao.jogadorId(),
-                requisicao.nome(), requisicao.tipo(), requisicao.custoTotal(), requisicao.turnosTotais()));
+                requisicao.nome(), requisicao.tipo(), requisicao.custoTotal(),
+                requisicao.turnosTotais(), requisicao.unidadeId()));
     }
 }

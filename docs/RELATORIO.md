@@ -5,12 +5,12 @@
 
 | Campo | Valor |
 |---|---|
-| Versão atual | **0.3.0** |
+| Versão atual | **0.4.0** |
 | Data da última atualização | 21/09/2026 |
 | Repositório | [naivepage13/Complexus](https://github.com/naivepage13/Complexus) |
-| Branch | `claude/business-country-management-game-4bbe6e` |
-| Estado | Núcleo jogável: economia, política, investimentos, turnos e auditoria |
-| Cobertura de testes | 22 testes Java + 9 testes Python, todos verdes |
+| Branch | `claude/game-company-admin-system-331d1c` |
+| Estado | Núcleo jogável: economia, política, investimentos, turnos e auditoria, com administração de empresas por unidade |
+| Cobertura de testes | 31 testes Java + 9 testes Python, todos verdes |
 
 ---
 
@@ -48,11 +48,21 @@ Linha de auditoria em [AUDITORIA.md](AUDITORIA.md).
 ### 3.1 Economia e empresas
 - Três setores parametrizados (`Setor`): margem bruta, volatilidade, giro do
   ativo, receita por funcionário, múltiplo de valuation e capital mínimo.
-- Motor de simulação puro (`MotorSimulacao`) com mercado potencial por
-  município, competitividade relativa, **dois tetos de produção** (equipe e
-  patrimônio), custos, tributos, subsídios e valuation lastreado.
+- Motor de simulação puro (`MotorSimulacao`) em duas camadas: `simularOperacao`
+  fecha o mês de cada unidade (mercado potencial, competitividade relativa,
+  **dois tetos de produção**, preço praticado, custos e tributo indireto) e
+  `consolidar` fecha o mês da empresa (juros, estrutura e imposto sobre o lucro).
 - Ciclo completo de gestão: fundar, aportar capital, contratar, demitir,
   ajustar marketing/salário/payout, abrir capital, tocar empreendimentos.
+- **Estrutura interna da empresa** (0.4.0):
+  - **unidades** por município, com patrimônio, equipe e produtividade próprios;
+    é a unidade que disputa mercado, e os totais da empresa são a soma delas;
+  - abertura, fechamento com deságio e transferência de capital ou equipe entre
+    unidades, cada movimento com o seu custo;
+  - **linhas de produto** com posicionamento popular, médio ou premium, que
+    definem o preço praticado e o custo de insumo pelo mix;
+  - **departamentos** (P&D, qualidade, comercial e logística) com orçamento
+    mensal e retorno decrescente calibrado pelo porte da empresa.
 - Empreendimentos (obras) para imobiliário e construção, com prazo, parcelas,
   atraso por falta de caixa e entrega que vira patrimônio.
 - Endividamento automático com juros e falência por alavancagem excessiva.
@@ -122,13 +132,16 @@ Linha de auditoria em [AUDITORIA.md](AUDITORIA.md).
 
 | Verificação | Resultado |
 |---|---|
-| `mvn test` (backend) | 22 testes, 0 falhas |
+| `mvn test` (backend) | 31 testes, 0 falhas |
 | `python -m unittest` (analytics) | 9 testes, 0 falhas |
 | Subida da aplicação + carga do mundo | OK |
 | Fluxo ponta a ponta pela API | Empresa → turno → IPO → compra → dividendo → lei sancionada → auditoria íntegra |
 | Integração Java ↔ Python | `fonteModificadores: PYTHON` com o serviço no ar; `FALLBACK_JAVA` com ele desligado |
 | Renomeação para Complexus | Build, 22 testes, login de conta anterior e cadeia de auditoria íntegra após o rename |
 | Separação de visibilidade | `/api/admin/auditoria` responde 403 sem token e 200 com token; canal de atualizações sem hash, ator ou detalhe interno |
+| Estrutura por unidade (0.4.0) | Partida nova: empresa fundada com 2 unidades, turno processado com 8 empresas e 9 unidades, receita da empresa igual à soma das filiais (R$ 308 mil + R$ 66 mil) |
+| Migração da partida em andamento | Empresas anteriores às unidades recebem sede automática na subida, sem alterar nenhum número do balanço |
+| Interface da empresa | Abertura de filial pela página: caixa R$ 600 mil → R$ 262 mil, patrimônio R$ 1,4 mi → R$ 1,7 mi, equipe 40 → 50 |
 
 Balanceamento observado após a calibragem (7 empresas do mundo inicial):
 receita agregada ≈ R$ 3,9 mi/mês, lucro agregado ≈ R$ 150–235 mil/mês,
@@ -149,6 +162,10 @@ margem líquida de 4% a 6% e retorno sobre o capital investido entre 8% e 13% ao
 | D-09 | Jogador vê o canal de atualizações; auditoria é administrativa | A linha de auditoria expõe ator, hash e detalhes internos de todas as partidas |
 | D-10 | Resultado de empresa só na página da empresa, em gráfico | Evita transformar painel e listagens em relatório e mantém o número no contexto certo |
 | D-11 | Empresa de capital aberto publica resultado na vitrine de investimentos | Quem vende ação divulga balanço; sem isso o investidor decide no escuro |
+| D-12 | Unidade opera, empresa fecha o mês | Juros, estrutura e imposto de renda são da companhia; cobrá-los por filial tributaria cada unidade como se fosse uma empresa separada |
+| D-13 | Totais da empresa recalculados a partir das unidades | Um único lugar define patrimônio, equipe e produtividade, então nenhuma operação faz o balanço divergir da estrutura |
+| D-14 | Elasticidade-preço dividida entre disputa e demanda | Só na demanda, baixar preço não tiraria cliente do concorrente; só na disputa, o mercado inteiro seria insensível a preço |
+| D-15 | Efeito de departamento satura pelo porte | Sem isso, orçamento grande em empresa pequena compraria vantagem infinita |
 
 ## 6. Limitações conhecidas
 
@@ -161,6 +178,8 @@ margem líquida de 4% a 6% e retorno sobre o capital investido entre 8% e 13% ao
 | L-05 | Cadeia de auditoria depende de escrita em processo único | Vários servidores exigiriam trava distribuída | RNF-03 |
 | L-06 | Balanceamento é inicial | Pode exigir ajuste com jogadores reais | Parâmetros centralizados em `Setor` e `MotorSimulacao` |
 | L-07 | `GET /api/empresas/{id}` devolve o balanço completo de qualquer empresa | Um jogador curioso pode consultar o detalhe de um concorrente pela API | Depende de RNF-01: com autenticação, o detalhe completo fica restrito ao dono |
+| L-08 | Marketing e esforço comercial são rateados entre unidades pelo patrimônio | O jogador não escolhe onde concentrar a verba | Verba por unidade, se a estrutura mostrar que faz diferença no jogo |
+| L-09 | O mix de linhas vale para a empresa inteira | Não dá para vender premium em uma cidade e popular em outra | Mix por unidade, se a demanda local justificar |
 
 ## 7. Como rodar
 
@@ -180,6 +199,7 @@ token de `jogo.admin.token` (padrão `admin-local`).
 
 | Versão | Data | Entrega |
 |---|---|---|
+| 0.4.0 | 21/09/2026 | Estrutura interna da empresa: unidades por município, linhas de produto e departamentos, com o motor separado em operação (unidade) e fechamento (empresa) |
 | 0.3.0 | 21/09/2026 | Renomeação do projeto para Complexus em todas as camadas, com a partida local preservada |
 | 0.2.1 | 18/09/2026 | Separação de visibilidade: painel inicial enxuto, resultado de empresa em gráfico na própria página, canal de atualizações para o jogador e auditoria restrita à administração com token |
 | 0.2.0 | 18/09/2026 | Núcleo completo em Spring Boot: economia dos três setores, política das três esferas, investimentos lastreados, turnos automáticos, estatísticas, linha de auditoria e sete painéis novos |

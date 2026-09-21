@@ -52,6 +52,15 @@ public class Empreendimento {
     @JoinColumn(name = "empresa_id")
     private Empresa empresa;
 
+    /**
+     * Unidade que toca a obra. A entrega vira patrimonio dessa unidade, e nao
+     * de um total solto da empresa: e o que mantem o balanco igual a soma das
+     * filiais depois que a obra e concluida.
+     */
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "unidade_id")
+    private Unidade unidade;
+
     @Column(nullable = false, length = 120)
     private String nome;
 
@@ -87,6 +96,8 @@ public class Empreendimento {
     public void setId(Long id) { this.id = id; }
     public Empresa getEmpresa() { return empresa; }
     public void setEmpresa(Empresa empresa) { this.empresa = empresa; }
+    public Unidade getUnidade() { return unidade; }
+    public void setUnidade(Unidade unidade) { this.unidade = unidade; }
     public String getNome() { return nome; }
     public void setNome(String nome) { this.nome = nome; }
     public TipoEmpreendimento getTipo() { return tipo; }

@@ -3,6 +3,7 @@ package com.complexus.economia;
 import com.complexus.politica.Estado;
 import com.complexus.politica.Municipio;
 import com.complexus.politica.Pais;
+import java.util.List;
 import org.springframework.stereotype.Component;
 
 /**
@@ -12,11 +13,19 @@ import org.springframework.stereotype.Component;
  * Nao acessa banco nem altera entidades. Toda regra de calculo vive aqui para
  * que o balanceamento possa ser ajustado e testado em um unico lugar.
  *
+ * <h2>Duas camadas</h2>
+ * A operacao acontece por <b>unidade</b> ({@link #simularOperacao}): cada filial
+ * disputa o mercado da sua cidade, com a propria equipe, o proprio patrimonio e
+ * o preco que a empresa pratica. O resultado financeiro acontece por
+ * <b>empresa</b> ({@link #consolidar}): juros da divida, estrutura administrativa
+ * e imposto sobre o lucro sao unicos e nao se repetem por filial.
+ *
  * <h2>Cadeia de calculo</h2>
  * <ol>
  *   <li>mercado potencial do setor no municipio;</li>
  *   <li>competitividade relativa define a participacao de mercado;</li>
- *   <li>demanda capturada x capacidade instalada define a receita;</li>
+ *   <li>demanda capturada x capacidade instalada define o volume;</li>
+ *   <li>preco praticado converte volume em receita;</li>
  *   <li>custos, tributos e subsidios definem o lucro;</li>
  *   <li>lucro anualizado e patrimonio definem o valuation e o preco da acao.</li>
  * </ol>
@@ -73,52 +82,171 @@ public class MotorSimulacao {
     }
 
     /**
-     * Forca competitiva da empresa. Patrimonio entra com raiz quadrada para que
-     * capital sozinho nao domine o mercado; reputacao e marketing pesam sobre ele.
+     * Forca competitiva de uma unidade. Patrimonio entra com raiz quadrada para
+     * que capital sozinho nao domine o mercado; reputacao, marketing, esforco
+     * comercial e preco pesam sobre ele.
+     *
+     * Metade da elasticidade-preco age aqui, na disputa por cliente do
+     * concorrente, e metade no tamanho da demanda capturada: quem baixa o preco
+     * tira cliente do vizinho e amplia o proprio mercado.
      */
+    public double competitividade(PerfilOperacional perfil) {
+        double capital = Math.sqrt(Math.max(perfil.patrimonio(), 1.0));
+        double fatorReputacao = 0.5 + perfil.reputacao() / 100.0;
+        double fatorMarketing = 1.0 + Math.sqrt(Math.max(perfil.marketingMensal(), 0.0)) / 500.0;
+        double fatorComercial = 1.0 + Math.max(perfil.bonusComercial(), 0.0);
+        return capital * Math.max(perfil.produtividade(), 0.1) * fatorReputacao * fatorMarketing
+                * fatorComercial * atratividadeDePreco(perfil);
+    }
+
+    /** Competitividade de uma empresa sem estrutura declarada. */
     public double competitividade(Empresa empresa) {
-        double capital = Math.sqrt(Math.max(empresa.getPatrimonio(), 1.0));
-        double fatorReputacao = 0.5 + empresa.getReputacao() / 100.0;
-        double fatorMarketing = 1.0 + Math.sqrt(Math.max(empresa.getMarketingMensal(), 0.0)) / 500.0;
-        return capital * Math.max(empresa.getProdutividade(), 0.1) * fatorReputacao * fatorMarketing;
+        return competitividade(PerfilOperacional.neutro(empresa));
+    }
+
+    /** Peso do preco na disputa por mercado: metade da elasticidade do setor. */
+    private double atratividadeDePreco(PerfilOperacional perfil) {
+        double preco = Math.max(perfil.fatorPreco(), 0.1);
+        return Math.pow(preco, -perfil.setor().getElasticidadePreco() / 2.0);
     }
 
     /**
-     * Receita mensal maxima que a empresa consegue entregar.
+     * Receita mensal maxima que a unidade consegue entregar, a preco de referencia.
      *
      * A producao tem dois tetos e vale o menor deles: a equipe (gente para
      * produzir e vender) e o patrimonio (instalacoes, estoque, terrenos). E o
      * que obriga o jogador a crescer nas duas frentes - contratar sem investir
      * so gera folha ociosa, e investir sem contratar deixa ativo parado.
      */
+    public double capacidadeProdutiva(PerfilOperacional perfil) {
+        return Math.max(Math.min(capacidadePorEquipe(perfil), capacidadePorCapital(perfil)), 0);
+    }
+
     public double capacidadeProdutiva(Empresa empresa) {
-        Setor setor = empresa.getSetor();
-        double porEquipe = empresa.getFuncionarios() * setor.getReceitaPorFuncionario()
-                * empresa.getProdutividade();
-        double porCapital = empresa.getPatrimonio() * setor.getGiroAtivoMensal();
-        return Math.max(Math.min(porEquipe, porCapital), 0);
+        return capacidadeProdutiva(PerfilOperacional.neutro(empresa));
     }
 
     /** Teto de producao apenas pela equipe, util para diagnosticar ociosidade. */
+    public double capacidadePorEquipe(PerfilOperacional perfil) {
+        return perfil.funcionarios() * perfil.setor().getReceitaPorFuncionario() * perfil.produtividade();
+    }
+
     public double capacidadePorEquipe(Empresa empresa) {
-        return empresa.getFuncionarios() * empresa.getSetor().getReceitaPorFuncionario()
-                * empresa.getProdutividade();
+        return capacidadePorEquipe(PerfilOperacional.neutro(empresa));
     }
 
     /** Teto de producao apenas pelo patrimonio. */
+    public double capacidadePorCapital(PerfilOperacional perfil) {
+        return perfil.patrimonio() * perfil.setor().getGiroAtivoMensal();
+    }
+
     public double capacidadePorCapital(Empresa empresa) {
-        return empresa.getPatrimonio() * empresa.getSetor().getGiroAtivoMensal();
+        return capacidadePorCapital(PerfilOperacional.neutro(empresa));
     }
 
     /**
-     * Calcula o mes da empresa.
+     * Calcula o mes de uma unidade.
      *
-     * @param participacao   fatia do mercado potencial conquistada (0 a 1)
-     * @param subsidioFracao subsidio vigente, como fracao da receita
+     * @param participacao    fatia do mercado disputavel conquistada (0 a 1)
+     * @param subsidioFracao  subsidio vigente, como fracao da receita
      * @param regulacaoFracao regulacao vigente, como acrescimo ao custo variavel
      */
+    public ResultadoOperacional simularOperacao(PerfilOperacional perfil,
+                                                double mercadoDisputavel,
+                                                double participacao,
+                                                ContextoMercado contexto,
+                                                Estado estado,
+                                                Municipio municipio,
+                                                double subsidioFracao,
+                                                double regulacaoFracao) {
+
+        Setor setor = perfil.setor();
+        ModificadorSetorial modificador = contexto.modificador(setor);
+
+        double ajusteRenda = 1.0 + (contexto.rendaMedia() / contexto.rendaReferencia() - 1.0)
+                * setor.getElasticidadeRenda();
+        double ajusteJuros = 1.0 - (contexto.taxaJurosAnual() - JUROS_REFERENCIA)
+                * setor.getElasticidadeJuros() * 3.0;
+        double ajusteConfianca = 0.85 + contexto.estabilidade() / 400.0;
+        // A outra metade da elasticidade-preco: preco alto encolhe o proprio mercado.
+        double ajustePreco = Math.pow(Math.max(perfil.fatorPreco(), 0.1),
+                -setor.getElasticidadePreco() / 2.0);
+
+        double demandaCapturada = mercadoDisputavel * participacao
+                * Math.max(ajusteRenda, 0.2)
+                * Math.max(ajusteJuros, 0.2)
+                * ajusteConfianca
+                * ajustePreco
+                * (1.0 + modificador.choqueDemanda());
+
+        double capacidade = capacidadeProdutiva(perfil);
+        // Volume sai a preco de referencia; o preco praticado vira receita depois.
+        double volume = Math.max(Math.min(demandaCapturada, capacidade), 0.0);
+        double receita = volume * perfil.fatorPreco();
+        double ocupacao = capacidade <= 0 ? 0.0 : Math.min(volume / capacidade, 1.0);
+
+        double custoVariavel = volume * (1.0 - setor.getMargemBase())
+                * (1.0 + modificador.choqueCusto())
+                * (1.0 + regulacaoFracao)
+                * Math.max(perfil.fatorCustoVariavel(), 0.1);
+        double folha = perfil.funcionarios() * perfil.salarioMedio() * 1.32; // encargos
+        double depreciacao = perfil.patrimonio() * DEPRECIACAO_MENSAL;
+        double custoOperacional = custoVariavel + folha + perfil.marketingMensal() + depreciacao;
+
+        double impostoIndireto = receita
+                * (estado.getAliquotaEstadual() * baseEstadual(setor)
+                + municipio.getAliquotaMunicipal() * baseMunicipal(setor));
+        double subsidio = receita * subsidioFracao;
+
+        return new ResultadoOperacional(demandaCapturada, capacidade, volume, receita,
+                custoOperacional, impostoIndireto, subsidio, ocupacao);
+    }
+
+    /**
+     * Fecha o mes da empresa a partir do que as unidades produziram.
+     *
+     * Juros da divida, estrutura administrativa e imposto de renda entram uma
+     * unica vez, na companhia: e o que permite uma filial nova operar no
+     * vermelho sem ser tributada como se fosse uma empresa separada.
+     *
+     * @param juros           juros do mes sobre a divida onerosa
+     * @param custoEstrutura  orcamento dos departamentos no mes
+     * @param aliquotaImposto aliquota federal sobre o lucro
+     */
+    public ResultadoMensal consolidar(List<ResultadoOperacional> operacoes, double juros,
+                                      double custoEstrutura, double aliquotaImposto) {
+        double demanda = 0;
+        double capacidade = 0;
+        double volume = 0;
+        double receita = 0;
+        double custo = 0;
+        double impostoIndireto = 0;
+        double subsidio = 0;
+        for (ResultadoOperacional operacao : operacoes) {
+            demanda += operacao.demandaCapturada();
+            capacidade += operacao.capacidade();
+            volume += operacao.volume();
+            receita += operacao.receita();
+            custo += operacao.custoOperacional();
+            impostoIndireto += operacao.impostoIndireto();
+            subsidio += operacao.subsidioRecebido();
+        }
+        double custoTotal = custo + Math.max(juros, 0) + Math.max(custoEstrutura, 0);
+        double lucroAntesImposto = receita + subsidio - custoTotal - impostoIndireto;
+        double impostoRenda = lucroAntesImposto > 0 ? lucroAntesImposto * aliquotaImposto : 0.0;
+        double lucro = lucroAntesImposto - impostoRenda;
+        double ocupacao = capacidade <= 0 ? 0.0 : Math.min(volume / capacidade, 1.0);
+
+        return new ResultadoMensal(demanda, capacidade, receita, custoTotal, impostoIndireto,
+                impostoRenda, subsidio, lucro, ocupacao);
+    }
+
+    /**
+     * Calcula o mes de uma empresa de unidade unica, sem estrutura declarada.
+     * Atalho usado pelos testes de balanceamento do motor.
+     */
     public ResultadoMensal simularMes(Empresa empresa,
-                                      double mercadoPotencial,
+                                      double mercadoDisputavel,
                                       double participacao,
                                       ContextoMercado contexto,
                                       Estado estado,
@@ -127,56 +255,27 @@ public class MotorSimulacao {
                                       double subsidioFracao,
                                       double regulacaoFracao) {
 
-        Setor setor = empresa.getSetor();
-        ModificadorSetorial modificador = contexto.modificador(setor);
-
-        double ajusteRenda = 1.0 + (contexto.rendaMedia() / contexto.rendaReferencia() - 1.0)
-                * setor.getElasticidadeRenda();
-        double ajusteJuros = 1.0 - (contexto.taxaJurosAnual() - JUROS_REFERENCIA)
-                * setor.getElasticidadeJuros() * 3.0;
-        double ajusteConfianca = 0.85 + contexto.estabilidade() / 400.0;
-
-        double demandaCapturada = mercadoPotencial * participacao
-                * Math.max(ajusteRenda, 0.2)
-                * Math.max(ajusteJuros, 0.2)
-                * ajusteConfianca
-                * (1.0 + modificador.choqueDemanda());
-
-        double capacidade = capacidadeProdutiva(empresa);
-        double receita = Math.max(Math.min(demandaCapturada, capacidade), 0.0);
-        double ocupacao = capacidade <= 0 ? 0.0 : Math.min(receita / capacidade, 1.0);
-
-        double custoVariavel = receita * (1.0 - setor.getMargemBase())
-                * (1.0 + modificador.choqueCusto())
-                * (1.0 + regulacaoFracao);
-        double folha = empresa.getFuncionarios() * empresa.getSalarioMedio() * 1.32; // encargos
-        double depreciacao = empresa.getPatrimonio() * DEPRECIACAO_MENSAL;
+        ResultadoOperacional operacao = simularOperacao(PerfilOperacional.neutro(empresa),
+                mercadoDisputavel, participacao, contexto, estado, municipio,
+                subsidioFracao, regulacaoFracao);
         double juros = empresa.getDivida() * contexto.taxaJurosAnual() / 12.0;
-        double custoOperacional = custoVariavel + folha + empresa.getMarketingMensal() + depreciacao + juros;
+        return consolidar(List.of(operacao), juros, 0.0, pais.getAliquotaImpostoEmpresarial());
+    }
 
-        double baseEstadual = switch (setor) {
+    private double baseEstadual(Setor setor) {
+        return switch (setor) {
             case ALIMENTICIO -> BASE_ESTADUAL_ALIMENTICIO;
             case IMOBILIARIO -> BASE_ESTADUAL_IMOBILIARIO;
             case CONSTRUCAO -> BASE_ESTADUAL_CONSTRUCAO;
         };
-        double baseMunicipal = switch (setor) {
+    }
+
+    private double baseMunicipal(Setor setor) {
+        return switch (setor) {
             case ALIMENTICIO -> BASE_MUNICIPAL_ALIMENTICIO;
             case IMOBILIARIO -> BASE_MUNICIPAL_IMOBILIARIO;
             case CONSTRUCAO -> BASE_MUNICIPAL_CONSTRUCAO;
         };
-        double impostoIndireto = receita
-                * (estado.getAliquotaEstadual() * baseEstadual
-                + municipio.getAliquotaMunicipal() * baseMunicipal);
-
-        double subsidio = receita * subsidioFracao;
-        double lucroAntesImposto = receita + subsidio - custoOperacional - impostoIndireto;
-        double impostoRenda = lucroAntesImposto > 0
-                ? lucroAntesImposto * pais.getAliquotaImpostoEmpresarial()
-                : 0.0;
-        double lucro = lucroAntesImposto - impostoRenda;
-
-        return new ResultadoMensal(demandaCapturada, capacidade, receita, custoOperacional,
-                impostoIndireto, impostoRenda, subsidio, lucro, ocupacao);
     }
 
     /**

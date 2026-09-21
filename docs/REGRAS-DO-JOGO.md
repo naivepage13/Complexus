@@ -30,11 +30,64 @@ O turno avança sozinho (`AgendadorTurno`) ou por chamada manual
 | Múltiplo de valuation | 9x | 12x | 8x |
 | Elasticidade à renda | 0,35 | 0,70 | 0,45 |
 | Elasticidade a juros | 0,10 | 0,85 | 0,65 |
+| Elasticidade-preço | 1,60 | 0,90 | 1,20 |
 | Capital mínimo | R$ 250 mil | R$ 1,2 mi | R$ 800 mil |
+| Capital mínimo por unidade | R$ 62,5 mil | R$ 300 mil | R$ 200 mil |
 
 ### 2.2 Fundação
 - O capital sai do caixa do jogador: **70% vira patrimônio, 30% vira caixa** da empresa.
 - Nome único, capital acima do mínimo do setor, ao menos um funcionário.
+- A empresa nasce com uma **unidade sede** no município escolhido, que recebe
+  todo o patrimônio e toda a equipe.
+
+### 2.2.1 Unidades (`Unidade`)
+
+Quem disputa mercado é a unidade, não a empresa. Patrimônio e equipe ficam
+alocados em unidades; os totais da empresa são sempre a soma delas.
+
+| Operação | Custo | Efeito |
+|---|---|---|
+| Abrir unidade | capital + 8% de instalação + meio salário por admissão | nova unidade em outro município, com a produtividade média da empresa |
+| Fechar unidade | um salário de rescisão por funcionário | devolve 70% dos ativos ao caixa e tira 3 pontos de reputação |
+| Transferir capital | 8% do valor movido | patrimônio muda de unidade sem passar pelo caixa |
+| Transferir equipe | 30% do salário por pessoa | funcionários mudam de unidade |
+
+Regras: uma unidade por município por empresa; a última unidade ativa não pode
+ser fechada (para sair do mercado, encerra-se a empresa).
+
+### 2.2.2 Linhas de produto (`LinhaProduto`)
+
+O mix define o preço praticado e o custo do insumo. A fatia **não declarada**
+do mix fica no posicionamento médio, então declarar 50% premium move o preço
+médio para 1,15 e não para 1,30.
+
+| Posicionamento | Preço | Custo de insumo |
+|---|---|---|
+| Popular | 0,85x | 0,93x |
+| Médio | 1,00x | 1,00x |
+| Premium | 1,30x | 1,12x |
+
+A soma das fatias nunca passa de 100%.
+
+### 2.2.3 Departamentos (`Departamento`)
+
+Orçamento mensal fixo que compra vantagem com retorno decrescente:
+
+```
+intensidade = orcamento / (orcamento + referenciaDePorte)
+efeito      = efeitoMaximo x intensidade
+referenciaDePorte = 2% da capacidade mensal instalada (mínimo R$ 5 mil)
+```
+
+| Área | Efeito máximo |
+|---|---|
+| Pesquisa e desenvolvimento | +0,06 de produtividade por turno em todas as unidades |
+| Qualidade | +3,0 pontos de reputação por turno |
+| Comercial | +35% de competitividade |
+| Logística | −12% no custo de insumo |
+
+Com orçamento igual à referência de porte, o efeito é metade do teto. O
+orçamento total sai do resultado todo turno, tenha havido venda ou não.
 
 ### 2.3 Capacidade de produção (`MotorSimulacao.capacidadeProdutiva`)
 
@@ -53,16 +106,34 @@ dois tetos está limitando (`gargalo`) e a equipe sugerida para o patrimônio at
 ```
 mercadoPotencial  = f(populacao, renda, desemprego, indicadores locais)   # por municipio e setor
 mercadoDisputavel = min(mercadoPotencial, soma das capacidades do grupo)
-competitividade   = raiz(patrimonio) x produtividade x (0,5 + reputacao/100) x fatorMarketing
+competitividade   = raiz(patrimonio) x produtividade x (0,5 + reputacao/100)
+                    x fatorMarketing x (1 + bonusComercial) x atratividadeDePreco
 participacao_i    = competitividade_i / soma das competitividades do grupo
 ```
+
+O grupo que disputa um mercado é o conjunto de **unidades** do mesmo setor no
+mesmo município. Duas filiais da mesma empresa em cidades diferentes não
+competem entre si.
+
+A elasticidade-preço age em duas metades: `atratividadeDePreco = preco^(-e/2)`
+na disputa por cliente do concorrente, e outro `preco^(-e/2)` no tamanho da
+demanda capturada. Quem baixa o preço tira cliente do vizinho e amplia o
+próprio mercado — e quem sobe o preço perde nas duas pontas.
 
 O mercado de uma cidade é muito maior que as empresas simuladas; o restante é
 atendido por empresas não modeladas. Limitar a disputa à capacidade instalada
 do grupo é o que faz a concorrência importar: quem perde participação fica com
 capacidade ociosa e prejuízo.
 
-### 2.5 Resultado do mês (`MotorSimulacao.simularMes`)
+### 2.5 Resultado do mês (`MotorSimulacao.simularOperacao` + `consolidar`)
+
+O mês tem duas etapas. A **operação** acontece por unidade: cada filial produz,
+vende e recolhe tributo indireto no estado e no município onde está. O
+**fechamento** acontece uma vez por empresa: juros da dívida, orçamento dos
+departamentos e imposto sobre o lucro entram no consolidado, nunca por filial.
+É o que permite abrir uma unidade que opera no vermelho sem que ela seja
+tributada como empresa separada.
+
 
 ```
 demanda  = mercadoDisputavel x participacao x ajusteRenda x ajusteJuros

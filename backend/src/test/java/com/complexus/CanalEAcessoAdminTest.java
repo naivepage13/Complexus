@@ -105,7 +105,7 @@ class CanalEAcessoAdminTest {
 
         var empresa = servicoEmpresa.fundar(dono.getId(), "Cantina " + sufixo(),
                 Setor.ALIMENTICIO, municipio.getId(), 400_000, 5);
-        servicoEmpresa.investirCapital(empresa.getId(), dono.getId(), 50_000);
+        servicoEmpresa.investirCapital(empresa.getId(), dono.getId(), 50_000, null);
 
         boolean donoVeOAporte = servicoAtualizacoes.feed(dono.getId(), 50).stream()
                 .anyMatch(item -> "Aporte de capital".equals(item.get("titulo")));

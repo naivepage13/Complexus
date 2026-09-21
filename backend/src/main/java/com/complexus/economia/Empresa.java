@@ -1,5 +1,6 @@
 package com.complexus.economia;
 
+import com.complexus.comum.RegraDeNegocioException;
 import com.complexus.jogador.Jogador;
 import com.complexus.politica.Municipio;
 import jakarta.persistence.Column;
@@ -202,5 +203,20 @@ public class Empresa {
 
     public double patrimonioLiquido() {
         return patrimonio + caixa - divida;
+    }
+
+    /**
+     * Confere se o jogador pode administrar a empresa.
+     *
+     * A regra vive na entidade porque vale para qualquer servico que mexa na
+     * empresa - gestao, estrutura, financas ou controle societario.
+     */
+    public void exigirControleDe(Jogador jogador) {
+        if (dono == null || jogador == null || !dono.getId().equals(jogador.getId())) {
+            throw new RegraDeNegocioException("Apenas o dono pode administrar a empresa " + nome + ".");
+        }
+        if (!ativa) {
+            throw new RegraDeNegocioException("A empresa " + nome + " esta inativa.");
+        }
     }
 }

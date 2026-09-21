@@ -99,7 +99,11 @@
     <section class="grade-2" id="area-gestao">
         <div class="cartao">
             <h2>Capital e equipe</h2>
-            <form class="formulario" id="formulario-capital">
+            <div class="campo">
+                <label for="unidade-alvo">Unidade de destino</label>
+                <select id="unidade-alvo"></select>
+            </div>
+            <form class="formulario espacado" id="formulario-capital">
                 <div class="campo">
                     <label for="valor-capital">Aportar capital (R$)</label>
                     <input type="number" id="valor-capital" min="10000" step="10000" value="100000">
@@ -157,6 +161,141 @@
         </div>
     </section>
 
+    <section class="cartao" id="area-unidades">
+        <div class="cartao-cabecalho">
+            <h2>Unidades</h2>
+            <span class="suave pequeno">cada unidade disputa o mercado da propria cidade</span>
+        </div>
+        <div class="tabela-rolagem">
+            <table class="tabela">
+                <thead>
+                <tr>
+                    <th>Unidade</th>
+                    <th>Cidade</th>
+                    <th class="direita">Patrimonio</th>
+                    <th class="direita">Equipe</th>
+                    <th class="direita">Produtividade</th>
+                    <th class="direita">Ocupacao</th>
+                    <th class="direita">Margem do turno</th>
+                    <th class="direita">Mercado</th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody id="lista-unidades"></tbody>
+            </table>
+        </div>
+
+        <form class="formulario espacado" id="formulario-unidade">
+            <h3>Abrir unidade</h3>
+            <div class="linha-campos">
+                <div class="campo">
+                    <label for="municipio-unidade">Cidade</label>
+                    <select id="municipio-unidade"></select>
+                </div>
+                <div class="campo">
+                    <label for="nome-unidade">Nome</label>
+                    <input type="text" id="nome-unidade" placeholder="Filial">
+                </div>
+                <div class="campo">
+                    <label for="capital-unidade">Capital alocado (R$)</label>
+                    <input type="number" id="capital-unidade" min="0" step="50000" value="300000">
+                </div>
+                <div class="campo">
+                    <label for="equipe-unidade">Funcionarios</label>
+                    <input type="number" id="equipe-unidade" min="1" step="1" value="10">
+                </div>
+            </div>
+            <p class="suave pequeno" id="custo-unidade"></p>
+            <div class="acoes">
+                <button type="submit" class="botao">Abrir unidade</button>
+            </div>
+        </form>
+
+        <form class="formulario espacado" id="formulario-transferencia">
+            <h3>Transferir entre unidades</h3>
+            <div class="linha-campos">
+                <div class="campo">
+                    <label for="origem-transferencia">Origem</label>
+                    <select id="origem-transferencia"></select>
+                </div>
+                <div class="campo">
+                    <label for="destino-transferencia">Destino</label>
+                    <select id="destino-transferencia"></select>
+                </div>
+                <div class="campo">
+                    <label for="valor-transferencia">Capital (R$)</label>
+                    <input type="number" id="valor-transferencia" min="0" step="10000" value="100000">
+                </div>
+                <div class="campo">
+                    <label for="equipe-transferencia">Funcionarios</label>
+                    <input type="number" id="equipe-transferencia" min="1" step="1" value="5">
+                </div>
+            </div>
+            <div class="acoes">
+                <button type="button" class="botao botao-neutro" id="botao-transferir-capital">Mover capital</button>
+                <button type="button" class="botao botao-neutro" id="botao-transferir-equipe">Mover equipe</button>
+            </div>
+        </form>
+    </section>
+
+    <section class="grade-2" id="area-portfolio">
+        <div class="cartao">
+            <div class="cartao-cabecalho">
+                <h2>Linhas de produto</h2>
+                <span class="suave pequeno" id="resumo-mix"></span>
+            </div>
+            <div class="tabela-rolagem">
+                <table class="tabela">
+                    <thead>
+                    <tr>
+                        <th>Linha</th>
+                        <th>Posicionamento</th>
+                        <th class="direita">Fatia do mix</th>
+                        <th></th>
+                    </tr>
+                    </thead>
+                    <tbody id="lista-linhas"></tbody>
+                </table>
+            </div>
+            <form class="formulario espacado" id="formulario-linha">
+                <div class="linha-campos">
+                    <div class="campo">
+                        <label for="nome-linha">Nome</label>
+                        <input type="text" id="nome-linha" placeholder="Linha basica">
+                    </div>
+                    <div class="campo">
+                        <label for="posicionamento-linha">Posicionamento</label>
+                        <select id="posicionamento-linha"></select>
+                    </div>
+                    <div class="campo">
+                        <label for="fatia-linha">Fatia do mix (0 a 1)</label>
+                        <input type="number" id="fatia-linha" min="0" max="1" step="0.05" value="0.3">
+                    </div>
+                </div>
+                <div class="acoes">
+                    <button type="submit" class="botao">Criar linha</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="cartao">
+            <div class="cartao-cabecalho">
+                <h2>Departamentos</h2>
+                <span class="suave pequeno" id="resumo-estrutura"></span>
+            </div>
+            <p class="suave pequeno">
+                Orcamento mensal fixo que compra vantagem com retorno decrescente.
+                Zerar o campo desmonta a area.
+            </p>
+            <form class="formulario espacado" id="formulario-departamentos">
+                <div id="campos-departamentos"></div>
+                <div class="acoes">
+                    <button type="submit" class="botao">Salvar orcamentos</button>
+                </div>
+            </form>
+        </div>
+    </section>
+
     <section class="cartao" id="area-obras">
         <div class="cartao-cabecalho">
             <h2>Empreendimentos</h2>
@@ -185,6 +324,10 @@
                     <label for="prazo-obra">Prazo (turnos)</label>
                     <input type="number" id="prazo-obra" min="1" max="36" value="6">
                 </div>
+                <div class="campo">
+                    <label for="unidade-obra">Unidade responsavel</label>
+                    <select id="unidade-obra"></select>
+                </div>
             </div>
             <div class="acoes">
                 <button type="submit" class="botao">Iniciar obra</button>
@@ -196,6 +339,7 @@
                 <thead>
                 <tr>
                     <th>Obra</th>
+                    <th>Unidade</th>
                     <th>Tipo</th>
                     <th>Status</th>
                     <th class="direita">Custo</th>

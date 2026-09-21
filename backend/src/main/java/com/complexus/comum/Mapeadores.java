@@ -2,9 +2,12 @@ package com.complexus.comum;
 
 import com.complexus.auditoria.EventoAuditoria;
 import com.complexus.core.EstadoJogo;
+import com.complexus.economia.Departamento;
 import com.complexus.economia.Empreendimento;
 import com.complexus.economia.Empresa;
 import com.complexus.economia.HistoricoEmpresa;
+import com.complexus.economia.LinhaProduto;
+import com.complexus.economia.Unidade;
 import com.complexus.estatistica.EstatisticaSetor;
 import com.complexus.estatistica.SnapshotTurno;
 import com.complexus.investimento.LancamentoFinanceiro;
@@ -135,12 +138,62 @@ public final class Mapeadores {
         mapa.put("tipo", obra.getTipo().name());
         mapa.put("tipoRotulo", obra.getTipo().getRotulo());
         mapa.put("status", obra.getStatus().name());
+        mapa.put("unidadeId", obra.getUnidade() == null ? null : obra.getUnidade().getId());
+        mapa.put("unidade", obra.getUnidade() == null ? null : obra.getUnidade().getNome());
         mapa.put("custoTotal", obra.getCustoTotal());
         mapa.put("investido", obra.getInvestido());
         mapa.put("valorEstimado", obra.getValorEstimado());
         mapa.put("turnosTotais", obra.getTurnosTotais());
         mapa.put("turnosRestantes", obra.getTurnosRestantes());
         mapa.put("percentualConcluido", obra.percentualConcluido());
+        return mapa;
+    }
+
+    public static Map<String, Object> unidade(Unidade unidade) {
+        Map<String, Object> mapa = new LinkedHashMap<>();
+        mapa.put("id", unidade.getId());
+        mapa.put("empresaId", unidade.getEmpresa().getId());
+        mapa.put("nome", unidade.getNome());
+        mapa.put("municipioId", unidade.getMunicipio().getId());
+        mapa.put("municipio", unidade.getMunicipio().getNome());
+        mapa.put("estado", unidade.getMunicipio().getEstado().getSigla());
+        mapa.put("sede", unidade.isSede());
+        mapa.put("ativa", unidade.isAtiva());
+        mapa.put("turnoAbertura", unidade.getTurnoAbertura());
+        mapa.put("patrimonio", unidade.getPatrimonio());
+        mapa.put("funcionarios", unidade.getFuncionarios());
+        mapa.put("produtividade", unidade.getProdutividade());
+        mapa.put("receitaMensal", unidade.getReceitaMensal());
+        mapa.put("custoMensal", unidade.getCustoMensal());
+        mapa.put("margemOperacional", unidade.getMargemOperacional());
+        mapa.put("ocupacao", unidade.getOcupacao());
+        mapa.put("marketShare", unidade.getMarketShare());
+        return mapa;
+    }
+
+    public static Map<String, Object> linhaProduto(LinhaProduto linha) {
+        Map<String, Object> mapa = new LinkedHashMap<>();
+        mapa.put("id", linha.getId());
+        mapa.put("empresaId", linha.getEmpresa().getId());
+        mapa.put("nome", linha.getNome());
+        mapa.put("posicionamento", linha.getPosicionamento().name());
+        mapa.put("posicionamentoRotulo", linha.getPosicionamento().getRotulo());
+        mapa.put("fatorPreco", linha.getPosicionamento().getFatorPreco());
+        mapa.put("fatorCusto", linha.getPosicionamento().getFatorCusto());
+        mapa.put("fatiaMix", linha.getFatiaMix());
+        mapa.put("ativa", linha.isAtiva());
+        mapa.put("turnoCriacao", linha.getTurnoCriacao());
+        return mapa;
+    }
+
+    public static Map<String, Object> departamento(Departamento departamento) {
+        Map<String, Object> mapa = new LinkedHashMap<>();
+        mapa.put("id", departamento.getId());
+        mapa.put("empresaId", departamento.getEmpresa().getId());
+        mapa.put("area", departamento.getArea().name());
+        mapa.put("areaRotulo", departamento.getArea().getRotulo());
+        mapa.put("unidadeEfeito", departamento.getArea().getUnidadeEfeito());
+        mapa.put("orcamentoMensal", departamento.getOrcamentoMensal());
         return mapa;
     }
 

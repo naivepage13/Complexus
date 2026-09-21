@@ -4,6 +4,8 @@ import com.complexus.auditoria.ServicoAuditoria;
 import com.complexus.core.ServicoEstadoJogo;
 import com.complexus.economia.Empresa;
 import com.complexus.economia.RepositorioEmpresa;
+import com.complexus.economia.RepositorioUnidade;
+import com.complexus.economia.ServicoEstrutura;
 import com.complexus.economia.Setor;
 import com.complexus.jogador.RepositorioJogador;
 import com.complexus.jogador.ServicoJogador;
@@ -43,6 +45,8 @@ public class SeedDados implements ApplicationRunner {
     private final RepositorioMunicipio repositorioMunicipio;
     private final RepositorioEmpresa repositorioEmpresa;
     private final RepositorioJogador repositorioJogador;
+    private final RepositorioUnidade repositorioUnidade;
+    private final ServicoEstrutura servicoEstrutura;
     private final ServicoPolitica servicoPolitica;
     private final ServicoJogador servicoJogador;
     private final ServicoEstadoJogo estadoJogo;
@@ -53,6 +57,8 @@ public class SeedDados implements ApplicationRunner {
                      RepositorioMunicipio repositorioMunicipio,
                      RepositorioEmpresa repositorioEmpresa,
                      RepositorioJogador repositorioJogador,
+                     RepositorioUnidade repositorioUnidade,
+                     ServicoEstrutura servicoEstrutura,
                      ServicoPolitica servicoPolitica,
                      ServicoJogador servicoJogador,
                      ServicoEstadoJogo estadoJogo,
@@ -62,6 +68,8 @@ public class SeedDados implements ApplicationRunner {
         this.repositorioMunicipio = repositorioMunicipio;
         this.repositorioEmpresa = repositorioEmpresa;
         this.repositorioJogador = repositorioJogador;
+        this.repositorioUnidade = repositorioUnidade;
+        this.servicoEstrutura = servicoEstrutura;
         this.servicoPolitica = servicoPolitica;
         this.servicoJogador = servicoJogador;
         this.estadoJogo = estadoJogo;
@@ -72,6 +80,7 @@ public class SeedDados implements ApplicationRunner {
     @Transactional
     public void run(ApplicationArguments args) {
         estadoJogo.obter();
+        abrirSedesFaltantes();
         if (repositorioPais.count() > 0) {
             log.info("Mundo ja inicializado; carga inicial ignorada.");
             return;
@@ -107,6 +116,30 @@ public class SeedDados implements ApplicationRunner {
                 "Carga inicial do mundo concluida",
                 Map.of("estados", 3, "municipios", 4, "empresasNpc", 7));
         log.info("Mundo inicializado com sucesso.");
+    }
+
+    /**
+     * Da uma sede as empresas criadas antes das unidades existirem.
+     *
+     * A partida em andamento continua de onde parou: o patrimonio e a equipe que
+     * estavam soltos na empresa passam a morar na unidade sede, sem mudar nenhum
+     * numero do balanco.
+     */
+    private void abrirSedesFaltantes() {
+        int migradas = 0;
+        for (Empresa empresa : repositorioEmpresa.findAll()) {
+            if (!repositorioUnidade.findByEmpresaIdOrderByIdAsc(empresa.getId()).isEmpty()) {
+                continue;
+            }
+            servicoEstrutura.criarSede(empresa, empresa.getPatrimonio(), empresa.getFuncionarios(),
+                    empresa.getTurnoFundacao());
+            migradas++;
+        }
+        if (migradas > 0) {
+            log.info("Sede criada para {} empresas anteriores as unidades.", migradas);
+            auditoria.registrarSistema("ESTRUTURA_MIGRADA", "Empresa", null,
+                    "Empresas existentes receberam unidade sede", Map.of("empresas", migradas));
+        }
     }
 
     private Pais criarPais() {
@@ -216,6 +249,7 @@ public class SeedDados implements ApplicationRunner {
         // Marketing calibrado como 1,5% da receita potencial, nao do capital:
         // e o que uma concorrente saudavel gastaria para sustentar a marca.
         empresa.setMarketingMensal(patrimonio * setor.getGiroAtivoMensal() * 0.015);
-        repositorioEmpresa.save(empresa);
+        Empresa salva = repositorioEmpresa.save(empresa);
+        servicoEstrutura.criarSede(salva, salva.getPatrimonio(), salva.getFuncionarios(), 0);
     }
 }

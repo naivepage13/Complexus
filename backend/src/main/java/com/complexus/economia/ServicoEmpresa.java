@@ -10,6 +10,7 @@ import com.complexus.jogador.Jogador;
 import com.complexus.jogador.ServicoJogador;
 import com.complexus.politica.Municipio;
 import com.complexus.politica.RepositorioMunicipio;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,6 +21,10 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * Regras de administracao de empresas: fundacao, capital, equipe, marketing,
  * abertura de capital e empreendimentos.
+ *
+ * Capital e equipe sempre entram em uma <b>unidade</b> ({@link ServicoEstrutura}).
+ * Quando o jogador nao diz qual, o destino e a sede. Os totais da empresa sao
+ * recalculados a partir das unidades depois de cada operacao.
  *
  * Toda operacao que move dinheiro gera um lancamento no razao e um evento na
  * linha de auditoria.
@@ -34,8 +39,10 @@ public class ServicoEmpresa {
     private final RepositorioEmpresa repositorio;
     private final RepositorioHistoricoEmpresa repositorioHistorico;
     private final RepositorioEmpreendimento repositorioEmpreendimento;
+    private final RepositorioUnidade repositorioUnidade;
     private final RepositorioMunicipio repositorioMunicipio;
     private final ServicoJogador servicoJogador;
+    private final ServicoEstrutura servicoEstrutura;
     private final ServicoRazao razao;
     private final ServicoAuditoria auditoria;
     private final ServicoEstadoJogo estadoJogo;
@@ -44,8 +51,10 @@ public class ServicoEmpresa {
     public ServicoEmpresa(RepositorioEmpresa repositorio,
                           RepositorioHistoricoEmpresa repositorioHistorico,
                           RepositorioEmpreendimento repositorioEmpreendimento,
+                          RepositorioUnidade repositorioUnidade,
                           RepositorioMunicipio repositorioMunicipio,
                           ServicoJogador servicoJogador,
+                          ServicoEstrutura servicoEstrutura,
                           ServicoRazao razao,
                           ServicoAuditoria auditoria,
                           ServicoEstadoJogo estadoJogo,
@@ -53,8 +62,10 @@ public class ServicoEmpresa {
         this.repositorio = repositorio;
         this.repositorioHistorico = repositorioHistorico;
         this.repositorioEmpreendimento = repositorioEmpreendimento;
+        this.repositorioUnidade = repositorioUnidade;
         this.repositorioMunicipio = repositorioMunicipio;
         this.servicoJogador = servicoJogador;
+        this.servicoEstrutura = servicoEstrutura;
         this.razao = razao;
         this.auditoria = auditoria;
         this.estadoJogo = estadoJogo;
@@ -109,7 +120,8 @@ public class ServicoEmpresa {
 
     /**
      * Funda uma empresa. O capital sai do caixa do jogador e vira patrimonio e
-     * caixa da empresa, mantendo o lastro do investimento inicial.
+     * caixa da empresa, mantendo o lastro do investimento inicial. O patrimonio
+     * nasce alocado na unidade sede.
      */
     @Transactional
     public Empresa fundar(Long jogadorId, String nome, Setor setor, Long municipioId,
@@ -148,6 +160,7 @@ public class ServicoEmpresa {
         empresa.setValuation(capitalInicial);
         empresa.setPrecoAcao(capitalInicial / empresa.getAcoesTotais());
         Empresa salva = repositorio.save(empresa);
+        servicoEstrutura.criarSede(salva, salva.getPatrimonio(), funcionarios, turno);
 
         razao.registrar(turno, TipoLancamento.APORTE_FUNDACAO, "jogador:" + jogador.getUsuario(),
                 "empresa:" + salva.getId(), capitalInicial, salva.getId(), jogador.getId(),
@@ -162,38 +175,45 @@ public class ServicoEmpresa {
         return salva;
     }
 
-    /** Aporte de capital do dono na empresa (vira patrimonio e produtividade). */
+    /**
+     * Aporte de capital do dono em uma unidade (vira patrimonio e produtividade).
+     * Sem unidade indicada, o aporte vai para a sede.
+     */
     @Transactional
-    public Empresa investirCapital(Long empresaId, Long jogadorId, double valor) {
+    public Empresa investirCapital(Long empresaId, Long jogadorId, double valor, Long unidadeId) {
         Empresa empresa = buscar(empresaId);
         Jogador jogador = exigirDono(empresa, jogadorId);
+        Unidade unidade = destino(empresa, unidadeId);
         if (valor < CAPEX_MINIMO) {
             throw new RegraDeNegocioException("O aporte minimo e R$ " + String.format("%.2f", CAPEX_MINIMO) + ".");
         }
         servicoJogador.debitar(jogador, valor, "investir na empresa " + empresa.getNome());
 
-        double patrimonioAnterior = empresa.getPatrimonio();
-        empresa.setPatrimonio(patrimonioAnterior + valor);
+        double patrimonioAnterior = unidade.getPatrimonio();
+        unidade.setPatrimonio(patrimonioAnterior + valor);
         // Ganho de produtividade decrescente: aportes grandes rendem menos por real.
         double ganho = GANHO_PRODUTIVIDADE_POR_CAPEX * (valor / Math.max(patrimonioAnterior, valor));
-        empresa.setProdutividade(Math.min(empresa.getProdutividade() + ganho, PRODUTIVIDADE_MAXIMA));
-        repositorio.save(empresa);
+        unidade.setProdutividade(Math.min(unidade.getProdutividade() + ganho, PRODUTIVIDADE_MAXIMA));
+        repositorioUnidade.save(unidade);
+        servicoEstrutura.sincronizarAgregados(empresa);
 
         int turno = estadoJogo.turnoAtual();
         razao.registrar(turno, TipoLancamento.CAPEX, "jogador:" + jogador.getUsuario(),
-                "empresa:" + empresa.getId(), valor, empresa.getId(), jogador.getId(),
-                "Aporte de capital");
+                "unidade:" + unidade.getId(), valor, empresa.getId(), jogador.getId(),
+                "Aporte de capital na unidade " + unidade.getNome());
         auditoria.registrar(jogador.getUsuario(), "EMPRESA_CAPEX", "Empresa", empresa.getId(),
                 "Aporte de capital na empresa " + empresa.getNome(),
-                Map.of("valor", valor, "produtividade", empresa.getProdutividade()));
+                Map.of("valor", valor, "unidade", unidade.getNome(),
+                        "produtividade", empresa.getProdutividade()));
         return empresa;
     }
 
-    /** Contrata funcionarios, cobrando custo de admissao equivalente a meio salario. */
+    /** Contrata funcionarios para uma unidade, cobrando meio salario de admissao. */
     @Transactional
-    public Empresa contratar(Long empresaId, Long jogadorId, int quantidade) {
+    public Empresa contratar(Long empresaId, Long jogadorId, int quantidade, Long unidadeId) {
         Empresa empresa = buscar(empresaId);
         Jogador jogador = exigirDono(empresa, jogadorId);
+        Unidade unidade = destino(empresa, unidadeId);
         if (quantidade < 1) {
             throw new RegraDeNegocioException("Quantidade de contratacoes deve ser positiva.");
         }
@@ -203,8 +223,9 @@ public class ServicoEmpresa {
                     + String.format("%.2f", custo));
         }
         empresa.setCaixa(empresa.getCaixa() - custo);
-        empresa.setFuncionarios(empresa.getFuncionarios() + quantidade);
-        repositorio.save(empresa);
+        unidade.setFuncionarios(unidade.getFuncionarios() + quantidade);
+        repositorioUnidade.save(unidade);
+        servicoEstrutura.sincronizarAgregados(empresa);
 
         int turno = estadoJogo.turnoAtual();
         razao.registrar(turno, TipoLancamento.CUSTO_OPERACIONAL, "empresa:" + empresa.getId(),
@@ -212,24 +233,27 @@ public class ServicoEmpresa {
                 "Admissao de " + quantidade + " funcionarios");
         auditoria.registrar(jogador.getUsuario(), "EMPRESA_CONTRATACAO", "Empresa", empresa.getId(),
                 "Contratacao de " + quantidade + " funcionarios",
-                Map.of("quantidade", quantidade, "custo", custo));
+                Map.of("quantidade", quantidade, "custo", custo, "unidade", unidade.getNome()));
         return empresa;
     }
 
-    /** Demite funcionarios pagando rescisao de um salario por pessoa. */
+    /** Demite funcionarios de uma unidade pagando rescisao de um salario por pessoa. */
     @Transactional
-    public Empresa demitir(Long empresaId, Long jogadorId, int quantidade) {
+    public Empresa demitir(Long empresaId, Long jogadorId, int quantidade, Long unidadeId) {
         Empresa empresa = buscar(empresaId);
         Jogador jogador = exigirDono(empresa, jogadorId);
-        if (quantidade < 1 || quantidade > empresa.getFuncionarios()) {
-            throw new RegraDeNegocioException("Quantidade invalida de desligamentos.");
+        Unidade unidade = destino(empresa, unidadeId);
+        if (quantidade < 1 || quantidade > unidade.getFuncionarios()) {
+            throw new RegraDeNegocioException("Quantidade invalida de desligamentos: a unidade "
+                    + unidade.getNome() + " tem " + unidade.getFuncionarios() + " funcionarios.");
         }
         double custo = quantidade * empresa.getSalarioMedio();
         empresa.setCaixa(empresa.getCaixa() - custo);
-        empresa.setFuncionarios(empresa.getFuncionarios() - quantidade);
+        unidade.setFuncionarios(unidade.getFuncionarios() - quantidade);
         // Desligamentos em massa desgastam a reputacao da empresa.
         empresa.setReputacao(Math.max(empresa.getReputacao() - quantidade * 0.05, 0));
-        repositorio.save(empresa);
+        repositorioUnidade.save(unidade);
+        servicoEstrutura.sincronizarAgregados(empresa);
 
         int turno = estadoJogo.turnoAtual();
         razao.registrar(turno, TipoLancamento.CUSTO_OPERACIONAL, "empresa:" + empresa.getId(),
@@ -237,7 +261,7 @@ public class ServicoEmpresa {
                 "Desligamento de " + quantidade + " funcionarios");
         auditoria.registrar(jogador.getUsuario(), "EMPRESA_DEMISSAO", "Empresa", empresa.getId(),
                 "Desligamento de " + quantidade + " funcionarios",
-                Map.of("quantidade", quantidade, "custo", custo));
+                Map.of("quantidade", quantidade, "custo", custo, "unidade", unidade.getNome()));
         return empresa;
     }
 
@@ -307,14 +331,16 @@ public class ServicoEmpresa {
 
     /**
      * Inicia um empreendimento (obra). Disponivel para os setores imobiliario e
-     * de construcao: consome caixa ao longo dos turnos e vira valor ao concluir.
+     * de construcao: consome caixa ao longo dos turnos e, ao concluir, vira
+     * patrimonio da unidade que tocou a obra.
      */
     @Transactional
     public Empreendimento iniciarEmpreendimento(Long empresaId, Long jogadorId, String nome,
                                                 Empreendimento.TipoEmpreendimento tipo,
-                                                double custoTotal, int turnosTotais) {
+                                                double custoTotal, int turnosTotais, Long unidadeId) {
         Empresa empresa = buscar(empresaId);
         Jogador jogador = exigirDono(empresa, jogadorId);
+        Unidade unidade = destino(empresa, unidadeId);
         if (empresa.getSetor() == Setor.ALIMENTICIO) {
             throw new RegraDeNegocioException("Empreendimentos sao exclusivos dos setores imobiliario e de construcao.");
         }
@@ -329,6 +355,7 @@ public class ServicoEmpresa {
         int turno = estadoJogo.turnoAtual();
         Empreendimento obra = new Empreendimento();
         obra.setEmpresa(empresa);
+        obra.setUnidade(unidade);
         obra.setNome(nome == null || nome.isBlank() ? "Empreendimento " + turno : nome.trim());
         obra.setTipo(tipo);
         obra.setCustoTotal(custoTotal);
@@ -336,36 +363,61 @@ public class ServicoEmpresa {
         obra.setTurnosRestantes(turnosTotais);
         obra.setTurnoInicio(turno);
         // Valor estimado acompanha o custo do terreno local e o tipo da obra.
-        double fatorLocal = 0.7 + empresa.getMunicipio().getIndiceUrbanizacao() / 100.0 * 0.6;
+        double fatorLocal = 0.7 + unidade.getMunicipio().getIndiceUrbanizacao() / 100.0 * 0.6;
         obra.setValorEstimado(custoTotal * tipo.getMultiplicadorValor() * fatorLocal);
         Empreendimento salva = repositorioEmpreendimento.save(obra);
 
         auditoria.registrar(jogador.getUsuario(), "OBRA_INICIADA", "Empreendimento", salva.getId(),
                 "Obra " + salva.getNome() + " iniciada pela empresa " + empresa.getNome(),
                 Map.of("custoTotal", custoTotal, "turnos", turnosTotais,
-                        "valorEstimado", salva.getValorEstimado()));
+                        "valorEstimado", salva.getValorEstimado(), "unidade", unidade.getNome()));
         return salva;
     }
 
     /**
-     * Diagnostico de capacidade: mostra qual dos dois tetos esta limitando a
-     * producao e qual seria a equipe coerente com o patrimonio atual.
+     * Diagnostico de capacidade da empresa, somando as unidades.
+     *
+     * Cada unidade tem o proprio gargalo, entao a capacidade da empresa e a soma
+     * dos menores tetos, nunca o menor dos totais: equipe sobrando em Campinas
+     * nao produz nada em Sao Paulo.
      */
     @Transactional(readOnly = true)
     public Map<String, Object> diagnosticoCapacidade(Long empresaId) {
         Empresa empresa = buscar(empresaId);
-        double porEquipe = motor.capacidadePorEquipe(empresa);
-        double porCapital = motor.capacidadePorCapital(empresa);
+        List<Unidade> unidades = servicoEstrutura.unidades(empresaId);
+        double porEquipe = 0;
+        double porCapital = 0;
+        double efetiva = 0;
+        List<Map<String, Object>> porUnidade = new ArrayList<>();
+
+        for (Unidade unidade : unidades) {
+            PerfilOperacional perfil = servicoEstrutura.perfil(unidade, empresa, 1.0, 1.0, 0.0);
+            double equipe = motor.capacidadePorEquipe(perfil);
+            double capital = motor.capacidadePorCapital(perfil);
+            porEquipe += equipe;
+            porCapital += capital;
+            efetiva += Math.min(equipe, capital);
+
+            Map<String, Object> linha = new LinkedHashMap<>();
+            linha.put("unidadeId", unidade.getId());
+            linha.put("unidade", unidade.getNome());
+            linha.put("municipio", unidade.getMunicipio().getNome());
+            linha.put("capacidadePorEquipe", equipe);
+            linha.put("capacidadePorCapital", capital);
+            linha.put("gargalo", equipe <= capital ? "EQUIPE" : "CAPITAL");
+            linha.put("equipeSugerida", empresa.getSetor().equipeSugerida(unidade.getPatrimonio()));
+            linha.put("ocupacao", unidade.getOcupacao());
+            porUnidade.add(linha);
+        }
 
         Map<String, Object> diagnostico = new LinkedHashMap<>();
         diagnostico.put("capacidadePorEquipe", porEquipe);
         diagnostico.put("capacidadePorCapital", porCapital);
-        diagnostico.put("capacidadeEfetiva", Math.min(porEquipe, porCapital));
+        diagnostico.put("capacidadeEfetiva", efetiva);
         diagnostico.put("gargalo", porEquipe <= porCapital ? "EQUIPE" : "CAPITAL");
         diagnostico.put("equipeSugerida", empresa.getSetor().equipeSugerida(empresa.getPatrimonio()));
-        diagnostico.put("ocupacao", porEquipe <= 0 || porCapital <= 0
-                ? 0.0
-                : empresa.getReceitaMensal() / Math.min(porEquipe, porCapital));
+        diagnostico.put("ocupacao", efetiva <= 0 ? 0.0 : empresa.getReceitaMensal() / efetiva);
+        diagnostico.put("unidades", porUnidade);
         return diagnostico;
     }
 
@@ -375,14 +427,25 @@ public class ServicoEmpresa {
         return motor.calcularValuation(empresa, empresa.getLucroMensal(), contexto);
     }
 
+    /** Unidade alvo de uma operacao: a indicada pelo jogador ou a sede. */
+    private Unidade destino(Empresa empresa, Long unidadeId) {
+        if (unidadeId == null) {
+            return servicoEstrutura.sede(empresa.getId());
+        }
+        Unidade unidade = servicoEstrutura.buscarUnidade(unidadeId);
+        if (!unidade.getEmpresa().getId().equals(empresa.getId())) {
+            throw new RegraDeNegocioException("A unidade informada nao pertence a empresa "
+                    + empresa.getNome() + ".");
+        }
+        if (!unidade.isAtiva()) {
+            throw new RegraDeNegocioException("A unidade " + unidade.getNome() + " esta fechada.");
+        }
+        return unidade;
+    }
+
     private Jogador exigirDono(Empresa empresa, Long jogadorId) {
         Jogador jogador = servicoJogador.buscar(jogadorId);
-        if (empresa.getDono() == null || !empresa.getDono().getId().equals(jogador.getId())) {
-            throw new RegraDeNegocioException("Apenas o dono pode administrar a empresa " + empresa.getNome() + ".");
-        }
-        if (!empresa.isAtiva()) {
-            throw new RegraDeNegocioException("A empresa " + empresa.getNome() + " esta inativa.");
-        }
+        empresa.exigirControleDe(jogador);
         return jogador;
     }
 }

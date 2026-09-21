@@ -42,16 +42,40 @@ Erros seguem um formato único:
 |---|---|---|
 | GET | `/empresas/setores` | — (catálogo com parâmetros de cada setor) |
 | GET | `/empresas?setor=&jogadorId=` | — (visão pública: sem lucro, custo, caixa ou patrimônio; com `jogadorId` devolve a visão completa das empresas do próprio jogador) |
-| GET | `/empresas/{id}` | — (inclui histórico, obras e diagnóstico de capacidade) |
+| GET | `/empresas/{id}` | — (inclui histórico, obras, unidades, linhas, departamentos e diagnóstico de capacidade) |
 | GET | `/empresas/{id}/historico?limite=36` | — |
 | POST | `/empresas` | `{jogadorId, nome, setor, municipioId, capitalInicial, funcionarios}` |
-| POST | `/empresas/{id}/capital` | `{jogadorId, valor}` |
-| POST | `/empresas/{id}/contratar` | `{jogadorId, quantidade}` |
-| POST | `/empresas/{id}/demitir` | `{jogadorId, quantidade}` |
+| POST | `/empresas/{id}/capital` | `{jogadorId, valor, unidadeId?}` |
+| POST | `/empresas/{id}/contratar` | `{jogadorId, quantidade, unidadeId?}` |
+| POST | `/empresas/{id}/demitir` | `{jogadorId, quantidade, unidadeId?}` |
 | POST | `/empresas/{id}/gestao` | `{jogadorId, marketingMensal, salarioMedio, payout}` |
 | POST | `/empresas/{id}/ipo` | `{jogadorId, fracaoOfertada}` |
 | GET | `/empresas/{id}/empreendimentos` | — |
-| POST | `/empresas/{id}/empreendimentos` | `{jogadorId, nome, tipo, custoTotal, turnosTotais}` |
+| POST | `/empresas/{id}/empreendimentos` | `{jogadorId, nome, tipo, custoTotal, turnosTotais, unidadeId?}` |
+
+`unidadeId` é opcional em todas as rotas acima: sem ele, a operação vai para a
+sede da empresa.
+
+## Estrutura da empresa
+
+Todas as rotas ficam sob `/empresas/{empresaId}/estrutura` e exigem que o
+`jogadorId` informado seja o dono da empresa.
+
+| Método | Rota | Corpo |
+|---|---|---|
+| GET | `/catalogo` | — (posicionamentos e áreas de departamento com seus fatores) |
+| GET | `` | — (unidades, linhas e departamentos de uma vez) |
+| GET | `/unidades` | — |
+| POST | `/unidades` | `{jogadorId, municipioId, nome, capital, funcionarios}` |
+| DELETE | `/unidades/{unidadeId}?jogadorId=` | — (liquida os ativos com deságio) |
+| POST | `/unidades/transferir-capital` | `{jogadorId, origemId, destinoId, valor}` |
+| POST | `/unidades/transferir-equipe` | `{jogadorId, origemId, destinoId, quantidade}` |
+| GET | `/linhas` | — |
+| POST | `/linhas` | `{jogadorId, nome, posicionamento, fatiaMix}` |
+| POST | `/linhas/{linhaId}` | `{jogadorId, posicionamento?, fatiaMix?}` |
+| DELETE | `/linhas/{linhaId}?jogadorId=` | — |
+| GET | `/departamentos` | — |
+| POST | `/departamentos` | `{jogadorId, area, orcamentoMensal}` (orçamento zero desmonta a área) |
 
 ## Investimentos
 
