@@ -4,36 +4,31 @@ Prioridades para os próximos ciclos. `RF` = requisito funcional,
 `RNF` = requisito não funcional. Itens concluídos ficam registrados no
 [CHANGELOG](../CHANGELOG.md) e no [RELATÓRIO](RELATORIO.md).
 
-## Próximo ciclo (0.3.0)
+## O que ainda não foi entregue
 
-| # | Item | Por quê | Onde mexe |
-|---|---|---|---|
-| RNF-01 | Autenticação real: Spring Security, BCrypt e token de sessão | Hoje o `jogadorId` vem no corpo e qualquer cliente pode agir por outro (L-01, L-02) | `jogador/`, todos os controllers, `js/app.js` |
-| RF-10 | Eleições com candidatura, campanha e apuração | A posse simplificada não representa disputa política | `politica/ServicoPolitica`, nova entidade `Candidatura` |
-| RF-11 | Quarto setor (varejo ou energia) | Valida que o motor aceita setor novo só com parâmetros | `economia/Setor` e seed |
+A tabela abaixo é gerada a partir de [`requisitos.toml`](requisitos.toml):
+mudar a situação de um requisito lá muda este roadmap e o relatório junto.
 
-## Ciclo seguinte (0.4.0)
-
-| # | Item | Por quê |
-|---|---|---|
-| RNF-02 | PostgreSQL + Flyway | H2 em arquivo aceita um processo só; migração versionada é pré-requisito para produção |
-| RF-12 | Contratos entre empresas (fornecimento construção → imobiliário) | Cria cadeia produtiva entre setores |
-| RF-13 | Eventos de mundo (crise, seca, boom imobiliário) | Dá narrativa e quebra a previsibilidade do ciclo |
-| RF-14 | Notificações de turno para o jogador | Hoje é preciso abrir a tela para saber o que aconteceu |
-
-## Backlog
-
-| # | Item | Observação |
-|---|---|---|
-| RNF-03 | Trava distribuída para a auditoria | Necessária ao rodar mais de um servidor (L-05) |
-| RNF-04 | Migrar dinheiro para `BigDecimal` | Só se o jogo passar a exigir precisão contábil (ADR-03) |
-| RNF-05 | Cache das consultas de estatísticas | Quando a série passar de algumas centenas de turnos |
-| RF-15 | Mais municípios e estados | Amplia o mapa e a disputa local |
-| RF-16 | Comércio exterior entre países | Exige um segundo país jogável |
-| RF-17 | Fusões e aquisições | Compra de participação relevante e controle |
-| RF-18 | Impeachment e cassação | Fecha o ciclo de responsabilização política |
-| RF-19 | Ranking de jogadores por patrimônio e influência | Motiva a competição entre partidas |
-| RF-20 | Projeções de investimento na tela usando `/projecao` do Python | O endpoint já existe, falta consumir no frontend |
+<!-- auto:inicio:planejados -->
+| Prioridade | Requisito | Título | Situação | Por quê |
+|---|---|---|---|---|
+| Alta | RF-10 | Eleições com candidatura e campanha | planejado | Disputa de cargos por candidatura, campanha e apuração por aprovação, substituindo a posse simplificada. |
+| Alta | RNF-01 | Autenticação real | planejado | Spring Security com BCrypt e token de sessão, substituindo o jogadorId que viaja no corpo da requisição. |
+| Alta | RNF-02 | Banco PostgreSQL com migração versionada | planejado | Trocar o H2 em arquivo por PostgreSQL com Flyway, pré-requisito para mais de um processo. |
+| Media | RF-11 | Quarto setor econômico | planejado | Acrescentar um setor novo (varejo ou energia) para validar que o motor aceita setores apenas com parâmetros. |
+| Media | RF-12 | Contratos entre empresas | planejado | Fornecimento entre empresas, ligando construção e imobiliário em cadeia produtiva. |
+| Media | RF-13 | Eventos de mundo | planejado | Crises, secas, booms setoriais e outros choques narrativos que quebrem a previsibilidade do ciclo. |
+| Media | RNF-03 | Trava distribuída para a auditoria | planejado | Garantir a ordem da cadeia de hashes com mais de um servidor gravando. |
+| Baixa | RF-14 | Notificações de turno para o jogador | planejado | Avisar o jogador do que aconteceu no fechamento sem exigir que ele abra a tela. |
+| Baixa | RF-15 | Mais municípios e estados | planejado | Ampliar o mapa para aumentar a disputa local e a variedade de mercados. |
+| Baixa | RF-16 | Comércio exterior entre países | planejado | Trocas comerciais entre países, exigindo um segundo país jogável. |
+| Baixa | RF-17 | Fusões e aquisições | planejado | Compra de participação relevante e troca de controle entre jogadores. |
+| Baixa | RF-18 | Impeachment e cassação | planejado | Responsabilização política, fechando o ciclo de poder com perda de mandato. |
+| Baixa | RF-19 | Ranking de jogadores | planejado | Classificação por patrimônio e influência política entre partidas. |
+| Baixa | RF-20 | Projeções de investimento na interface | parcial | Mostrar ao investidor a projeção de retorno calculada pelo serviço analítico. |
+| Baixa | RNF-04 | Valores monetários em BigDecimal | planejado | Migrar de double para BigDecimal caso o jogo passe a exigir precisão contábil. |
+| Baixa | RNF-05 | Cache das consultas de estatísticas | planejado | Evitar recalcular séries longas a cada requisição quando a partida passar de centenas de turnos. |
+<!-- auto:fim:planejados -->
 
 ## Dívidas técnicas conhecidas
 

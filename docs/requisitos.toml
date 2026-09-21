@@ -1,0 +1,480 @@
+# Catálogo de requisitos do Complexus — FONTE ÚNICA DA VERDADE.
+#
+# Este arquivo é escrito à mão. Os relatórios (docs/REQUISITOS.md, os blocos
+# automáticos do README e do RELATORIO, e a tabela do ROADMAP) são GERADOS a
+# partir daqui por `python ferramentas/gerar_documentacao.py`. Não edite os
+# arquivos gerados: edite este catálogo.
+#
+# Campos de cada requisito:
+#   id             RF-nn (funcional) ou RNF-nn (não funcional)
+#   titulo         frase curta, no infinitivo ou substantiva
+#   status         IMPLEMENTADO | PARCIAL | PLANEJADO
+#   prioridade     ALTA | MEDIA | BAIXA
+#   versao         versão em que entrou (vazio quando ainda não entregue)
+#   descricao      o que o sistema faz (ou fará)
+#   criterio       critério de aceite verificável
+#   implementacao  caminhos reais — o gerador falha se um deles não existir
+#   testes         testes que cobrem o requisito (vazio = lacuna de cobertura)
+#   observacao     opcional: decisão, limitação ou nota de contexto
+
+[meta]
+projeto = "Complexus"
+responsavel = "naivepage13"
+
+# ---------------------------------------------------------------------------
+# Requisitos funcionais
+# ---------------------------------------------------------------------------
+
+[[requisito]]
+id = "RF-01"
+titulo = "Cadastro e identificação de jogadores"
+status = "IMPLEMENTADO"
+prioridade = "ALTA"
+versao = "0.2.0"
+descricao = "Criar conta, entrar na partida e manter um caixa pessoal que financia empresas e investimentos."
+criterio = "Um usuário novo se registra, recebe caixa inicial e consegue autenticar em seguida."
+implementacao = [
+  "backend/src/main/java/com/complexus/jogador/ServicoJogador.java",
+  "backend/src/main/java/com/complexus/jogador/JogadorController.java",
+  "backend/src/main/resources/static/login.html",
+]
+testes = ["CredencialEstavelTest#registroEAutenticacao"]
+observacao = "Autenticação simplificada: ver RNF-01."
+
+[[requisito]]
+id = "RF-02"
+titulo = "Administração de empresas"
+status = "IMPLEMENTADO"
+prioridade = "ALTA"
+versao = "0.2.0"
+descricao = "Fundar empresa nos setores disponíveis e administrá-la: aporte de capital, contratação, demissão, marketing, salário, política de dividendos e abertura de capital."
+criterio = "Fundar debita o caixa do jogador, cria a empresa com patrimônio e caixa, e cada comando de gestão altera o estado e gera lançamento e evento."
+implementacao = [
+  "backend/src/main/java/com/complexus/economia/ServicoEmpresa.java",
+  "backend/src/main/java/com/complexus/economia/EmpresaController.java",
+  "backend/src/main/resources/static/empresa.html",
+]
+testes = [
+  "FluxoDoJogoTest#fundarEmpresaRegistraTudo",
+  "FluxoDoJogoTest#capitalMinimoEValidado",
+]
+
+[[requisito]]
+id = "RF-03"
+titulo = "Simulação econômica por turno"
+status = "IMPLEMENTADO"
+prioridade = "ALTA"
+versao = "0.2.0"
+descricao = "Calcular a cada turno mercado, concorrência, receita, custos, tributos, lucro, valor de mercado e preço da ação de todas as empresas ativas, além dos indicadores macroeconômicos."
+criterio = "Um turno processado atualiza o resultado de todas as empresas, grava histórico e recalcula PIB, desemprego, inflação, juros e aprovação."
+implementacao = [
+  "backend/src/main/java/com/complexus/economia/MotorSimulacao.java",
+  "backend/src/main/java/com/complexus/core/ServicoTurno.java",
+]
+testes = [
+  "MotorSimulacaoTest#receitaLimitadaPelaCapacidade",
+  "MotorSimulacaoTest#efeitoDeSubsidioEregulacao",
+  "MotorSimulacaoTest#valuationRespeitaOLastro",
+  "FluxoDoJogoTest#turnoCompleto",
+]
+observacao = "A produção é limitada pelo menor teto entre equipe e patrimônio (decisão D-02)."
+
+[[requisito]]
+id = "RF-04"
+titulo = "Empreendimentos dos setores imobiliário e construção"
+status = "IMPLEMENTADO"
+prioridade = "MEDIA"
+versao = "0.2.0"
+descricao = "Tocar obras de longo prazo que consomem caixa em parcelas, atrasam quando falta caixa e viram patrimônio ao concluir."
+criterio = "Obra iniciada consome uma parcela por turno; sem caixa o prazo escorrega; ao concluir o valor estimado entra no patrimônio."
+implementacao = [
+  "backend/src/main/java/com/complexus/economia/Empreendimento.java",
+  "backend/src/main/java/com/complexus/core/ServicoTurno.java",
+]
+testes = [
+  "FluxoDoJogoTest#cicloDeEmpreendimento",
+  "FluxoDoJogoTest#alimenticioNaoTemObra",
+]
+
+[[requisito]]
+id = "RF-05"
+titulo = "Ocupação de cargos políticos nas três esferas"
+status = "IMPLEMENTADO"
+prioridade = "ALTA"
+versao = "0.2.0"
+descricao = "Assumir cargos federais, estaduais e municipais, de presidente a vereador, com mandato por prazo e cadeiras ocupadas por NPCs quando não há jogador."
+criterio = "Havendo vaga a posse é direta; o mandato tem início e fim em turnos; ao vencer, a cadeira é renovada por NPC."
+implementacao = [
+  "backend/src/main/java/com/complexus/politica/CargoPolitico.java",
+  "backend/src/main/java/com/complexus/politica/ServicoPolitica.java",
+  "backend/src/main/resources/static/politica.html",
+]
+testes = ["FluxoDoJogoTest#mundoInicialCarregado"]
+
+[[requisito]]
+id = "RF-06"
+titulo = "Tramitação de projetos de lei"
+status = "IMPLEMENTADO"
+prioridade = "ALTA"
+versao = "0.2.0"
+descricao = "Propor, pautar, votar (jogadores e NPCs), apurar, sancionar, vetar, sancionar tacitamente e derrubar veto por dois terços."
+criterio = "Um projeto percorre rascunho, votação e apuração, e termina sancionado, rejeitado ou vetado sem intervenção manual."
+implementacao = [
+  "backend/src/main/java/com/complexus/politica/ProjetoDeLei.java",
+  "backend/src/main/java/com/complexus/politica/ServicoPolitica.java",
+]
+testes = [
+  "FluxoDoJogoTest#tramitacaoDeProjeto",
+  "FluxoDoJogoTest#votoForaDaCasaERecusado",
+]
+
+[[requisito]]
+id = "RF-07"
+titulo = "Efeito das leis sobre a economia"
+status = "IMPLEMENTADO"
+prioridade = "ALTA"
+versao = "0.2.0"
+descricao = "Lei sancionada altera alíquotas, subsídios, custo regulatório, investimento em infraestrutura, programa social ou zoneamento, e isso entra no cálculo das empresas."
+criterio = "Sancionar uma lei tributária muda a alíquota do território e o efeito aparece no resultado do turno seguinte."
+implementacao = [
+  "backend/src/main/java/com/complexus/politica/TipoProjeto.java",
+  "backend/src/main/java/com/complexus/politica/ServicoPolitica.java",
+]
+testes = ["MotorSimulacaoTest#efeitoDeSubsidioEregulacao"]
+
+[[requisito]]
+id = "RF-08"
+titulo = "Mercado de ações com investimento lastreado"
+status = "IMPLEMENTADO"
+prioridade = "ALTA"
+versao = "0.2.0"
+descricao = "Abrir capital, comprar e vender ações e receber dividendos mensais proporcionais ao lucro da empresa."
+criterio = "A compra credita o caixa da empresa (mercado primário) e o investidor recebe dividendo no turno seguinte."
+implementacao = [
+  "backend/src/main/java/com/complexus/investimento/ServicoInvestimento.java",
+  "backend/src/main/resources/static/investimentos.html",
+]
+testes = ["FluxoDoJogoTest#mercadoDeAcoes"]
+
+[[requisito]]
+id = "RF-09"
+titulo = "Turno automático de uma hora"
+status = "IMPLEMENTADO"
+prioridade = "ALTA"
+versao = "0.2.0"
+descricao = "O mundo avança sozinho a cada hora de tempo real, equivalente a um mês de jogo, com avanço manual disponível pela API."
+criterio = "O agendador dispara no intervalo configurado e a API expõe o turno corrente e a contagem para o próximo."
+implementacao = [
+  "backend/src/main/java/com/complexus/core/AgendadorTurno.java",
+  "backend/src/main/java/com/complexus/core/JogoController.java",
+]
+testes = ["FluxoDoJogoTest#turnoCompleto"]
+
+[[requisito]]
+id = "RF-10"
+titulo = "Eleições com candidatura e campanha"
+status = "PLANEJADO"
+prioridade = "ALTA"
+versao = ""
+descricao = "Disputa de cargos por candidatura, campanha e apuração por aprovação, substituindo a posse simplificada."
+criterio = "Ao fim do mandato, candidatos concorrem e o vencedor sai da apuração, não da ordem de chegada."
+implementacao = []
+testes = []
+observacao = "Hoje a posse é direta em vaga livre ou desafio a NPC com aprovação abaixo de 45."
+
+[[requisito]]
+id = "RF-11"
+titulo = "Quarto setor econômico"
+status = "PLANEJADO"
+prioridade = "MEDIA"
+versao = ""
+descricao = "Acrescentar um setor novo (varejo ou energia) para validar que o motor aceita setores apenas com parâmetros."
+criterio = "O setor entra alterando somente o enum Setor e a carga inicial, sem tocar no motor de simulação."
+implementacao = []
+testes = []
+
+[[requisito]]
+id = "RF-12"
+titulo = "Contratos entre empresas"
+status = "PLANEJADO"
+prioridade = "MEDIA"
+versao = ""
+descricao = "Fornecimento entre empresas, ligando construção e imobiliário em cadeia produtiva."
+criterio = "Uma empresa compra insumo de outra e o custo de uma vira receita da outra no mesmo turno."
+implementacao = []
+testes = []
+
+[[requisito]]
+id = "RF-13"
+titulo = "Eventos de mundo"
+status = "PLANEJADO"
+prioridade = "MEDIA"
+versao = ""
+descricao = "Crises, secas, booms setoriais e outros choques narrativos que quebrem a previsibilidade do ciclo."
+criterio = "Um evento ativo altera os parâmetros do turno e aparece no canal de atualizações."
+implementacao = []
+testes = []
+
+[[requisito]]
+id = "RF-14"
+titulo = "Notificações de turno para o jogador"
+status = "PLANEJADO"
+prioridade = "BAIXA"
+versao = ""
+descricao = "Avisar o jogador do que aconteceu no fechamento sem exigir que ele abra a tela."
+criterio = "O jogador recebe o resumo do turno por um canal fora da interface."
+implementacao = []
+testes = []
+
+[[requisito]]
+id = "RF-15"
+titulo = "Mais municípios e estados"
+status = "PLANEJADO"
+prioridade = "BAIXA"
+versao = ""
+descricao = "Ampliar o mapa para aumentar a disputa local e a variedade de mercados."
+criterio = "A carga inicial cria os novos territórios e as empresas disputam mercados distintos."
+implementacao = []
+testes = []
+
+[[requisito]]
+id = "RF-16"
+titulo = "Comércio exterior entre países"
+status = "PLANEJADO"
+prioridade = "BAIXA"
+versao = ""
+descricao = "Trocas comerciais entre países, exigindo um segundo país jogável."
+criterio = "Exportação e importação alteram PIB e balança dos países envolvidos."
+implementacao = []
+testes = []
+
+[[requisito]]
+id = "RF-17"
+titulo = "Fusões e aquisições"
+status = "PLANEJADO"
+prioridade = "BAIXA"
+versao = ""
+descricao = "Compra de participação relevante e troca de controle entre jogadores."
+criterio = "Ao ultrapassar o limite de participação, o comprador assume o controle da empresa."
+implementacao = []
+testes = []
+
+[[requisito]]
+id = "RF-18"
+titulo = "Impeachment e cassação"
+status = "PLANEJADO"
+prioridade = "BAIXA"
+versao = ""
+descricao = "Responsabilização política, fechando o ciclo de poder com perda de mandato."
+criterio = "Um processo aprovado encerra o mandato do titular antes do prazo."
+implementacao = []
+testes = []
+
+[[requisito]]
+id = "RF-19"
+titulo = "Ranking de jogadores"
+status = "PLANEJADO"
+prioridade = "BAIXA"
+versao = ""
+descricao = "Classificação por patrimônio e influência política entre partidas."
+criterio = "O ranking ordena jogadores por critério declarado e atualiza a cada turno."
+implementacao = []
+testes = []
+
+[[requisito]]
+id = "RF-20"
+titulo = "Projeções de investimento na interface"
+status = "PARCIAL"
+prioridade = "BAIXA"
+versao = ""
+descricao = "Mostrar ao investidor a projeção de retorno calculada pelo serviço analítico."
+criterio = "A tela de investimentos exibe a série projetada vinda de /projecao."
+implementacao = ["analytics/modelo_setorial.py"]
+testes = ["testes_modelo#test_projecao_acumula_dividendos"]
+observacao = "O cálculo existe e é testado no Python; falta a interface consumir o endpoint."
+
+[[requisito]]
+id = "RF-21"
+titulo = "Estatísticas gerais e séries históricas"
+status = "IMPLEMENTADO"
+prioridade = "ALTA"
+versao = "0.2.0"
+descricao = "Consolidar por turno os agregados do mundo e por setor, com séries históricas e ranking de empresas."
+criterio = "Cada turno grava um snapshot e uma linha por setor, consultáveis por série histórica."
+implementacao = [
+  "backend/src/main/java/com/complexus/estatistica/ServicoEstatistica.java",
+  "backend/src/main/resources/static/estatisticas.html",
+]
+testes = ["FluxoDoJogoTest#turnoCompleto"]
+
+[[requisito]]
+id = "RF-22"
+titulo = "Canal de atualizações do jogador"
+status = "IMPLEMENTADO"
+prioridade = "ALTA"
+versao = "0.2.1"
+descricao = "Feed com os fatos públicos do mundo e as ações do próprio jogador, em linguagem de jogo."
+criterio = "O feed mostra fatos públicos a todos, movimentos privados só ao autor, e nunca hash, ator ou detalhe interno."
+implementacao = [
+  "backend/src/main/java/com/complexus/atualizacoes/ServicoAtualizacoes.java",
+  "backend/src/main/resources/static/atualizacoes.html",
+]
+testes = [
+  "CanalEAcessoAdminTest#canalNaoExpoeDadoInterno",
+  "CanalEAcessoAdminTest#movimentoPrivadoFicaComODono",
+]
+
+# ---------------------------------------------------------------------------
+# Requisitos não funcionais
+# ---------------------------------------------------------------------------
+
+[[requisito]]
+id = "RNF-01"
+titulo = "Autenticação real"
+status = "PLANEJADO"
+prioridade = "ALTA"
+versao = ""
+descricao = "Spring Security com BCrypt e token de sessão, substituindo o jogadorId que viaja no corpo da requisição."
+criterio = "Nenhuma rota aceita agir em nome de um jogador sem credencial verificada."
+implementacao = []
+testes = []
+observacao = "Bloqueia também a correção da limitação L-07 (detalhe de empresa de terceiros)."
+
+[[requisito]]
+id = "RNF-02"
+titulo = "Banco PostgreSQL com migração versionada"
+status = "PLANEJADO"
+prioridade = "ALTA"
+versao = ""
+descricao = "Trocar o H2 em arquivo por PostgreSQL com Flyway, pré-requisito para mais de um processo."
+criterio = "O esquema é criado por migração versionada, não por ddl-auto."
+implementacao = []
+testes = []
+
+[[requisito]]
+id = "RNF-03"
+titulo = "Trava distribuída para a auditoria"
+status = "PLANEJADO"
+prioridade = "MEDIA"
+versao = ""
+descricao = "Garantir a ordem da cadeia de hashes com mais de um servidor gravando."
+criterio = "Dois processos gravando em paralelo produzem uma cadeia íntegra."
+implementacao = []
+testes = []
+
+[[requisito]]
+id = "RNF-04"
+titulo = "Valores monetários em BigDecimal"
+status = "PLANEJADO"
+prioridade = "BAIXA"
+versao = ""
+descricao = "Migrar de double para BigDecimal caso o jogo passe a exigir precisão contábil."
+criterio = "Somas de lançamentos fecham sem erro de arredondamento."
+implementacao = []
+testes = []
+observacao = "Decisão ADR-03: double é suficiente enquanto for simulação de jogo."
+
+[[requisito]]
+id = "RNF-05"
+titulo = "Cache das consultas de estatísticas"
+status = "PLANEJADO"
+prioridade = "BAIXA"
+versao = ""
+descricao = "Evitar recalcular séries longas a cada requisição quando a partida passar de centenas de turnos."
+criterio = "A consulta de série histórica responde em tempo constante com o crescimento do histórico."
+implementacao = []
+testes = []
+
+[[requisito]]
+id = "RNF-06"
+titulo = "Integridade verificável do histórico"
+status = "IMPLEMENTADO"
+prioridade = "ALTA"
+versao = "0.2.0"
+descricao = "Cada fato do jogo entra em uma cadeia encadeada por SHA-256, com verificação que aponta o elo adulterado."
+criterio = "Alterar um evento antigo faz a verificação apontar exatamente onde a cadeia quebrou."
+implementacao = ["backend/src/main/java/com/complexus/auditoria/ServicoAuditoria.java"]
+testes = ["FluxoDoJogoTest#cadeiaDeAuditoriaIntegra"]
+
+[[requisito]]
+id = "RNF-07"
+titulo = "Isolamento do acesso administrativo"
+status = "IMPLEMENTADO"
+prioridade = "ALTA"
+versao = "0.2.1"
+descricao = "Rotas administrativas exigem credencial no servidor, não apenas ausência de link no menu."
+criterio = "Chamada a /api/admin sem o cabeçalho correto responde 403."
+implementacao = ["backend/src/main/java/com/complexus/config/FiltroAdmin.java"]
+testes = [
+  "CanalEAcessoAdminTest#auditoriaExigeCredencial",
+  "CanalEAcessoAdminTest#credencialInvalida",
+]
+
+[[requisito]]
+id = "RNF-08"
+titulo = "Resiliência ao serviço analítico"
+status = "IMPLEMENTADO"
+prioridade = "MEDIA"
+versao = "0.2.0"
+descricao = "O turno é processado mesmo com o serviço Python fora do ar, usando a fórmula equivalente em Java."
+criterio = "Com o serviço desligado o turno fecha e o relatório registra a origem FALLBACK_JAVA."
+implementacao = ["backend/src/main/java/com/complexus/integracao/ClienteAnalitico.java"]
+testes = []
+observacao = "Verificado manualmente; os testes rodam sempre com o serviço desabilitado."
+
+[[requisito]]
+id = "RNF-09"
+titulo = "Reprodutibilidade da simulação"
+status = "IMPLEMENTADO"
+prioridade = "MEDIA"
+versao = "0.2.0"
+descricao = "Os choques setoriais derivam de semente ligada ao turno, então o mesmo turno produz sempre o mesmo resultado."
+criterio = "Calcular duas vezes o mesmo turno devolve valores idênticos."
+implementacao = ["analytics/modelo_setorial.py"]
+testes = [
+  "testes_modelo#test_resultado_e_deterministico",
+  "testes_modelo#test_turnos_diferentes_geram_choques_diferentes",
+]
+
+[[requisito]]
+id = "RNF-10"
+titulo = "Estabilidade das credenciais entre versões"
+status = "IMPLEMENTADO"
+prioridade = "ALTA"
+versao = "0.3.0"
+descricao = "O hash de senha não pode mudar de formato sem migração: contas existentes continuam entrando."
+criterio = "O hash de uma senha conhecida permanece igual entre versões."
+implementacao = ["backend/src/main/java/com/complexus/jogador/ServicoJogador.java"]
+testes = ["CredencialEstavelTest#hashDeSenhaEstavel"]
+observacao = "Criado depois que a renomeação do projeto trocou o sal e derrubou o login de todas as contas."
+
+[[requisito]]
+id = "RNF-11"
+titulo = "Frontend sem dependência externa"
+status = "IMPLEMENTADO"
+prioridade = "MEDIA"
+versao = "0.2.0"
+descricao = "Interface em HTML, CSS e JavaScript puros, uma página por arquivo e uma única folha de estilo, sem build."
+criterio = "Subir o backend entrega a interface pronta, sem etapa de compilação do frontend."
+implementacao = ["backend/src/main/resources/static/css/app.css"]
+testes = []
+
+[[requisito]]
+id = "RNF-12"
+titulo = "Documentação viva e rastreável"
+status = "IMPLEMENTADO"
+prioridade = "ALTA"
+versao = "0.4.0"
+descricao = "README, relatórios e catálogo de requisitos se atualizam a partir do código a cada commit, com rastreabilidade de requisito para arquivo e teste."
+criterio = "O gerador falha quando um requisito aponta para arquivo inexistente ou quando a documentação está desatualizada em relação ao código."
+implementacao = [
+  "ferramentas/gerar_documentacao.py",
+  "ferramentas/inventario.py",
+  "ferramentas/requisitos.py",
+  ".githooks/pre-commit",
+]
+testes = [
+  "testes_gerador#test_requisitos_tem_id_unico",
+  "testes_gerador#test_implementacao_aponta_para_arquivo_existente",
+  "testes_gerador#test_documentacao_esta_atualizada",
+]

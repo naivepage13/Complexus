@@ -10,6 +10,7 @@ import com.complexus.auditoria.ServicoAuditoria;
 import com.complexus.comum.RegraDeNegocioException;
 import com.complexus.core.ServicoEstadoJogo;
 import com.complexus.core.ServicoTurno;
+import com.complexus.economia.Empreendimento;
 import com.complexus.economia.Empresa;
 import com.complexus.economia.HistoricoEmpresa;
 import com.complexus.economia.ServicoEmpresa;
@@ -124,6 +125,49 @@ class FluxoDoJogoTest {
         assertNotNull(snapshot);
         assertTrue(snapshot.getEmpresasAtivas() > 0);
         assertEquals(3, servicoEstatistica.setoresNoTurno(snapshot.getTurno()).size());
+    }
+
+    @Test
+    @DisplayName("Obra consome caixa por turno e vira patrimonio ao concluir")
+    void cicloDeEmpreendimento() {
+        Jogador jogador = novoJogador();
+        Municipio municipio = servicoPolitica.listarMunicipios().get(0);
+        Empresa empresa = servicoEmpresa.fundar(jogador.getId(), "Construtora " + sufixo(),
+                Setor.CONSTRUCAO, municipio.getId(), 2_000_000, 20);
+
+        double patrimonioAntes = empresa.getPatrimonio();
+        Empreendimento obra = servicoEmpresa.iniciarEmpreendimento(empresa.getId(), jogador.getId(),
+                "Viaduto " + sufixo(), Empreendimento.TipoEmpreendimento.INFRAESTRUTURA,
+                200_000, 2);
+
+        assertEquals(Empreendimento.StatusEmpreendimento.EM_OBRA, obra.getStatus());
+        assertEquals(2, obra.getTurnosRestantes());
+
+        servicoTurno.processarTurno("TESTE");
+        Empreendimento emAndamento = servicoEmpresa.empreendimentos(empresa.getId()).get(0);
+        assertEquals(1, emAndamento.getTurnosRestantes(), "a obra deveria andar um turno");
+        assertTrue(emAndamento.getInvestido() > 0, "a parcela do turno deveria ter sido paga");
+
+        servicoTurno.processarTurno("TESTE");
+        Empreendimento concluida = servicoEmpresa.empreendimentos(empresa.getId()).get(0);
+
+        assertEquals(Empreendimento.StatusEmpreendimento.CONCLUIDO, concluida.getStatus());
+        assertTrue(concluida.getValorEstimado() > 0);
+        assertTrue(servicoEmpresa.buscar(empresa.getId()).getPatrimonio() > patrimonioAntes,
+                "a entrega da obra deveria somar patrimonio");
+    }
+
+    @Test
+    @DisplayName("Empresa do setor alimenticio nao toca obra")
+    void alimenticioNaoTemObra() {
+        Jogador jogador = novoJogador();
+        Municipio municipio = servicoPolitica.listarMunicipios().get(0);
+        Empresa empresa = servicoEmpresa.fundar(jogador.getId(), "Mercado " + sufixo(),
+                Setor.ALIMENTICIO, municipio.getId(), 400_000, 5);
+
+        assertThrows(RegraDeNegocioException.class, () -> servicoEmpresa.iniciarEmpreendimento(
+                empresa.getId(), jogador.getId(), "Obra invalida",
+                Empreendimento.TipoEmpreendimento.RESIDENCIAL, 100_000, 3));
     }
 
     @Test

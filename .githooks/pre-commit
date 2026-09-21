@@ -1,0 +1,45 @@
+#!/bin/sh
+#
+# Mantem a documentacao viva sincronizada com o codigo.
+#
+# Regenera os relatorios a partir do codigo e do catalogo de requisitos e
+# inclui no proprio commit o que mudou. Se o catalogo estiver invalido (por
+# exemplo, um requisito apontando para arquivo que nao existe mais), o commit
+# e recusado com a mensagem do gerador.
+#
+# Para ligar nesta copia do repositorio:
+#   git config core.hooksPath .githooks
+
+set -e
+
+# Sem Python instalado o hook nao bloqueia o trabalho: apenas avisa.
+if command -v python >/dev/null 2>&1; then
+    PYTHON=python
+elif command -v python3 >/dev/null 2>&1; then
+    PYTHON=python3
+else
+    echo "pre-commit: Python nao encontrado; documentacao nao foi regerada." >&2
+    exit 0
+fi
+
+RAIZ=$(git rev-parse --show-toplevel)
+
+if ! SAIDA=$("$PYTHON" "$RAIZ/ferramentas/gerar_documentacao.py" --raiz "$RAIZ" 2>&1); then
+    echo "$SAIDA" >&2
+    echo "" >&2
+    echo "pre-commit: a documentacao nao pode ser gerada. Commit interrompido." >&2
+    exit 1
+fi
+
+echo "$SAIDA"
+
+# Reinclui no commit apenas os arquivos que o gerador mantem.
+GERADOS="README.md docs/REQUISITOS.md docs/INVENTARIO.md docs/RELATORIO.md docs/ROADMAP.md"
+for ARQUIVO in $GERADOS; do
+    if [ -f "$RAIZ/$ARQUIVO" ] && ! git diff --quiet -- "$ARQUIVO"; then
+        git add "$ARQUIVO"
+        echo "pre-commit: $ARQUIVO atualizado e incluido no commit."
+    fi
+done
+
+exit 0

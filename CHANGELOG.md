@@ -4,6 +4,47 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 Este arquivo é a linha de auditoria do desenvolvimento: nenhuma entrega entra
 sem uma linha aqui. Ver também [docs/RELATORIO.md](docs/RELATORIO.md).
 
+## [0.4.0] - 2026-09-21
+
+Documentacao que se mantem sozinha. Os relatorios deixam de depender de alguem
+lembrar de atualiza-los: passam a ser gerados do codigo e de um catalogo de
+requisitos, e o commit e recusado quando estao atrasados.
+
+### Adicionado
+- **Catalogo de requisitos** em `docs/requisitos.toml`: fonte unica com 34
+  requisitos (22 funcionais e 12 nao funcionais), cada um com situacao,
+  prioridade, criterio de aceite, arquivos que o implementam e testes que o
+  cobrem.
+- **Gerador** `ferramentas/gerar_documentacao.py`, com `ferramentas/inventario.py`
+  (le o codigo: versao, endpoints, entidades, servicos, paginas, testes, linhas)
+  e `ferramentas/requisitos.py` (le e valida o catalogo).
+- **Relatorio de requisitos** `docs/REQUISITOS.md`, gerado por inteiro: panorama
+  por situacao, lacunas de cobertura de teste e ficha de cada requisito.
+- **Inventario tecnico** `docs/INVENTARIO.md`, gerado por inteiro: endpoints
+  separados entre jogador e administracao, entidades, servicos e paginas.
+- **Blocos automaticos** no README (estado do projeto e indice da documentacao),
+  no RELATORIO (numeros e situacao dos requisitos) e no ROADMAP (pendentes).
+- **Hook de pre-commit** em `.githooks/pre-commit`: regera os relatorios, inclui
+  no commit o que mudou e recusa o commit se o catalogo estiver invalido.
+- Modo `--verificar`, que nao escreve e falha quando a documentacao esta
+  desatualizada: serve para CI.
+- 12 testes do proprio gerador, incluindo um que falha se a documentacao do
+  repositorio estiver atrasada em relacao ao codigo.
+- Testes do ciclo de empreendimentos (`cicloDeEmpreendimento` e
+  `alimenticioNaoTemObra`), fechando a lacuna que o novo relatorio apontou.
+
+### Alterado
+- README reestruturado: estado do projeto e indice passam a sair do gerador, e
+  a secao de contribuicao diz o que e manual e o que e automatico.
+- ROADMAP: a tabela de pendencias virou projecao do catalogo, entao situacao de
+  requisito muda em um lugar so.
+- Versao do backend para 0.4.0.
+
+### Observacao
+A saida do gerador e deterministica de proposito: depende do codigo e do
+catalogo, nunca do relogio nem do hash do commit. Sem isso, `--verificar`
+acusaria diferenca a cada execucao.
+
 ## [0.3.0] - 2026-09-21
 
 O projeto passa a se chamar **Complexus**. Sem mudanca de comportamento: e

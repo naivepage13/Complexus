@@ -1,16 +1,58 @@
 # Relatório de desenvolvimento — Complexus
 
-> **Documento vivo.** É atualizado a cada entrega. Sempre que algo muda no
-> projeto, esta página e o [CHANGELOG](../CHANGELOG.md) mudam junto.
+> **Documento vivo.** As seções de métricas e de requisitos são reescritas por
+> `ferramentas/gerar_documentacao.py` a partir do código e de
+> [`requisitos.toml`](requisitos.toml). O restante é análise escrita à mão e
+> muda a cada entrega, junto com o [CHANGELOG](../CHANGELOG.md).
 
 | Campo | Valor |
 |---|---|
-| Versão atual | **0.3.0** |
+| Versão atual | **0.4.0** |
 | Data da última atualização | 21/09/2026 |
 | Repositório | [naivepage13/Complexus](https://github.com/naivepage13/Complexus) |
 | Branch | `claude/business-country-management-game-4bbe6e` |
 | Estado | Núcleo jogável: economia, política, investimentos, turnos e auditoria |
-| Cobertura de testes | 22 testes Java + 9 testes Python, todos verdes |
+| Cobertura de testes | 24 testes Java + 21 testes Python, todos verdes |
+
+## Números do projeto
+
+<!-- auto:inicio:metricas -->
+Versão `0.4.0` · 45 testes · 44 endpoints · 16 entidades · 10 serviços · 9 páginas.
+
+Linhas de código não vazias, sem contar `legado/` e artefatos de build:
+
+| Linguagem | Linhas |
+|---|---|
+| Java | 6.255 |
+| JavaScript | 1.325 |
+| HTML | 1.137 |
+| Python | 996 |
+| Configuração | 553 |
+| CSS | 384 |
+| **Total** | **10.650** |
+<!-- auto:fim:metricas -->
+
+## Situação dos requisitos
+
+<!-- auto:inicio:requisitos -->
+| Situação | Funcionais | Não funcionais | Total |
+|---|---|---|---|
+| Entregue | 11 | 7 | 18 |
+| Parcial | 1 | 0 | 1 |
+| Planejado | 10 | 5 | 15 |
+
+16 dos 18 requisitos entregues têm teste automatizado declarado.
+
+**Lacunas de cobertura** — entregues sem teste declarado:
+
+| Requisito | Título | Situação |
+|---|---|---|
+| RNF-08 | Resiliência ao serviço analítico | entregue |
+| RNF-11 | Frontend sem dependência externa | entregue |
+<!-- auto:fim:requisitos -->
+
+Detalhamento requisito a requisito, com critério de aceite e rastreabilidade,
+em [REQUISITOS.md](REQUISITOS.md).
 
 ---
 
@@ -105,6 +147,20 @@ Linha de auditoria em [AUDITORIA.md](AUDITORIA.md).
 - **Auditoria virou área administrativa**: rotas em `/api/admin/auditoria/**`
   exigem `X-Admin-Token` e a página saiu para `admin/auditoria.html`.
 
+### 3.9 Documentação viva (entregue na 0.4.0)
+- Catálogo de requisitos em [`requisitos.toml`](requisitos.toml) como fonte
+  única: 34 requisitos com critério de aceite, implementação e testes.
+- Gerador em `ferramentas/` que lê o código e o catálogo e reescreve
+  [REQUISITOS.md](REQUISITOS.md), [INVENTARIO.md](INVENTARIO.md) e os blocos
+  automáticos do README, deste relatório e do roadmap.
+- Hook de pré-commit que regenera e inclui no commit, e modo `--verificar` que
+  falha quando a documentação está atrasada.
+- A rastreabilidade é verificada: requisito apontando para arquivo inexistente
+  quebra a geração em vez de virar referência morta.
+- O mecanismo já se provou: o primeiro relatório apontou três requisitos
+  entregues sem teste, e um deles (RF-04, empreendimentos) foi coberto na mesma
+  entrega.
+
 ### 3.8 Identidade do projeto (entregue na 0.3.0)
 - O jogo passou a se chamar **Complexus**, em todas as camadas: pacote Java
   (`com.complexus`), artefato Maven (`complexus-backend`), banco local,
@@ -127,6 +183,7 @@ Linha de auditoria em [AUDITORIA.md](AUDITORIA.md).
 | Subida da aplicação + carga do mundo | OK |
 | Fluxo ponta a ponta pela API | Empresa → turno → IPO → compra → dividendo → lei sancionada → auditoria íntegra |
 | Integração Java ↔ Python | `fonteModificadores: PYTHON` com o serviço no ar; `FALLBACK_JAVA` com ele desligado |
+| Documentação viva | Gerador roda, `--verificar` acusa atraso, 12 testes do gerador verdes e hook regenera no commit |
 | Renomeação para Complexus | Build, 22 testes, login de conta anterior e cadeia de auditoria íntegra após o rename |
 | Separação de visibilidade | `/api/admin/auditoria` responde 403 sem token e 200 com token; canal de atualizações sem hash, ator ou detalhe interno |
 
@@ -149,6 +206,8 @@ margem líquida de 4% a 6% e retorno sobre o capital investido entre 8% e 13% ao
 | D-09 | Jogador vê o canal de atualizações; auditoria é administrativa | A linha de auditoria expõe ator, hash e detalhes internos de todas as partidas |
 | D-10 | Resultado de empresa só na página da empresa, em gráfico | Evita transformar painel e listagens em relatório e mantém o número no contexto certo |
 | D-11 | Empresa de capital aberto publica resultado na vitrine de investimentos | Quem vende ação divulga balanço; sem isso o investidor decide no escuro |
+| D-12 | Relatórios gerados do código, não escritos à mão | Documentação manual envelhece em silêncio; gerada, ela quebra o build quando mente |
+| D-13 | Saída do gerador sem data nem hash de commit | Determinismo é o que permite o modo `--verificar` acusar atraso de verdade |
 
 ## 6. Limitações conhecidas
 
@@ -180,6 +239,7 @@ token de `jogo.admin.token` (padrão `admin-local`).
 
 | Versão | Data | Entrega |
 |---|---|---|
+| 0.4.0 | 21/09/2026 | Documentação viva: catálogo de requisitos, gerador de relatórios, inventário técnico e hook que mantém tudo sincronizado |
 | 0.3.0 | 21/09/2026 | Renomeação do projeto para Complexus em todas as camadas, com a partida local preservada |
 | 0.2.1 | 18/09/2026 | Separação de visibilidade: painel inicial enxuto, resultado de empresa em gráfico na própria página, canal de atualizações para o jogador e auditoria restrita à administração com token |
 | 0.2.0 | 18/09/2026 | Núcleo completo em Spring Boot: economia dos três setores, política das três esferas, investimentos lastreados, turnos automáticos, estatísticas, linha de auditoria e sete painéis novos |
