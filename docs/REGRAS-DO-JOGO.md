@@ -227,6 +227,43 @@ vai à falência.
 Renegociar alonga o prazo, soma 1% de comissão ao saldo, acrescenta 3% a.a. à
 taxa e zera a contagem de atraso.
 
+### 2.7.2 Contratos de fornecimento (`ServicoCadeia`)
+
+Uma empresa pode fornecer para outra. A matriz de insumos liga os três setores:
+
+| Insumo | Fornece | Compra |
+|---|---|---|
+| Material de construção | Construção | Imobiliário, Construção |
+| Serviço de obra | Construção | Imobiliário |
+| Espaço comercial | Imobiliário | Alimentício, Construção |
+| Insumo alimentar | Alimentício | Alimentício |
+
+**O que o contrato muda.** Para o comprador, a parte do insumo coberta por
+contrato paga o preço acordado e **escapa do choque de custo do turno**. Para o
+fornecedor, é receita garantida que **ocupa capacidade**: o que sai pelo
+contrato não disputa o mercado aberto da cidade nem entra no mercado disputável
+do grupo.
+
+**Limites.** O volume é medido em R$ por turno a preço de referência e tem teto
+dos dois lados: até 30% da capacidade produtiva do fornecedor e até 40% do
+insumo que o comprador consome por turno. O preço fica entre 0,70 e 1,30 da
+referência e o prazo entre 3 e 36 turnos.
+
+**Negociação.** Qualquer lado propõe; a contraparte aceita ou recusa. Empresas
+do sistema respondem na hora, pela regra de preço: fornecem com desconto de até
+5% e compram pagando até 5% acima da referência. É o que permite negociar desde
+o turno zero sem depender de outro jogador.
+
+**No turno.** As entregas são apuradas **antes da produção**. Fornecedor sem
+capacidade entrega menos, registra falha e perde 2 pontos de reputação — e o
+comprador recebe menos insumo contratado no mesmo turno. Nenhum dinheiro é
+transferido à parte: a receita do fornecedor e o custo do comprador entram no
+resultado de cada um, e é o resultado que mexe no caixa.
+
+**Rompimento.** Quem rompe antes do prazo paga 10% do valor remanescente à
+outra parte e perde 4 pontos de reputação. Empresa que sai de operação tem os
+contratos encerrados sem multa.
+
 ### 2.8 Empreendimentos (imobiliário e construção)
 - Custo total dividido em parcelas iguais pelos turnos de obra.
 - Sem caixa para a parcela, o prazo escorrega um turno.

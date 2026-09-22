@@ -5,6 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.complexus.economia.ContextoMercado;
 import com.complexus.economia.Empresa;
+import com.complexus.economia.PerfilOperacional;
+import com.complexus.economia.ResultadoOperacional;
 import com.complexus.economia.ModificadorSetorial;
 import com.complexus.economia.MotorSimulacao;
 import com.complexus.economia.ResultadoMensal;
@@ -79,6 +81,42 @@ class MotorSimulacaoTest {
     }
 
     @Test
+    @DisplayName("Insumo contratado sai mais barato e escapa do choque de custo")
+    void insumoContratadoBarateiaOCusto() {
+        Empresa empresa = empresa(Setor.CONSTRUCAO, 200, 20_000_000);
+        PerfilOperacional semContrato = PerfilOperacional.neutro(empresa);
+        ResultadoOperacional aberto = operacao(semContrato);
+
+        // Metade do insumo do turno vem de contrato, com 20 por cento de desconto.
+        double insumoContratado = aberto.volume() * (1 - Setor.CONSTRUCAO.getMargemBase()) * 0.5;
+        PerfilOperacional comContrato = new PerfilOperacional(Setor.CONSTRUCAO,
+                empresa.getPatrimonio(), empresa.getFuncionarios(), 1.0, 2800, 0, 50,
+                1.0, 1.0, 0.0, 0.0, insumoContratado, 0.80);
+
+        ResultadoOperacional contratado = operacao(comContrato);
+
+        assertEquals(aberto.receita(), contratado.receita(), 0.01, "o contrato nao muda a venda");
+        assertTrue(contratado.custoOperacional() < aberto.custoOperacional(),
+                "insumo contratado com desconto reduz o custo do turno");
+    }
+
+    @Test
+    @DisplayName("Capacidade comprometida com contrato nao disputa o mercado aberto")
+    void capacidadeReservadaSaiDoMercado() {
+        Empresa empresa = empresa(Setor.CONSTRUCAO, 200, 20_000_000);
+        PerfilOperacional livre = PerfilOperacional.neutro(empresa);
+        double capacidade = motor.capacidadeProdutiva(livre);
+
+        PerfilOperacional comprometida = new PerfilOperacional(Setor.CONSTRUCAO,
+                empresa.getPatrimonio(), empresa.getFuncionarios(), 1.0, 2800, 0, 50,
+                1.0, 1.0, 0.0, capacidade * 0.30, 0, 1.0);
+
+        assertEquals(capacidade * 0.70, motor.capacidadeDisponivel(comprometida), 0.01);
+        assertTrue(operacao(comprometida).receita() < operacao(livre).receita(),
+                "com menos capacidade livre, sobra menos para vender no mercado");
+    }
+
+    @Test
     @DisplayName("Crescimento lida com base zero e base negativa")
     void crescimentoComBaseDegenerada() {
         assertEquals(1.0, motor.calcularCrescimento(100, 0), 0.0001);
@@ -109,6 +147,13 @@ class MotorSimulacaoTest {
         Municipio municipio = municipio(estado);
         return motor.simularMes(empresa, mercado, participacao, contexto(), estado, municipio,
                 pais, subsidio, regulacao);
+    }
+
+    private ResultadoOperacional operacao(PerfilOperacional perfil) {
+        Pais pais = pais();
+        Estado estado = estado(pais);
+        Municipio municipio = municipio(estado);
+        return motor.simularOperacao(perfil, 100_000_000, 0.4, contexto(), estado, municipio, 0, 0);
     }
 
     private ContextoMercado contexto() {

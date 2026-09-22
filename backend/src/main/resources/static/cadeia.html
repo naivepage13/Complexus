@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Fornecimento - Complexus</title>
+    <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+<!--
+  Cadeia produtiva: contratos de fornecimento entre empresas.
+  Quem fornece reserva capacidade; quem compra trava o preco do insumo.
+-->
+<header class="cabecalho">
+    <div class="cabecalho-conteudo">
+        <span class="marca">Complexus</span>
+        <nav class="menu">
+            <a href="index.html">Painel</a>
+            <a href="empresas.html">Empresas</a>
+            <a href="investimentos.html">Investimentos</a>
+            <a href="politica.html">Politica</a>
+            <a href="estatisticas.html">Estatisticas</a>
+            <a href="atualizacoes.html">Atualizacoes</a>
+        </nav>
+        <div class="identificacao" id="relogio-turno"></div>
+        <div class="identificacao" id="identificacao"></div>
+    </div>
+</header>
+
+<main class="pagina">
+    <div class="titulo-pagina">
+        <div>
+            <h1 id="titulo-empresa">Fornecimento</h1>
+            <p id="subtitulo-empresa">Carregando dados...</p>
+        </div>
+        <div class="acoes">
+            <a href="#" class="botao botao-neutro" id="link-empresa">Gestao da empresa</a>
+        </div>
+    </div>
+
+    <div id="mensagem" class="oculto"></div>
+
+    <section class="grade">
+        <div class="cartao indicador">
+            <span class="rotulo">Capacidade livre para contrato</span>
+            <span class="valor" id="capacidade-livre">-</span>
+            <span class="detalhe">ate 30% da producao pode ir para contratos</span>
+        </div>
+        <div class="cartao indicador">
+            <span class="rotulo">Insumo que ainda cabe contratar</span>
+            <span class="valor" id="insumo-livre">-</span>
+            <span class="detalhe">ate 40% do insumo do turno</span>
+        </div>
+        <div class="cartao indicador">
+            <span class="rotulo">Fornecendo por turno</span>
+            <span class="valor" id="fornecendo">-</span>
+            <span class="detalhe" id="detalhe-fornecendo"></span>
+        </div>
+        <div class="cartao indicador">
+            <span class="rotulo">Comprando por turno</span>
+            <span class="valor" id="comprando">-</span>
+            <span class="detalhe" id="detalhe-comprando"></span>
+        </div>
+    </section>
+
+    <section class="cartao" id="area-propostas">
+        <div class="cartao-cabecalho">
+            <h2>Propostas</h2>
+            <span class="suave pequeno">empresas do sistema respondem na hora</span>
+        </div>
+        <div class="tabela-rolagem">
+            <table class="tabela">
+                <thead>
+                <tr>
+                    <th>Insumo</th>
+                    <th>Papel</th>
+                    <th>Contraparte</th>
+                    <th class="direita">Volume/turno</th>
+                    <th class="direita">Preco</th>
+                    <th class="direita">Prazo</th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody id="lista-propostas"></tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="cartao">
+        <div class="cartao-cabecalho">
+            <h2>Contratos em vigor</h2>
+            <span class="suave pequeno">romper antes do prazo custa 10% do que falta entregar</span>
+        </div>
+        <div class="tabela-rolagem">
+            <table class="tabela">
+                <thead>
+                <tr>
+                    <th>Insumo</th>
+                    <th>Papel</th>
+                    <th>Contraparte</th>
+                    <th class="direita">Volume/turno</th>
+                    <th class="direita">Preco</th>
+                    <th class="direita">Efeito no turno</th>
+                    <th class="direita">Turnos restantes</th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody id="lista-contratos"></tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="cartao" id="area-proposta">
+        <h2>Nova proposta</h2>
+        <form class="formulario" id="formulario-proposta">
+            <div class="linha-campos">
+                <div class="campo">
+                    <label for="papel">Papel da empresa</label>
+                    <select id="papel">
+                        <option value="fornecer">Fornecer</option>
+                        <option value="comprar">Comprar</option>
+                    </select>
+                </div>
+                <div class="campo">
+                    <label for="tipo-insumo">Insumo</label>
+                    <select id="tipo-insumo"></select>
+                </div>
+                <div class="campo">
+                    <label for="contraparte">Contraparte</label>
+                    <select id="contraparte"></select>
+                </div>
+            </div>
+            <div class="linha-campos">
+                <div class="campo">
+                    <label for="volume">Volume por turno (R$)</label>
+                    <input type="number" id="volume" min="0" step="10000" value="100000">
+                </div>
+                <div class="campo">
+                    <label for="preco">Preco sobre a referencia (0,70 a 1,30)</label>
+                    <input type="number" id="preco" min="0.7" max="1.3" step="0.01" value="1.00">
+                </div>
+                <div class="campo">
+                    <label for="prazo">Prazo (turnos)</label>
+                    <input type="number" id="prazo" min="3" max="36" value="6">
+                </div>
+            </div>
+            <p class="suave pequeno" id="simulacao"></p>
+            <div class="acoes">
+                <button type="submit" class="botao">Enviar proposta</button>
+            </div>
+        </form>
+    </section>
+
+    <section class="cartao">
+        <h2>Historico</h2>
+        <div class="tabela-rolagem">
+            <table class="tabela">
+                <thead>
+                <tr>
+                    <th>Insumo</th>
+                    <th>Papel</th>
+                    <th>Contraparte</th>
+                    <th>Status</th>
+                    <th class="direita">Total faturado</th>
+                    <th class="direita">Falhas de entrega</th>
+                </tr>
+                </thead>
+                <tbody id="lista-historico"></tbody>
+            </table>
+        </div>
+    </section>
+</main>
+
+<script src="js/app.js"></script>
+<script src="js/cadeia.js"></script>
+</body>
+</html>

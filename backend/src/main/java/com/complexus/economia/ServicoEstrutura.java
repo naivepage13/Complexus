@@ -424,18 +424,30 @@ public class ServicoEstrutura {
     /**
      * Monta o perfil operacional de uma unidade no turno.
      *
-     * O marketing e o esforco comercial da empresa sao rateados entre as
-     * unidades pelo patrimonio: quem tem mais ativo instalado carrega mais da
-     * verba e colhe mais do efeito.
+     * Verba de marketing, esforco comercial e compromissos de contrato sao da
+     * empresa: chegam a unidade rateados pelo patrimonio, porque quem tem mais
+     * ativo instalado carrega mais da verba, entrega mais do contrato e colhe
+     * mais do efeito.
      */
     public PerfilOperacional perfil(Unidade unidade, Empresa empresa, double fatorPreco,
-                                    double fatorCustoVariavel, double bonusComercial) {
+                                    double fatorCustoVariavel, double bonusComercial,
+                                    EfeitoCadeia cadeia) {
         double totalPatrimonio = Math.max(empresa.getPatrimonio(), 1.0);
         double rateio = Math.min(unidade.getPatrimonio() / totalPatrimonio, 1.0);
+        EfeitoCadeia efeito = cadeia == null ? EfeitoCadeia.NENHUM : cadeia;
         return new PerfilOperacional(empresa.getSetor(), unidade.getPatrimonio(), unidade.getFuncionarios(),
                 unidade.getProdutividade(), empresa.getSalarioMedio(),
                 empresa.getMarketingMensal() * rateio, empresa.getReputacao(),
-                fatorPreco, fatorCustoVariavel, bonusComercial);
+                fatorPreco, fatorCustoVariavel, bonusComercial,
+                efeito.capacidadeReservada() * rateio, efeito.insumoContratado() * rateio,
+                efeito.precoInsumoContratado());
+    }
+
+    /** Perfil sem efeito de cadeia, usado nos diagnosticos da propria empresa. */
+    public PerfilOperacional perfil(Unidade unidade, Empresa empresa, double fatorPreco,
+                                    double fatorCustoVariavel, double bonusComercial) {
+        return perfil(unidade, empresa, fatorPreco, fatorCustoVariavel, bonusComercial,
+                EfeitoCadeia.NENHUM);
     }
 
     /**

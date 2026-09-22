@@ -94,6 +94,23 @@ Modalidades: `CAPITAL_DE_GIRO`, `INVESTIMENTO`, `ANTECIPACAO_RECEBIVEIS`.
 `ROTATIVO` existe apenas como crédito automático de caixa negativo e é recusado
 na contratação.
 
+## Fornecimento entre empresas
+
+Rotas sob `/empresas/{empresaId}/fornecimento`.
+
+| Método | Rota | Corpo |
+|---|---|---|
+| GET | `` | — (insumos que o setor fornece e compra, limites e todos os contratos) |
+| GET | `/parceiros?tipo=&comoFornecedor=` | — (empresas compatíveis, com o espaço que resta em cada uma) |
+| POST | `/propostas` | `{jogadorId, contraparteId, tipo, comoFornecedor, volumeMensal, precoRelativo, prazoTurnos}` |
+| POST | `/contratos/{id}/aceitar` | `{jogadorId}` |
+| POST | `/contratos/{id}/recusar` | `{jogadorId}` |
+| POST | `/contratos/{id}/romper` | `{jogadorId}` (paga multa de 10% do que falta entregar) |
+
+Tipos de insumo: `MATERIAL_CONSTRUCAO`, `SERVICO_DE_OBRA`, `ESPACO_COMERCIAL`,
+`INSUMO_ALIMENTAR`. Uma proposta feita a uma empresa do sistema já volta
+`ATIVO` ou `RECUSADO`.
+
 ## Investimentos
 
 | Método | Rota | Corpo |

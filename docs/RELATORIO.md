@@ -5,12 +5,12 @@
 
 | Campo | Valor |
 |---|---|
-| Versão atual | **0.5.0** |
-| Data da última atualização | 21/09/2026 |
+| Versão atual | **0.6.0** |
+| Data da última atualização | 22/09/2026 |
 | Repositório | [naivepage13/Complexus](https://github.com/naivepage13/Complexus) |
 | Branch | `claude/game-company-admin-system-331d1c` |
 | Estado | Núcleo jogável: economia, política, investimentos, turnos e auditoria, com administração de empresas por unidade |
-| Cobertura de testes | 40 testes Java + 9 testes Python, todos verdes |
+| Cobertura de testes | 51 testes Java + 9 testes Python, todos verdes |
 
 ---
 
@@ -54,6 +54,11 @@ Linha de auditoria em [AUDITORIA.md](AUDITORIA.md).
   `consolidar` fecha o mês da empresa (juros, estrutura e imposto sobre o lucro).
 - Ciclo completo de gestão: fundar, aportar capital, contratar, demitir,
   ajustar marketing/salário/payout, abrir capital, tocar empreendimentos.
+- **Cadeia produtiva** (0.6.0): contratos de fornecimento entre empresas ligando
+  os três setores. O comprador trava o preço do insumo e escapa do choque de
+  custo do turno; o fornecedor ganha receita garantida que ocupa capacidade e
+  sai do mercado aberto. Proposta, aceite, recusa, rompimento com multa, falha
+  de entrega por falta de capacidade e resposta automática das empresas do sistema.
 - **Crédito e dívida ativa** (0.5.0): quatro linhas com prazo, taxa travada na
   contratação e amortização constante; nota de crédito de A a D calculada por
   alavancagem, cobertura de juros, lastro e histórico; amortização antecipada,
@@ -137,7 +142,7 @@ Linha de auditoria em [AUDITORIA.md](AUDITORIA.md).
 
 | Verificação | Resultado |
 |---|---|
-| `mvn test` (backend) | 40 testes, 0 falhas |
+| `mvn test` (backend) | 51 testes, 0 falhas |
 | `python -m unittest` (analytics) | 9 testes, 0 falhas |
 | Subida da aplicação + carga do mundo | OK |
 | Fluxo ponta a ponta pela API | Empresa → turno → IPO → compra → dividendo → lei sancionada → auditoria íntegra |
@@ -150,6 +155,8 @@ Linha de auditoria em [AUDITORIA.md](AUDITORIA.md).
 | Crédito ponta a ponta (0.5.0) | Contrato de R$ 200 mil em 12 turnos: o turno seguinte amortizou R$ 16.666,67 e cobrou R$ 2.408 de juros, prazo 12 → 11, nota caiu de A para B |
 | Atualização de banco existente | Partida criada na 0.4.0 e reaberta na 0.5.0: 17 colunas de enum convertidas, contrato gravado e turno processado sem erro |
 | Página de finanças | Nota, score decomposto, limites por linha, simulação da parcela e taxa travada (contrato a 14,45% enquanto o mercado oferecia 16,09%) |
+| Cadeia produtiva ponta a ponta (0.6.0) | Proposta a 1,03 aceita na hora pela empresa do sistema e a 1,28 recusada; no turno seguinte a receita da construtora foi R$ 422.700 = R$ 330.000 de mercado + R$ 92.700 de contrato, e a capacidade livre caiu de R$ 126 mil para R$ 36 mil |
+| Corrida na carga inicial | Partida nova com requisição chegando no primeiro instante: mundo carregado sem violação de chave primária |
 
 Balanceamento observado após a calibragem (7 empresas do mundo inicial):
 receita agregada ≈ R$ 3,9 mi/mês, lucro agregado ≈ R$ 150–235 mil/mês,
@@ -179,6 +186,9 @@ margem líquida de 4% a 6% e retorno sobre o capital investido entre 8% e 13% ao
 | D-18 | Só o principal sai do caixa na parcela | Os juros já foram deduzidos no resultado; cobrar a parcela inteira os descontaria duas vezes |
 | D-19 | Risco encarece em vez de bloquear | Alavancagem alta muda a nota, a taxa e o limite, não a permissão de tomar crédito |
 | D-20 | Colunas de enum em `varchar`, não no tipo ENUM do H2 | `ddl-auto=update` não acrescenta valor a um tipo ENUM existente: toda constante nova quebraria a gravação nas partidas já criadas |
+| D-21 | Entregas apuradas antes da produção | Fornecedor e comprador precisam ver a mesma entrega no mesmo turno; apurar depois jogaria a falha para o turno seguinte |
+| D-22 | Contrato não transfere dinheiro direto | Receita e custo entram no resultado de cada empresa, e é o resultado que mexe no caixa; mover caixa à parte contaria o mesmo dinheiro duas vezes |
+| D-23 | Empresa do sistema responde por regra de preço | Sem isso a cadeia só existiria com vários jogadores online ao mesmo tempo |
 
 ## 6. Limitações conhecidas
 
@@ -195,6 +205,8 @@ margem líquida de 4% a 6% e retorno sobre o capital investido entre 8% e 13% ao
 | L-09 | O mix de linhas vale para a empresa inteira | Não dá para vender premium em uma cidade e popular em outra | Mix por unidade, se a demanda local justificar |
 | L-10 | A garantia executada é rateada entre as unidades | O jogador não escolhe qual ativo perde | Garantia por unidade, junto com o mix por unidade |
 | L-11 | Empresas do sistema não tomam crédito por decisão própria | Só recorrem ao rotativo automático | Política de crédito para NPC, quando houver estratégia de NPC |
+| L-12 | O contrato de fornecimento é da empresa, não da unidade | Uma filial no Rio honra contrato fechado pela sede em São Paulo sem custo de distância | Contrato por unidade, junto com o mix por unidade |
+| L-13 | Empresa do sistema aceita qualquer volume dentro do limite | Não avalia se o contrato lhe é vantajoso além do preço | Regra de decisão para NPC, junto com L-11 |
 
 ## 7. Como rodar
 
@@ -214,6 +226,7 @@ token de `jogo.admin.token` (padrão `admin-local`).
 
 | Versão | Data | Entrega |
 |---|---|---|
+| 0.6.0 | 22/09/2026 | Cadeia produtiva: contratos de fornecimento entre empresas, com preço travado para o comprador e capacidade reservada no fornecedor |
 | 0.5.0 | 21/09/2026 | Crédito e dívida ativa: quatro linhas, nota de risco, amortização, renegociação, inadimplência e execução de garantia |
 | 0.4.0 | 21/09/2026 | Estrutura interna da empresa: unidades por município, linhas de produto e departamentos, com o motor separado em operação (unidade) e fechamento (empresa) |
 | 0.3.0 | 21/09/2026 | Renomeação do projeto para Complexus em todas as camadas, com a partida local preservada |

@@ -1,6 +1,7 @@
 package com.complexus.comum;
 
 import com.complexus.auditoria.EventoAuditoria;
+import com.complexus.cadeia.ContratoFornecimento;
 import com.complexus.core.EstadoJogo;
 import com.complexus.economia.Departamento;
 import com.complexus.economia.Empreendimento;
@@ -195,6 +196,35 @@ public final class Mapeadores {
         mapa.put("areaRotulo", departamento.getArea().getRotulo());
         mapa.put("unidadeEfeito", departamento.getArea().getUnidadeEfeito());
         mapa.put("orcamentoMensal", departamento.getOrcamentoMensal());
+        return mapa;
+    }
+
+    public static Map<String, Object> contratoFornecimento(ContratoFornecimento contrato) {
+        Map<String, Object> mapa = new LinkedHashMap<>();
+        mapa.put("id", contrato.getId());
+        mapa.put("tipo", contrato.getTipo().name());
+        mapa.put("tipoRotulo", contrato.getTipo().getRotulo());
+        mapa.put("status", contrato.getStatus().name());
+        mapa.put("statusRotulo", contrato.getStatus().getRotulo());
+        mapa.put("fornecedorId", contrato.getFornecedor().getId());
+        mapa.put("fornecedor", contrato.getFornecedor().getNome());
+        mapa.put("fornecedorDoSistema", contrato.getFornecedor().getDono() == null);
+        mapa.put("compradorId", contrato.getComprador().getId());
+        mapa.put("comprador", contrato.getComprador().getNome());
+        mapa.put("compradorDoSistema", contrato.getComprador().getDono() == null);
+        mapa.put("propostoPor", contrato.getPropostoPor());
+        mapa.put("volumeMensal", contrato.getVolumeMensal());
+        mapa.put("precoRelativo", contrato.getPrecoRelativo());
+        mapa.put("faturamentoMensal", contrato.faturamentoMensal());
+        mapa.put("economiaMensalDoComprador", contrato.economiaMensalDoComprador());
+        mapa.put("prazoTurnos", contrato.getPrazoTurnos());
+        mapa.put("turnosRestantes", contrato.getTurnosRestantes());
+        mapa.put("turnoProposta", contrato.getTurnoProposta());
+        mapa.put("turnoInicio", contrato.getTurnoInicio());
+        mapa.put("turnoEncerramento", contrato.getTurnoEncerramento());
+        mapa.put("totalFaturado", contrato.getTotalFaturado());
+        mapa.put("falhasDeEntrega", contrato.getFalhasDeEntrega());
+        mapa.put("valorRemanescente", contrato.valorRemanescente());
         return mapa;
     }
 

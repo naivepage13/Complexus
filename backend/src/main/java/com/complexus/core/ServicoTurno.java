@@ -1,11 +1,15 @@
 package com.complexus.core;
 
 import com.complexus.auditoria.ServicoAuditoria;
+import com.complexus.cadeia.ApuracaoCadeia;
+import com.complexus.cadeia.ServicoCadeia;
 import com.complexus.config.PropriedadesJogo;
 import com.complexus.economia.ContextoMercado;
 import com.complexus.economia.Departamento;
+import com.complexus.economia.EfeitoCadeia;
 import com.complexus.economia.Empreendimento;
 import com.complexus.economia.Empresa;
+import com.complexus.economia.FechamentoFinanceiro;
 import com.complexus.economia.HistoricoEmpresa;
 import com.complexus.economia.LinhaProduto;
 import com.complexus.economia.MotorSimulacao;
@@ -89,6 +93,7 @@ public class ServicoTurno {
     private final MotorSimulacao motor;
     private final ServicoEstrutura servicoEstrutura;
     private final ServicoCredito servicoCredito;
+    private final ServicoCadeia servicoCadeia;
     private final ServicoPolitica servicoPolitica;
     private final ServicoInvestimento servicoInvestimento;
     private final ServicoEstatistica servicoEstatistica;
@@ -108,6 +113,7 @@ public class ServicoTurno {
                         MotorSimulacao motor,
                         ServicoEstrutura servicoEstrutura,
                         ServicoCredito servicoCredito,
+                        ServicoCadeia servicoCadeia,
                         ServicoPolitica servicoPolitica,
                         ServicoInvestimento servicoInvestimento,
                         ServicoEstatistica servicoEstatistica,
@@ -126,6 +132,7 @@ public class ServicoTurno {
         this.motor = motor;
         this.servicoEstrutura = servicoEstrutura;
         this.servicoCredito = servicoCredito;
+        this.servicoCadeia = servicoCadeia;
         this.servicoPolitica = servicoPolitica;
         this.servicoInvestimento = servicoInvestimento;
         this.servicoEstatistica = servicoEstatistica;
@@ -169,7 +176,10 @@ public class ServicoTurno {
                 pais.getRendaMedia(), RENDA_REFERENCIA, estado.getTaxaJuros(),
                 estado.getInflacaoAnual(), pais.getEstabilidade(), analitico.modificadores());
 
-        ResumoEconomico economia = simularEmpresas(turno, contexto, pais);
+        // Os contratos sao apurados antes da producao: o que sai pelo contrato ja
+        // nasce comprometido, e o comprador sabe no mesmo turno o que recebeu.
+        Map<Long, ApuracaoCadeia> cadeia = servicoCadeia.apurarEntregas(turno);
+        ResumoEconomico economia = simularEmpresas(turno, contexto, pais, cadeia);
         processarEmpreendimentos(turno);
         atualizarMacroeconomia(estado, pais, economia);
 
@@ -193,6 +203,7 @@ public class ServicoTurno {
         relatorio.put("impostosArrecadados", economia.impostos);
         relatorio.put("dividendosPagos", economia.dividendos);
         relatorio.put("dividaAmortizada", economia.amortizacao);
+        relatorio.put("fornecimentoFaturado", economia.fornecimento);
         relatorio.put("contratosEmAtraso", economia.inadimplencias);
         relatorio.put("indiceMercado", snapshot.getIndiceMercado());
         relatorio.put("variacaoIndice", snapshot.getVariacaoIndice());
@@ -245,7 +256,8 @@ public class ServicoTurno {
      * participacao de cada uma sai da competitividade relativa dentro do grupo.
      * Duas filiais da mesma empresa em cidades diferentes nao competem entre si.
      */
-    private ResumoEconomico simularEmpresas(int turno, ContextoMercado contexto, Pais pais) {
+    private ResumoEconomico simularEmpresas(int turno, ContextoMercado contexto, Pais pais,
+                                            Map<Long, ApuracaoCadeia> cadeia) {
         ResumoEconomico resumo = new ResumoEconomico();
         List<Unidade> unidades = repositorioUnidade.findByAtivaTrueAndEmpresaAtivaTrue();
 
@@ -269,8 +281,10 @@ public class ServicoTurno {
             for (Unidade unidade : grupo) {
                 EstruturaEmpresa estrutura = estruturas.computeIfAbsent(unidade.getEmpresa().getId(),
                         id -> EstruturaEmpresa.de(unidade.getEmpresa(), servicoEstrutura));
+                EfeitoCadeia efeito = cadeia
+                        .getOrDefault(unidade.getEmpresa().getId(), ApuracaoCadeia.NENHUMA).efeito();
                 PerfilOperacional perfil = servicoEstrutura.perfil(unidade, unidade.getEmpresa(),
-                        estrutura.fatorPreco, estrutura.fatorCusto, estrutura.bonusComercial);
+                        estrutura.fatorPreco, estrutura.fatorCusto, estrutura.bonusComercial, efeito);
                 perfis.put(unidade.getId(), perfil);
                 somaCapacidades += motor.capacidadeProdutiva(perfil);
                 somaCompetitividade += motor.competitividade(perfil);
@@ -289,7 +303,8 @@ public class ServicoTurno {
 
         for (FechamentoEmpresa fechamento : fechamentos.values()) {
             fecharEmpresa(turno, fechamento, contexto, pais,
-                    estruturas.get(fechamento.empresa.getId()), resumo);
+                    estruturas.get(fechamento.empresa.getId()),
+                    cadeia.getOrDefault(fechamento.empresa.getId(), ApuracaoCadeia.NENHUMA), resumo);
         }
         repositorioPais.save(pais);
         return resumo;
@@ -338,13 +353,23 @@ public class ServicoTurno {
      * imposto sobre o lucro, distribui dividendos e reavalia a companhia.
      */
     private void fecharEmpresa(int turno, FechamentoEmpresa fechamento, ContextoMercado contexto,
-                               Pais pais, EstruturaEmpresa estrutura, ResumoEconomico resumo) {
+                               Pais pais, EstruturaEmpresa estrutura, ApuracaoCadeia cadeia,
+                               ResumoEconomico resumo) {
         Empresa empresa = fechamento.empresa;
         // Os juros vem da taxa travada em cada contrato, nao da Selic do turno:
         // quem pegou credito barato continua pagando barato.
         double juros = servicoCredito.jurosDoMes(empresa.getId());
-        ResultadoMensal resultado = motor.consolidar(fechamento.operacoes, juros,
-                estrutura.custoEstrutura, pais.getAliquotaImpostoEmpresarial());
+        // O faturamento de contrato paga tributo onde fica a sede da empresa.
+        Municipio sede = empresa.getMunicipio();
+        double impostoContratos = motor.tributoIndireto(empresa.getSetor(),
+                cadeia.receitaContratos(), sede.getEstado(), sede);
+        ResultadoMensal resultado = motor.consolidar(fechamento.operacoes,
+                new FechamentoFinanceiro(juros, estrutura.custoEstrutura, cadeia.receitaContratos(),
+                        cadeia.custoContratos(), impostoContratos,
+                        pais.getAliquotaImpostoEmpresarial()));
+        if (impostoContratos > 0) {
+            distribuirTributoIndireto(turno, empresa, impostoContratos, sede.getEstado(), sede);
+        }
 
         double lucroAnterior = empresa.getLucroMensal();
         double impostosTotais = resultado.impostoIndireto() + resultado.impostoRenda();
@@ -384,9 +409,14 @@ public class ServicoTurno {
         empresa.setPrecoAcao(motor.calcularPrecoAcao(empresa, valuation));
 
         boolean faliu = verificarFalencia(empresa);
+        if (faliu) {
+            servicoCadeia.encerrarContratosDe(empresa, turno,
+                    "Empresa fora de operacao: contrato encerrado sem multa");
+        }
         repositorioEmpresa.save(empresa);
         registrarHistorico(turno, empresa, resultado, dividendos);
         resumo.amortizacao += (double) servicoDaDivida.get("amortizado");
+        resumo.fornecimento += cadeia.receitaContratos();
         resumo.inadimplencias += (int) servicoDaDivida.get("contratosEmAtraso");
 
         razao.registrar(turno, TipoLancamento.RECEITA_OPERACIONAL, "mercado",
@@ -650,6 +680,7 @@ public class ServicoTurno {
         private double impostos;
         private double dividendos;
         private double amortizacao;
+        private double fornecimento;
         private int inadimplencias;
     }
 }

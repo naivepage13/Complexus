@@ -4,6 +4,49 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 Este arquivo é a linha de auditoria do desenvolvimento: nenhuma entrega entra
 sem uma linha aqui. Ver também [docs/RELATORIO.md](docs/RELATORIO.md).
 
+## [0.6.0] - 2026-09-22
+
+As empresas passam a comprar umas das outras. Terceira parte da administracao
+de empresas.
+
+### Adicionado
+- **Contratos de fornecimento** (`ContratoFornecimento`) entre duas empresas,
+  com insumo, volume mensal, preco relativo a referencia do setor e prazo.
+- **Matriz de insumos** (`TipoInsumo`) ligando os tres setores: construcao
+  entrega material e obra ao imobiliario, o imobiliario aluga espaco comercial
+  ao alimenticio e a construcao, e o alimenticio abastece o proprio setor.
+- **Efeito no motor**: o comprador troca insumo de mercado por insumo de preco
+  travado, que nao sofre o choque de custo do turno; o fornecedor reserva
+  capacidade, que sai do mercado aberto e do mercado disputavel do grupo.
+- **Negociacao completa**: propor (dos dois lados), aceitar, recusar e romper
+  com multa de 10 por cento do valor remanescente e perda de reputacao.
+- **Resposta automatica das empresas do sistema**: aceitam fornecer com ate 5
+  por cento de desconto e comprar pagando ate 5 por cento acima da referencia.
+- **Falha de entrega**: fornecedor sem capacidade entrega menos, registra a
+  falha, perde reputacao e o comprador recebe menos insumo no mesmo turno.
+- Pagina `cadeia.html` com limites dos dois lados, propostas, contratos em
+  vigor, historico e simulacao do efeito antes de enviar a proposta.
+- Rotas `/api/empresas/{id}/fornecimento/**`.
+- `CadeiaProdutivaTest` (9 testes) e 2 testes novos do motor para o insumo
+  contratado e a capacidade reservada.
+
+### Alterado
+- `MotorSimulacao.consolidar` passou a receber um `FechamentoFinanceiro`, que
+  reune juros, estrutura, contratos e aliquota em vez de quatro parametros.
+- O turno ganhou uma etapa: a apuracao dos contratos acontece **antes** da
+  producao, para que fornecedor e comprador enxerguem a mesma entrega.
+- `PerfilOperacional` ganhou capacidade reservada, insumo contratado e preco do
+  insumo contratado, rateados entre as unidades pelo patrimonio.
+- Tributo indireto virou metodo publico do motor (`tributoIndireto`), usado
+  tanto na venda ao mercado quanto no faturamento de contrato.
+
+### Corrigido
+- **Corrida na carga inicial**: em uma partida nova, uma requisicao que chegasse
+  enquanto a carga do mundo rodava criava a linha do relogio em paralelo e
+  derrubava a carga com violacao de chave primaria. O relogio passou a nascer na
+  inicializacao dos beans, antes de o servidor abrir a porta. O defeito existia
+  desde a 0.2.0 e so aparecia com requisicao nos primeiros segundos.
+
 ## [0.5.0] - 2026-09-21
 
 Divida com contrato: a empresa passa a tomar credito, pagar parcela, renegociar

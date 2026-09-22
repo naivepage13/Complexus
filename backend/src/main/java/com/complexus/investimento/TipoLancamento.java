@@ -17,6 +17,8 @@ public enum TipoLancamento {
     EMPRESTIMO("Credito liberado"),
     AMORTIZACAO("Amortizacao de divida"),
     EXECUCAO_GARANTIA("Execucao de garantia"),
+    FORNECIMENTO("Fornecimento entre empresas"),
+    MULTA_CONTRATUAL("Multa por rompimento de contrato"),
     TRANSFERENCIA_TESOURO("Transferencia do tesouro");
 
     private final String rotulo;

@@ -122,6 +122,16 @@ public class MotorSimulacao {
         return Math.max(Math.min(capacidadePorEquipe(perfil), capacidadePorCapital(perfil)), 0);
     }
 
+    /**
+     * Capacidade que sobra para o mercado aberto.
+     *
+     * O que esta comprometido com contrato de fornecimento ja tem destino: nao
+     * disputa cliente nem entra na conta do mercado disputavel do grupo.
+     */
+    public double capacidadeDisponivel(PerfilOperacional perfil) {
+        return Math.max(capacidadeProdutiva(perfil) - Math.max(perfil.capacidadeReservada(), 0), 0);
+    }
+
     public double capacidadeProdutiva(Empresa empresa) {
         return capacidadeProdutiva(PerfilOperacional.neutro(empresa));
     }
@@ -179,23 +189,30 @@ public class MotorSimulacao {
                 * ajustePreco
                 * (1.0 + modificador.choqueDemanda());
 
-        double capacidade = capacidadeProdutiva(perfil);
+        double capacidade = capacidadeDisponivel(perfil);
         // Volume sai a preco de referencia; o preco praticado vira receita depois.
         double volume = Math.max(Math.min(demandaCapturada, capacidade), 0.0);
         double receita = volume * perfil.fatorPreco();
         double ocupacao = capacidade <= 0 ? 0.0 : Math.min(volume / capacidade, 1.0);
 
-        double custoVariavel = volume * (1.0 - setor.getMargemBase())
+        // Insumo necessario para o volume, a preco de referencia.
+        double insumoBase = volume * (1.0 - setor.getMargemBase());
+        // A parte coberta por contrato paga o preco acordado e escapa do choque
+        // de custo do turno: e essa a vantagem de ter fornecedor contratado.
+        double insumoContratado = Math.min(Math.max(perfil.insumoContratado(), 0), insumoBase);
+        double insumoDeMercado = insumoBase - insumoContratado;
+        double custoVariavel = insumoDeMercado
                 * (1.0 + modificador.choqueCusto())
                 * (1.0 + regulacaoFracao)
-                * Math.max(perfil.fatorCustoVariavel(), 0.1);
+                * Math.max(perfil.fatorCustoVariavel(), 0.1)
+                + insumoContratado
+                * Math.max(perfil.precoInsumoContratado(), 0.1)
+                * (1.0 + regulacaoFracao);
         double folha = perfil.funcionarios() * perfil.salarioMedio() * 1.32; // encargos
         double depreciacao = perfil.patrimonio() * DEPRECIACAO_MENSAL;
         double custoOperacional = custoVariavel + folha + perfil.marketingMensal() + depreciacao;
 
-        double impostoIndireto = receita
-                * (estado.getAliquotaEstadual() * baseEstadual(setor)
-                + municipio.getAliquotaMunicipal() * baseMunicipal(setor));
+        double impostoIndireto = tributoIndireto(setor, receita, estado, municipio);
         double subsidio = receita * subsidioFracao;
 
         return new ResultadoOperacional(demandaCapturada, capacidade, volume, receita,
@@ -209,12 +226,11 @@ public class MotorSimulacao {
      * unica vez, na companhia: e o que permite uma filial nova operar no
      * vermelho sem ser tributada como se fosse uma empresa separada.
      *
-     * @param juros           juros do mes sobre a divida onerosa
-     * @param custoEstrutura  orcamento dos departamentos no mes
-     * @param aliquotaImposto aliquota federal sobre o lucro
+     * @param fechamento o que a companhia carrega alem da operacao: juros,
+     *                   estrutura, contratos de fornecimento e aliquota do lucro
      */
-    public ResultadoMensal consolidar(List<ResultadoOperacional> operacoes, double juros,
-                                      double custoEstrutura, double aliquotaImposto) {
+    public ResultadoMensal consolidar(List<ResultadoOperacional> operacoes,
+                                      FechamentoFinanceiro fechamento) {
         double demanda = 0;
         double capacidade = 0;
         double volume = 0;
@@ -231,9 +247,15 @@ public class MotorSimulacao {
             impostoIndireto += operacao.impostoIndireto();
             subsidio += operacao.subsidioRecebido();
         }
-        double custoTotal = custo + Math.max(juros, 0) + Math.max(custoEstrutura, 0);
+        // Contrato de fornecimento e venda como outra qualquer no resultado: entra
+        // na receita, consome insumo e paga tributo, so nao disputa mercado.
+        receita += Math.max(fechamento.receitaContratos(), 0);
+        impostoIndireto += Math.max(fechamento.impostoContratos(), 0);
+        double custoTotal = custo + Math.max(fechamento.custoContratos(), 0)
+                + Math.max(fechamento.juros(), 0) + Math.max(fechamento.custoEstrutura(), 0);
         double lucroAntesImposto = receita + subsidio - custoTotal - impostoIndireto;
-        double impostoRenda = lucroAntesImposto > 0 ? lucroAntesImposto * aliquotaImposto : 0.0;
+        double impostoRenda = lucroAntesImposto > 0
+                ? lucroAntesImposto * fechamento.aliquotaImposto() : 0.0;
         double lucro = lucroAntesImposto - impostoRenda;
         double ocupacao = capacidade <= 0 ? 0.0 : Math.min(volume / capacidade, 1.0);
 
@@ -259,7 +281,20 @@ public class MotorSimulacao {
                 mercadoDisputavel, participacao, contexto, estado, municipio,
                 subsidioFracao, regulacaoFracao);
         double juros = empresa.getDivida() * contexto.taxaJurosAnual() / 12.0;
-        return consolidar(List.of(operacao), juros, 0.0, pais.getAliquotaImpostoEmpresarial());
+        return consolidar(List.of(operacao),
+                FechamentoFinanceiro.simples(juros, pais.getAliquotaImpostoEmpresarial()));
+    }
+
+    /**
+     * Tributo estadual e municipal sobre uma receita do setor.
+     *
+     * Vale para a venda ao mercado e para o faturamento de contrato de
+     * fornecimento: onde ha receita, ha tributo indireto.
+     */
+    public double tributoIndireto(Setor setor, double receita, Estado estado, Municipio municipio) {
+        return Math.max(receita, 0)
+                * (estado.getAliquotaEstadual() * baseEstadual(setor)
+                + municipio.getAliquotaMunicipal() * baseMunicipal(setor));
     }
 
     private double baseEstadual(Setor setor) {

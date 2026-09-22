@@ -14,6 +14,10 @@ package com.complexus.economia;
  *                           das linhas e ganho de logistica)
  * @param bonusComercial     acrescimo de competitividade vindo do departamento
  *                           comercial, alem do marketing
+ * @param capacidadeReservada parte da capacidade ja comprometida com contratos
+ *                           de fornecimento, que nao disputa o mercado aberto
+ * @param insumoContratado   insumo coberto por contrato, a preco de referencia
+ * @param precoInsumoContratado preco pago por esse insumo sobre a referencia
  */
 public record PerfilOperacional(Setor setor,
                                 double patrimonio,
@@ -24,12 +28,15 @@ public record PerfilOperacional(Setor setor,
                                 double reputacao,
                                 double fatorPreco,
                                 double fatorCustoVariavel,
-                                double bonusComercial) {
+                                double bonusComercial,
+                                double capacidadeReservada,
+                                double insumoContratado,
+                                double precoInsumoContratado) {
 
     /** Perfil de uma empresa sem estrutura declarada: preco e custo de referencia. */
     public static PerfilOperacional neutro(Empresa empresa) {
         return new PerfilOperacional(empresa.getSetor(), empresa.getPatrimonio(), empresa.getFuncionarios(),
                 empresa.getProdutividade(), empresa.getSalarioMedio(), empresa.getMarketingMensal(),
-                empresa.getReputacao(), 1.0, 1.0, 0.0);
+                empresa.getReputacao(), 1.0, 1.0, 0.0, 0.0, 0.0, 1.0);
     }
 }

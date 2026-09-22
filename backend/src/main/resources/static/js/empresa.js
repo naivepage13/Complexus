@@ -40,6 +40,7 @@ function desenharCabecalho(empresa) {
         `${empresa.setorRotulo} | sede em ${empresa.municipio}/${empresa.estado} | `
         + `fundada no turno ${empresa.turnoFundacao} | dono: ${empresa.dono}`;
     document.querySelector('#link-financas').href = `financas.html?id=${empresa.id}`;
+    document.querySelector('#link-cadeia').href = `cadeia.html?id=${empresa.id}`;
 
     const ehDono = empresa.donoId === jogadorEmpresa.id;
     if (!ehDono) {
