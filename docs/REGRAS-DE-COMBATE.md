@@ -1,6 +1,6 @@
 # Regras de Combate — GeoHistoricalSim
 
-Especificação do sistema de combate. O código em `src/combate/` é a
+Especificação do sistema de combate. O código em `combate/` é a
 implementação desta especificação; quando os dois divergirem, este documento
 descreve a intenção e o código descreve o que acontece de fato.
 
@@ -8,7 +8,7 @@ descreve a intenção e o código descreve o que acontece de fato.
 
 | Decisão | Escolha | Consequência |
 |---|---|---|
-| Onde a regra vive | Python (`src/combate/`) | Fonte única da verdade. O frontend consome o resultado, nunca recalcula. |
+| Onde a regra vive | Python (`combate/`) | Fonte única da verdade. O frontend consome o resultado, nunca recalcula. |
 | Granularidade | Unidade por unidade | Cada plataforma é uma entidade com resistência e suprimento próprios. |
 | Arbitragem | Motor resolve sozinho | Sem mestre e sem override manual. Mesma semente + mesmos dados = mesmo resultado. |
 
@@ -183,7 +183,7 @@ rodadas previstas.
 
 ## Balanceamento observado
 
-Com os dados atuais de `data/paises.json`:
+Com os dados atuais de `combate/paises.json`:
 
 - **Brasil → Argentina**: vitória decisiva. Razão de forças de 2,4:1 somada a
   supremacia aérea e ISR total. A lei quadrática de Lanchester amplifica a
@@ -194,8 +194,13 @@ Com os dados atuais de `data/paises.json`:
 
 ## Dados de entrada
 
-`data/paises.json` é a fonte única. O inventário militar veio de `stats.html`,
-com dois campos novos:
+`combate/paises.json` é a fixture para uso standalone. Fica ao lado do pacote
+e não em `data/` porque o `.gitignore` do projeto ignora `data/`, que é onde
+vive o banco H2 — o arquivo sumiria do repositório no merge.
+
+Quando o backend Java estiver integrado, as nações chegam no corpo da
+requisição e esta fixture só serve de semente. O inventário militar veio de
+`stats.html`, com dois campos novos:
 
 - `defesas.baterias_antiaereas` — não existia e a interceptação precisa dele.
 - `doutrina` — `mobilizacao_reserva`, `agressividade`, `permitir_nuclear`,
@@ -206,29 +211,72 @@ cobertura (`equipamento / soldados_ativos`) multiplica o ataque da infantaria
 por `0.5 + 0.5 × cobertura`. O Brasil, com 85 mil equipamentos para 220 mil
 soldados, luta a 69% da capacidade nominal de infantaria.
 
+## Serviço HTTP
+
+O motor é exposto ao backend Java em `combate/servico.py`, no mesmo molde do
+`analytics/servico_analitico.py`: só biblioteca padrão, sem instalar nada.
+
+```
+python -m combate.servico            # porta 8200
+```
+
+| Rota | Método | O que faz |
+|---|---|---|
+| `/saude` | GET | Disponibilidade |
+| `/batalha` | POST | Resolve uma guerra completa |
+| `/ordem-de-batalha` | POST | Composição da força de uma nação, sem simular |
+
+O serviço é **sem estado**: as nações chegam no corpo da requisição. Passar o
+nome em vez do objeto resolve pela fixture local, o que serve para testar e
+para o frontend antes do Java assumir os dados.
+
+```json
+{ "atacante": "Brasil", "defensor": { "nome": "...", "militar": {} },
+  "rodadas": 5, "semente": 42, "distancia": 1.8 }
+```
+
+As chaves de resposta saem em **camelCase** (`frenteFinal`, `baixasHumanas`,
+`custoTotal`), acompanhando o contrato que o backend Java já usa com o serviço
+analítico (`choqueDemanda`, `retornoTotal`).
+
+### Por que não existe fallback em Java
+
+O `ClienteAnalitico` cai para uma implementação Java equivalente quando o
+Python está fora do ar, para o turno nunca falhar. Para choque setorial isso é
+barato: é a mesma fórmula em duas linguagens.
+
+Para combate não é. Um fallback significaria reimplementar a simulação de 26
+mil entidades em Java — e aí existem duas regras divergentes, exatamente o que
+a decisão de ter o Python como fonte única quis evitar. **A batalha fica
+pendente e resolve no turno seguinte.**
+
 ## Como rodar
 
 ```
-python src/simular_batalha.py Brasil Argentina --semente 42
-python src/simular_batalha.py Brasil Argentina --json
+python -m combate.cli Brasil Argentina --semente 42
+python -m combate.cli Brasil Argentina --json
+python -m combate.servico --porta 8200
 python -m unittest discover -s tests
 ```
 
 ## Limitações conhecidas
 
-- Só Brasil e Argentina têm inventário militar. França e Egito aparecem em
-  `src/main.py` sem dados — precisam ser preenchidos para entrar em guerra.
+- Só Brasil e Argentina têm inventário militar na fixture. França e Egito
+  aparecem em `legado/main.py` sem dados.
 - Não há geografia: `distancia` é um único número, sem terreno, fronteira ou
   teatro. Uma guerra naval contra um país sem litoral não é impedida.
 - Não há alianças: os acordos em `paises.json` são decorativos no combate.
 - Sem reposição: nenhuma unidade é reconstruída entre rodadas. A guerra só
   consome.
-- O frontend ainda não consome o motor. `index.html` tem sua própria cópia dos
-  países e a função `atacar()` só escreve no console.
+- O frontend ainda não consome o serviço. `index.html` tem sua própria cópia
+  dos países e a função `atacar()` só escreve no console.
+- O lado Java ainda não existe: falta o `ClienteCombate` e a fila de batalhas
+  pendentes descrita acima.
 
 ## Arquivos legados
 
-`src/engine_combate.py`, `src/main.py` e `src/pais.py` são a primeira versão do
-combate e foram substituídos por `src/combate/`. `src/pais.py` está quebrado
-(instancia `Pais` com 4 argumentos para 5 parâmetros) e `src/main.py` executa o
-loop do jogo no import. Devem ser removidos quando o frontend migrar.
+`legado/engine_combate.py`, `legado/main.py` e `legado/pais.py` são a primeira
+versão do combate, substituída por `combate/`. `legado/pais.py` está quebrado
+(instancia `Pais` com 4 argumentos para 5 parâmetros) e `legado/main.py` executa
+o loop do jogo no import. Estão no mesmo caminho que a branch do backend já
+usa, byte a byte, então o merge não conflita.

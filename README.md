@@ -12,11 +12,13 @@ Criar uma ferramenta para gerenciamento de jogos estratégicos baseados em geopo
 
 ## Sistema de combate
 
-O motor de combate fica em `src/combate/` e é a fonte única das regras de
-guerra — o frontend consome o resultado, nunca recalcula.
+O motor de combate fica em `combate/` e é a fonte única das regras de guerra —
+o frontend consome o resultado, nunca recalcula. É exposto ao backend Java por
+um serviço HTTP sem estado, no mesmo molde do `analytics/`.
 
 ```
-python src/simular_batalha.py Brasil Argentina --semente 42
+python -m combate.cli Brasil Argentina --semente 42
+python -m combate.servico
 python -m unittest discover -s tests
 ```
 

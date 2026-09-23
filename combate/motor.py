@@ -33,7 +33,11 @@ from .fases import (
 from .relatorio import BalancoNacional, RelatorioBatalha
 from .unidades import ForcaArmada, criar_forca
 
-CAMINHO_PADRAO = Path(__file__).resolve().parents[2] / "data" / "paises.json"
+# Fixture para uso standalone (CLI e testes). Quando o backend Java estiver
+# integrado, as nacoes chegam no corpo da requisicao e este arquivo so serve
+# de semente. Fica ao lado do pacote porque o .gitignore do projeto ignora
+# "data/", que e onde vive o banco H2.
+CAMINHO_PADRAO = Path(__file__).resolve().parent / "paises.json"
 
 RODADAS_PADRAO = 5
 DISTANCIA_ATACANTE = 1.8  # campanha fora de casa custa mais logistica
@@ -78,7 +82,7 @@ class Beligerante:
 
 
 def carregar_paises(caminho: Path | str = CAMINHO_PADRAO) -> dict[str, dict]:
-    """Le ``data/paises.json`` e devolve os paises indexados por nome."""
+    """Le ``combate/paises.json`` e devolve os paises indexados por nome."""
     dados = json.loads(Path(caminho).read_text(encoding="utf-8"))
     return {p["nome"]: p for p in dados["paises"]}
 

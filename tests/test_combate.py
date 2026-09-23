@@ -13,7 +13,7 @@ import sys
 import unittest
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from combate import CATALOGO, carregar_paises, criar_forca, resolver_guerra  # noqa: E402
 from combate.catalogo import Fase, Papel  # noqa: E402

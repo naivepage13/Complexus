@@ -1,7 +1,7 @@
 """Catalogo de tipos de unidade.
 
 Cada chave deste catalogo corresponde a um campo do inventario militar em
-``data/paises.json``. Uma instancia de ``Unidade`` no campo de batalha aponta
+``combate/paises.json``. Uma instancia de ``Unidade`` no campo de batalha aponta
 para um ``TipoUnidade`` daqui, que define todos os seus atributos de combate.
 
 Escala de referencia: 1 ponto de resistencia ~ 1% da capacidade de combate de
@@ -239,7 +239,7 @@ CATALOGO: Mapping[str, TipoUnidade] = MappingProxyType({
     ),
 })
 
-# Mapeia o inventario de data/paises.json para as chaves do catalogo.
+# Mapeia o inventario de combate/paises.json para as chaves do catalogo.
 MAPA_INVENTARIO: Mapping[str, str] = MappingProxyType({
     "terrestre.soldados_ativos": "infantaria_ativa",
     "terrestre.soldados_reserva": "infantaria_reserva",

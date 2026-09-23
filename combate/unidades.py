@@ -159,7 +159,7 @@ def _valor(inventario: Mapping, caminho: str) -> int:
 
 
 def criar_forca(pais: Mapping) -> ForcaArmada:
-    """Monta a ordem de batalha de um pais a partir de ``data/paises.json``."""
+    """Monta a ordem de batalha de um pais a partir de ``combate/paises.json``."""
     inventario = pais.get("militar", {})
     doutrina = pais.get("doutrina", {})
     mobilizacao = float(doutrina.get("mobilizacao_reserva", 0.30))

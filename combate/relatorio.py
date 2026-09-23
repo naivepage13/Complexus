@@ -3,7 +3,9 @@
 Duas saidas do mesmo objeto:
 
 * ``narrar()`` - texto para o console de [index.html] e para o log do jogo.
-* ``para_dicionario()`` - JSON para a futura API e para o frontend.
+* ``para_dicionario()`` - JSON para a API e para o frontend. As chaves saem
+  em camelCase para acompanhar o contrato ja usado entre o backend Java e o
+  servico analitico (``choqueDemanda``, ``retornoTotal``).
 """
 
 from __future__ import annotations
@@ -41,9 +43,9 @@ class BalancoNacional:
     def para_dicionario(self) -> dict:
         return {
             "nome": self.nome,
-            "baixas_humanas": self.baixas_humanas,
-            "unidades_perdidas": self.unidades_perdidas,
-            "perdas_por_tipo": dict(self.perdas_por_tipo),
+            "baixasHumanas": self.baixas_humanas,
+            "unidadesPerdidas": self.unidades_perdidas,
+            "perdasPorTipo": dict(self.perdas_por_tipo),
             "efetivos": {
                 "inicial": int(self.efetivos_iniciais),
                 "final": int(self.efetivos_finais),
@@ -52,7 +54,7 @@ class BalancoNacional:
                 "inicial": self.unidades_iniciais,
                 "final": self.unidades_finais,
             },
-            "custo_total": round(self.custo_total, 3),
+            "custoTotal": round(self.custo_total, 3),
             "tesouro": {
                 "inicial": round(self.tesouro_inicial, 3),
                 "final": round(self.tesouro_final, 3),
@@ -61,8 +63,8 @@ class BalancoNacional:
                 "inicial": round(self.estabilidade_inicial, 1),
                 "final": round(self.estabilidade_final, 1),
             },
-            "moral_final": round(self.moral_final, 3),
-            "suprimento_final": round(self.suprimento_final, 3),
+            "moralFinal": round(self.moral_final, 3),
+            "suprimentoFinal": round(self.suprimento_final, 3),
         }
 
 
@@ -145,8 +147,8 @@ class RelatorioBatalha:
         return {
             "veredito": self.veredito,
             "detalhe": self.detalhe,
-            "frente_final": round(self.frente_final, 1),
-            "nuclear_empregado": list(self.nuclear_empregado),
+            "frenteFinal": round(self.frente_final, 1),
+            "nuclearEmpregado": list(self.nuclear_empregado),
             "semente": self.semente,
             "atacante": self.atacante.para_dicionario(),
             "defensor": self.defensor.para_dicionario(),
@@ -154,12 +156,12 @@ class RelatorioBatalha:
                 {
                     "numero": r.numero,
                     "intel": {k: round(v, 3) for k, v in r.intel.items()},
-                    "supremacia_aerea": {
+                    "supremaciaAerea": {
                         k: round(v, 3) for k, v in r.supremacia_aerea.items()
                     },
                     "surpresa": r.surpresa,
                     "bloqueio": r.bloqueio,
-                    "movimento_frente": round(r.movimento_frente, 2),
+                    "movimentoFrente": round(r.movimento_frente, 2),
                     "engajamentos": [
                         {
                             "fase": e.fase.value,

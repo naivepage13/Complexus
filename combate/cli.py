@@ -1,8 +1,8 @@
 """CLI de simulacao de batalha.
 
-    python src/simular_batalha.py Brasil Argentina
-    python src/simular_batalha.py Brasil Argentina --rodadas 8 --semente 42
-    python src/simular_batalha.py Brasil Argentina --json > batalha.json
+    python -m combate.cli Brasil Argentina
+    python -m combate.cli Brasil Argentina --rodadas 8 --semente 42
+    python -m combate.cli Brasil Argentina --json > batalha.json
 """
 
 from __future__ import annotations
@@ -10,11 +10,8 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-
-from combate import carregar_paises, resolver_guerra  # noqa: E402
+from .motor import carregar_paises, resolver_guerra
 
 
 def main(argv: list[str] | None = None) -> int:
