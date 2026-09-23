@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GeoHistoricalSim - Mapa</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <nav class="site-header">
+        <div class="header-content">
+            <h1 class="site-title">GeoHistoricalSim</h1>
+            <div class="header-nav">
+                <a href="index.html" class="nav-link">Jogo</a>
+                <a href="mapa.html" class="nav-link active">Mapa</a>
+                <a href="stats.html" class="nav-link">Estatísticas</a>
+                <a href="login.html" class="nav-link">Sair</a>
+            </div>
+        </div>
+    </nav>
+
+    <div id="mapa-layout">
+        <div id="mapa-mapa"></div>
+
+        <aside id="painel-decisao" class="hidden">
+            <button class="btn-fechar-painel" onclick="fecharPainel()">×</button>
+            <div id="painel-conteudo"></div>
+        </aside>
+    </div>
+
+    <div id="mapa-legenda">
+        <span class="legenda-item"><span class="legenda-cor cor-estado"></span>Estado</span>
+        <span class="legenda-item"><span class="legenda-cor cor-cidade"></span>Cidade</span>
+        <span class="legenda-item"><span class="legenda-cor cor-estrada"></span>Estrada</span>
+        <span id="indicador-zoom" class="legenda-item"></span>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="mapa.js"></script>
+</body>
+</html>

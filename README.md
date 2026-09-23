@@ -21,3 +21,15 @@ python -m unittest discover -s tests
 ```
 
 Especificação completa das regras: [docs/REGRAS-DE-COMBATE.md](docs/REGRAS-DE-COMBATE.md).
+
+## Mapa interativo
+
+`mapa.html` traz o mapa hierárquico (Estados → Cidades → Estradas) com zoom
+semântico e lazy loading espacial, feito com [Leaflet](https://leafletjs.com/).
+Os dados geográficos (ilustrativos) ficam em `data/mapa/`. Para testar
+localmente, sirva a pasta por HTTP (o `fetch()` dos GeoJSON não funciona em
+`file://`):
+
+```
+python -m http.server 8123
+```

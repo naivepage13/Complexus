@@ -1,0 +1,112 @@
+{
+  "type": "FeatureCollection",
+  "properties": {
+    "_nota": "Coordenadas reais das cidades; estatisticas (PIB, infraestrutura, tropas) sao ilustrativas para o prototipo."
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "sp-capital",
+        "nome": "São Paulo",
+        "estadoId": "sp",
+        "capital": true,
+        "pibMunicipal": 780000000000,
+        "infraestrutura": 82,
+        "tropasGuarnecidas": 4200
+      },
+      "geometry": { "type": "Point", "coordinates": [-46.6333, -23.5505] }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "sp-campinas",
+        "nome": "Campinas",
+        "estadoId": "sp",
+        "capital": false,
+        "pibMunicipal": 65000000000,
+        "infraestrutura": 74,
+        "tropasGuarnecidas": 900
+      },
+      "geometry": { "type": "Point", "coordinates": [-47.0626, -22.9099] }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "rj-capital",
+        "nome": "Rio de Janeiro",
+        "estadoId": "rj",
+        "capital": true,
+        "pibMunicipal": 340000000000,
+        "infraestrutura": 70,
+        "tropasGuarnecidas": 5200
+      },
+      "geometry": { "type": "Point", "coordinates": [-43.1729, -22.9068] }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "rj-niteroi",
+        "nome": "Niterói",
+        "estadoId": "rj",
+        "capital": false,
+        "pibMunicipal": 22000000000,
+        "infraestrutura": 68,
+        "tropasGuarnecidas": 600
+      },
+      "geometry": { "type": "Point", "coordinates": [-43.1036, -22.8833] }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "mg-capital",
+        "nome": "Belo Horizonte",
+        "estadoId": "mg",
+        "capital": true,
+        "pibMunicipal": 95000000000,
+        "infraestrutura": 65,
+        "tropasGuarnecidas": 1800
+      },
+      "geometry": { "type": "Point", "coordinates": [-43.9345, -19.9167] }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "mg-uberlandia",
+        "nome": "Uberlândia",
+        "estadoId": "mg",
+        "capital": false,
+        "pibMunicipal": 28000000000,
+        "infraestrutura": 60,
+        "tropasGuarnecidas": 400
+      },
+      "geometry": { "type": "Point", "coordinates": [-48.2772, -18.9186] }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "es-capital",
+        "nome": "Vitória",
+        "estadoId": "es",
+        "capital": true,
+        "pibMunicipal": 18000000000,
+        "infraestrutura": 63,
+        "tropasGuarnecidas": 1100
+      },
+      "geometry": { "type": "Point", "coordinates": [-40.3128, -20.3155] }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "es-vilavelha",
+        "nome": "Vila Velha",
+        "estadoId": "es",
+        "capital": false,
+        "pibMunicipal": 9000000000,
+        "infraestrutura": 58,
+        "tropasGuarnecidas": 250
+      },
+      "geometry": { "type": "Point", "coordinates": [-40.2925, -20.3297] }
+    }
+  ]
+}
