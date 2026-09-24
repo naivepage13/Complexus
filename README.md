@@ -14,7 +14,7 @@ indicadores macroeconômicos e fecha as estatísticas do período.
 <!-- auto:inicio:estado -->
 | Indicador | Valor |
 |---|---|
-| Versão | `0.4.0` |
+| Versão | `0.4.1` |
 | Requisitos entregues | 18 de 34 (53%) |
 | Requisitos funcionais | 22 |
 | Requisitos não funcionais | 12 |
@@ -39,6 +39,21 @@ Situação por requisito em [docs/REQUISITOS.md](docs/REQUISITOS.md); mapa do c�
 
 Pré-requisitos: JDK 21 ou superior, Maven 3.9+, Python 3.11+.
 
+### Windows: um clique
+
+Dê dois cliques em **`IniciarComplexus.bat`**. Ele sobe o serviço analítico,
+sobe o backend e abre o navegador sozinho quando o servidor responder. Se o
+servidor já estiver no ar, só abre o navegador.
+
+O script procura um JDK 21+ por conta própria (em `JAVA_HOME`, `~/.jdks`,
+`C:\Ferramentas`, `Program Files\Java`, Adoptium, Microsoft, Corretto e Zulu)
+e usa apenas naquela janela — então funciona mesmo com o `JAVA_HOME` da
+máquina apontando para uma versão mais antiga.
+
+Para encerrar, feche a janela ou pressione Ctrl+C.
+
+### Qualquer sistema: na mão
+
 ```bash
 python analytics/servico_analitico.py
 ```
@@ -49,6 +64,10 @@ cd backend && mvn spring-boot:run
 
 Abra <http://localhost:8080> e entre com `demo` / `demo1234`.
 O serviço Python é opcional: sem ele o backend usa o cálculo local equivalente.
+
+> Se o `mvn` reclamar de `release version 21 not supported`, o `JAVA_HOME` está
+> apontando para um JDK anterior ao 21. Aponte para um JDK 21+ ou use o
+> `IniciarComplexus.bat`, que resolve isso sozinho.
 
 ## Testes
 
@@ -144,6 +163,7 @@ existe mais, o gerador falha em vez de publicar uma referência morta.
 ## Estrutura
 
 ```
+IniciarComplexus.bat  sobe tudo e abre o navegador (Windows)
 backend/     nucleo Java (Spring Boot) + frontend estatico
 analytics/   servico analitico em Python
 ferramentas/ gerador da documentacao viva

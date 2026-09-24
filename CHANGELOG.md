@@ -4,6 +4,22 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 Este arquivo é a linha de auditoria do desenvolvimento: nenhuma entrega entra
 sem uma linha aqui. Ver também [docs/RELATORIO.md](docs/RELATORIO.md).
 
+## [0.4.1] - 2026-09-24
+
+### Adicionado
+- `IniciarComplexus.bat`: sobe o servico analitico e o backend e abre o
+  navegador sozinho quando a porta responde. Rodando com o servidor ja no ar,
+  apenas abre o navegador.
+- O script procura um JDK 21 ou superior por conta propria e usa so na propria
+  janela, entao funciona com o JAVA_HOME da maquina apontando para outra
+  versao. Sem JDK compativel, explica o que falta em vez de despejar erro do
+  compilador.
+
+### Observacao
+A maquina de desenvolvimento estava com `JAVA_HOME` no JDK 17 e o projeto
+compila com release 21: `mvn` na mao falha com "release version 21 not
+supported". O README passou a registrar isso e o .bat contorna sozinho.
+
 ## [0.4.0] - 2026-09-21
 
 Documentacao que se mantem sozinha. Os relatorios deixam de depender de alguem

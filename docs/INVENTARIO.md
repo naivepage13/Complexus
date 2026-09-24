@@ -2,7 +2,7 @@
 
 <!-- Arquivo gerado por ferramentas/gerar_documentacao.py. Nao edite a mao: mude docs/requisitos.toml ou o codigo e rode o gerador. -->
 
-Retrato do código na versão `0.4.0`, lido direto dos fontes.
+Retrato do código na versão `0.4.1`, lido direto dos fontes.
 
 ## Endpoints da API
 

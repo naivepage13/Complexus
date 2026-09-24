@@ -7,8 +7,8 @@
 
 | Campo | Valor |
 |---|---|
-| Versão atual | **0.4.0** |
-| Data da última atualização | 21/09/2026 |
+| Versão atual | **0.4.1** |
+| Data da última atualização | 24/09/2026 |
 | Repositório | [naivepage13/Complexus](https://github.com/naivepage13/Complexus) |
 | Branch | `claude/business-country-management-game-4bbe6e` |
 | Estado | Núcleo jogável: economia, política, investimentos, turnos e auditoria |
@@ -17,7 +17,7 @@
 ## Números do projeto
 
 <!-- auto:inicio:metricas -->
-Versão `0.4.0` · 45 testes · 44 endpoints · 16 entidades · 10 serviços · 9 páginas.
+Versão `0.4.1` · 45 testes · 44 endpoints · 16 entidades · 10 serviços · 9 páginas.
 
 Linhas de código não vazias, sem contar `legado/` e artefatos de build:
 
@@ -239,6 +239,7 @@ token de `jogo.admin.token` (padrão `admin-local`).
 
 | Versão | Data | Entrega |
 |---|---|---|
+| 0.4.1 | 24/09/2026 | Atalho `IniciarComplexus.bat` para Windows, que escolhe o JDK compatível sozinho |
 | 0.4.0 | 21/09/2026 | Documentação viva: catálogo de requisitos, gerador de relatórios, inventário técnico e hook que mantém tudo sincronizado |
 | 0.3.0 | 21/09/2026 | Renomeação do projeto para Complexus em todas as camadas, com a partida local preservada |
 | 0.2.1 | 18/09/2026 | Separação de visibilidade: painel inicial enxuto, resultado de empresa em gráfico na própria página, canal de atualizações para o jogador e auditoria restrita à administração com token |
