@@ -15,13 +15,13 @@ indicadores macroeconômicos e fecha as estatísticas do período.
 | Indicador | Valor |
 |---|---|
 | Versão | `0.4.1` |
-| Requisitos entregues | 18 de 34 (53%) |
-| Requisitos funcionais | 22 |
+| Requisitos entregues | 20 de 38 (53%) |
+| Requisitos funcionais | 26 |
 | Requisitos não funcionais | 12 |
 | Testes automatizados | 45 (24 Java + 21 Python) |
 | Endpoints da API | 41 públicos + 3 administrativos |
 | Entidades persistidas | 16 |
-| Páginas do frontend | 9 |
+| Páginas do frontend | 10 |
 
 Situação por requisito em [docs/REQUISITOS.md](docs/REQUISITOS.md); mapa do código em [docs/INVENTARIO.md](docs/INVENTARIO.md).
 <!-- auto:fim:estado -->
@@ -83,6 +83,10 @@ cd analytics && python -m unittest discover -p "testes_*.py"
 python -m unittest discover -s ferramentas -p "testes_*.py"
 ```
 
+```bash
+python -m unittest discover -s tests
+```
+
 ## O que dá para fazer no jogo
 
 - **Empresas** — fundar, aportar capital, contratar, demitir, ajustar marketing,
@@ -96,6 +100,10 @@ python -m unittest discover -s ferramentas -p "testes_*.py"
   dividendos mensais lastreados no lucro e acompanhar o retorno da carteira.
 - **Estatísticas** — PIB, inflação, juros, desemprego, aprovação do governo,
   índice de mercado e séries históricas por turno e por setor.
+- **Mapa** — mapa hierárquico Estados → Cidades → Estradas, com zoom semântico,
+  carregamento por viewport e painel de decisão. A alíquota estadual e o
+  investimento em infraestrutura são herdados do estado pai, então mexer no
+  estado muda o PIB efetivo das cidades filhas na hora.
 - **Atualizações** — canal com o que acontece no mundo: fechamentos de turno,
   leis, empresas e cargos, mais as suas próprias ações.
 
@@ -120,6 +128,20 @@ financeiro. Essa linha de auditoria é administrativa: fica em
 | [CHANGELOG.md](CHANGELOG.md) | Histórico de versões | Manual |
 | [docs/requisitos.toml](docs/requisitos.toml) | Catálogo de requisitos: fonte única dos relatórios | Manual |
 <!-- auto:fim:documentacao -->
+
+## Sistema de combate
+
+O motor de combate vive em `src/combate/` e é a fonte única das regras de
+guerra: resolução por fases (inteligência, ar, golpe profundo, mar, terra),
+cada plataforma como entidade individual, logística com transporte e verba, e
+gate nuclear que exige doutrina permissiva e cobra estabilidade.
+
+```bash
+python src/simular_batalha.py Brasil Argentina --semente 42
+```
+
+Especificação completa em [docs/REGRAS-DE-COMBATE.md](docs/REGRAS-DE-COMBATE.md).
+O motor ainda não é consumido pelo backend Java — a ligação está no roadmap.
 
 ## Como a documentação se mantém em dia
 
@@ -165,7 +187,10 @@ existe mais, o gerador falha em vez de publicar uma referência morta.
 ```
 IniciarComplexus.bat  sobe tudo e abre o navegador (Windows)
 backend/     nucleo Java (Spring Boot) + frontend estatico
-analytics/   servico analitico em Python
+analytics/   servico analitico em Python (choques setoriais)
+src/combate/ motor de combate por fases, em Python
+data/        inventario militar das nacoes (paises.json)
+tests/       testes do motor de combate
 ferramentas/ gerador da documentacao viva
 docs/        documentacao do projeto e catalogo de requisitos
 .githooks/   hook que mantem a documentacao sincronizada

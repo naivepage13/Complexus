@@ -17,19 +17,19 @@
 ## Números do projeto
 
 <!-- auto:inicio:metricas -->
-Versão `0.4.1` · 45 testes · 44 endpoints · 16 entidades · 10 serviços · 9 páginas.
+Versão `0.4.1` · 45 testes · 44 endpoints · 16 entidades · 10 serviços · 10 páginas.
 
 Linhas de código não vazias, sem contar `legado/` e artefatos de build:
 
 | Linguagem | Linhas |
 |---|---|
 | Java | 6.255 |
-| JavaScript | 1.325 |
-| HTML | 1.137 |
-| Python | 996 |
-| Configuração | 553 |
-| CSS | 384 |
-| **Total** | **10.650** |
+| Python | 2.392 |
+| JavaScript | 1.722 |
+| HTML | 1.194 |
+| CSS | 1.060 |
+| Configuração | 610 |
+| **Total** | **13.233** |
 <!-- auto:fim:metricas -->
 
 ## Situação dos requisitos
@@ -37,16 +37,17 @@ Linhas de código não vazias, sem contar `legado/` e artefatos de build:
 <!-- auto:inicio:requisitos -->
 | Situação | Funcionais | Não funcionais | Total |
 |---|---|---|---|
-| Entregue | 11 | 7 | 18 |
+| Entregue | 13 | 7 | 20 |
 | Parcial | 1 | 0 | 1 |
-| Planejado | 10 | 5 | 15 |
+| Planejado | 12 | 5 | 17 |
 
-16 dos 18 requisitos entregues têm teste automatizado declarado.
+17 dos 20 requisitos entregues têm teste automatizado declarado.
 
 **Lacunas de cobertura** — entregues sem teste declarado:
 
 | Requisito | Título | Situação |
 |---|---|---|
+| RF-24 | Mapa hierárquico com zoom semântico | entregue |
 | RNF-08 | Resiliência ao serviço analítico | entregue |
 | RNF-11 | Frontend sem dependência externa | entregue |
 <!-- auto:fim:requisitos -->

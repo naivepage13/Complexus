@@ -2,7 +2,7 @@
 
 <!-- Arquivo gerado por ferramentas/gerar_documentacao.py. Nao edite a mao: mude docs/requisitos.toml ou o codigo e rode o gerador. -->
 
-Projeto **Complexus**, versão `0.4.1`. 18 de 34 requisitos entregues (53%).
+Projeto **Complexus**, versão `0.4.1`. 20 de 38 requisitos entregues (53%).
 
 Cada requisito declara o critério de aceite, os arquivos que o implementam e os testes que o cobrem. O gerador falha se um arquivo declarado não existir, então a rastreabilidade não envelhece em silêncio.
 
@@ -10,16 +10,17 @@ Cada requisito declara o critério de aceite, os arquivos que o implementam e os
 
 | Situação | Funcionais | Não funcionais | Total |
 |---|---|---|---|
-| Entregue | 11 | 7 | 18 |
+| Entregue | 13 | 7 | 20 |
 | Parcial | 1 | 0 | 1 |
-| Planejado | 10 | 5 | 15 |
+| Planejado | 12 | 5 | 17 |
 
-16 dos 18 requisitos entregues têm teste automatizado declarado.
+17 dos 20 requisitos entregues têm teste automatizado declarado.
 
 **Lacunas de cobertura** — entregues sem teste declarado:
 
 | Requisito | Título | Situação |
 |---|---|---|
+| RF-24 | Mapa hierárquico com zoom semântico | entregue |
 | RNF-08 | Resiliência ao serviço analítico | entregue |
 | RNF-11 | Frontend sem dependência externa | entregue |
 
@@ -49,6 +50,10 @@ Cada requisito declara o critério de aceite, os arquivos que o implementam e os
 | RF-20 | Projeções de investimento na interface | parcial | Baixa | - | 1 |
 | RF-21 | Estatísticas gerais e séries históricas | entregue | Alta | 0.2.0 | 1 |
 | RF-22 | Canal de atualizações do jogador | entregue | Alta | 0.2.1 | 2 |
+| RF-23 | Motor de combate por fases | entregue | Alta | 0.5.0 | 1 |
+| RF-24 | Mapa hierárquico com zoom semântico | entregue | Media | 0.5.0 | 0 |
+| RF-25 | Backend consome o motor de combate | planejado | Alta | - | 0 |
+| RF-26 | Mapa alimentado pelo backend | planejado | Media | - | 0 |
 
 ### RF-01 — Cadastro e identificação de jogadores
 
@@ -371,6 +376,75 @@ Feed com os fatos públicos do mundo e as ações do próprio jogador, em lingua
 - `CanalEAcessoAdminTest#canalNaoExpoeDadoInterno`
 - `CanalEAcessoAdminTest#movimentoPrivadoFicaComODono`
 
+### RF-23 — Motor de combate por fases
+
+**Situação:** entregue · **Prioridade:** Alta · **Entregue em:** `0.5.0`
+
+Resolver guerras entre nações por fases (inteligência, ar, golpe profundo, mar, terra), com cada plataforma como entidade individual, logística por transporte e verba, e gate nuclear que exige doutrina permissiva.
+
+**Critério de aceite:** Uma guerra entre duas nações do inventário resolve em rodadas e devolve relatório; a mesma semente produz sempre o mesmo resultado.
+
+**Implementação:**
+
+- `src/combate/motor.py`
+- `src/combate/fases.py`
+- `src/combate/unidades.py`
+- `src/simular_batalha.py`
+- `data/paises.json`
+
+**Testes:**
+
+- `test_combate`
+
+> Veio da main, feito em outra sessão. O backend Java ainda não consome o motor: ver RF-25.
+
+### RF-24 — Mapa hierárquico com zoom semântico
+
+**Situação:** entregue · **Prioridade:** Media · **Entregue em:** `0.5.0`
+
+Navegar Estados, Cidades e Estradas em três níveis de zoom, com carregamento por viewport, painel de decisão e herança de alíquota e infraestrutura do estado para as cidades filhas.
+
+**Critério de aceite:** Aproximar revela cidades e estradas; clicar numa cidade abre o painel com PIB e infraestrutura já ajustados pelo estado pai.
+
+**Implementação:**
+
+- `backend/src/main/resources/static/mapa.html`
+- `backend/src/main/resources/static/js/mapa.js`
+- `backend/src/main/resources/static/dados/mapa/estados.geojson`
+
+**Testes:** nenhum declarado.
+
+> Veio da main. Integrado ao frontend do jogo na 0.5.0, com Leaflet servido localmente. 
+Sem teste automatizado: a herança de estado roda só no cliente. 
+Renderização verificada (camadas, paleta, dados servidos pelo backend); o zoom e o drill-down NÃO puderam ser 
+verificados aqui, porque a animação de zoom do Leaflet não completa no navegador embutido usado nos testes — 
+reproduzido com uma instância limpa do Leaflet, e com `zoomAnimation: false` o zoom volta a funcionar. 
+Conferir num navegador comum; se também travar, a correção é criar o mapa com `zoomAnimation: false`.
+
+### RF-25 — Backend consome o motor de combate
+
+**Situação:** planejado · **Prioridade:** Alta
+
+Expor a resolução de guerra pela API do backend Java, chamando o motor Python no mesmo padrão do serviço analítico, com fallback e registro na auditoria.
+
+**Critério de aceite:** Uma guerra disparada pela API gera evento de auditoria, lançamentos no razão e efeito sobre a estabilidade do país.
+
+**Testes:** nenhum declarado.
+
+> Hoje o motor só roda por CLI. É a ligação que falta entre os dois lados do projeto.
+
+### RF-26 — Mapa alimentado pelo backend
+
+**Situação:** planejado · **Prioridade:** Media
+
+Trocar os dados ilustrativos do mapa pelos territórios reais da partida, servidos pela API, e persistir as decisões tomadas no painel.
+
+**Critério de aceite:** Municípios e estados do mapa vêm de /api/politica/territorios e as decisões mudam o estado da partida.
+
+**Testes:** nenhum declarado.
+
+> Hoje o mapa lê GeoJSON estático e a herança de estado vive só no navegador.
+
 ## Requisitos não funcionais
 
 | ID | Título | Situação | Prioridade | Versão | Testes |
@@ -530,13 +604,14 @@ O hash de senha não pode mudar de formato sem migração: contas existentes con
 
 **Situação:** entregue · **Prioridade:** Media · **Entregue em:** `0.2.0`
 
-Interface em HTML, CSS e JavaScript puros, uma página por arquivo e uma única folha de estilo, sem build.
+Interface em HTML, CSS e JavaScript puros, uma página por arquivo e uma única folha de estilo, sem build e sem depender de rede. A única biblioteca externa, o Leaflet do mapa, é servida da pasta vendor.
 
-**Critério de aceite:** Subir o backend entrega a interface pronta, sem etapa de compilação do frontend.
+**Critério de aceite:** Subir o backend entrega a interface pronta, sem etapa de compilação e sem buscar nada em CDN.
 
 **Implementação:**
 
 - `backend/src/main/resources/static/css/app.css`
+- `backend/src/main/resources/static/vendor/leaflet/leaflet.js`
 
 **Testes:** nenhum declarado.
 

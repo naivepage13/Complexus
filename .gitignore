@@ -5,8 +5,9 @@ backend/target/
 *.war
 
 # Banco de dados local (H2)
+# Atencao: ignorar "data/" inteiro esconderia data/paises.json, que e o
+# inventario militar usado pelo modulo de combate. Ignoramos so o banco.
 backend/data/
-data/
 *.mv.db
 *.trace.db
 

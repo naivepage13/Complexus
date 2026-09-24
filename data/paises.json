@@ -1,0 +1,104 @@
+{
+  "versao": 1,
+  "observacao": "Fonte unica de verdade do estado das nacoes. Extraido de stats.html. O frontend deve consumir este arquivo em vez de manter copias locais.",
+  "paises": [
+    {
+      "nome": "Brasil",
+      "poder": 70,
+      "estabilidade": 100,
+      "economia": "1.2T",
+      "tesouro": 120.0,
+      "moral": 1.0,
+      "acordos": ["ONU", "Mercosul"],
+      "doutrina": {
+        "mobilizacao_reserva": 0.30,
+        "agressividade": 1.0,
+        "permitir_nuclear": false,
+        "qualidade_treinamento": 1.0
+      },
+      "militar": {
+        "terrestre": {
+          "soldados_ativos": 220000,
+          "soldados_reserva": 450000,
+          "equipamento_infantaria": 85000,
+          "caminhoes_transporte": 12500,
+          "tanques_principais": 350,
+          "tanques_reconhecimento": 180
+        },
+        "aerea": {
+          "aeronaves_transporte": 120,
+          "cacas_ataque": 250,
+          "helicopteros": 310,
+          "aeronaves_patrulha_maritima": 45
+        },
+        "naval": {
+          "submarinos": 8,
+          "navios_guerra": 15,
+          "porta_avioes": 1
+        },
+        "drones": {
+          "kamikase": 420,
+          "reconhecimento": 680
+        },
+        "misseis": {
+          "balisticos": 45,
+          "simples": 850,
+          "hipersonicos": 25,
+          "ogivas_nucleares": 8
+        },
+        "defesas": {
+          "baterias_antiaereas": 90
+        }
+      }
+    },
+    {
+      "nome": "Argentina",
+      "poder": 50,
+      "estabilidade": 100,
+      "economia": "450B",
+      "tesouro": 25.0,
+      "moral": 1.0,
+      "acordos": ["Mercosul"],
+      "doutrina": {
+        "mobilizacao_reserva": 0.30,
+        "agressividade": 1.0,
+        "permitir_nuclear": false,
+        "qualidade_treinamento": 0.95
+      },
+      "militar": {
+        "terrestre": {
+          "soldados_ativos": 95000,
+          "soldados_reserva": 180000,
+          "equipamento_infantaria": 35000,
+          "caminhoes_transporte": 4500,
+          "tanques_principais": 120,
+          "tanques_reconhecimento": 65
+        },
+        "aerea": {
+          "aeronaves_transporte": 45,
+          "cacas_ataque": 75,
+          "helicopteros": 95,
+          "aeronaves_patrulha_maritima": 12
+        },
+        "naval": {
+          "submarinos": 2,
+          "navios_guerra": 5,
+          "porta_avioes": 0
+        },
+        "drones": {
+          "kamikase": 80,
+          "reconhecimento": 150
+        },
+        "misseis": {
+          "balisticos": 5,
+          "simples": 200,
+          "hipersonicos": 0,
+          "ogivas_nucleares": 0
+        },
+        "defesas": {
+          "baterias_antiaereas": 28
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,98 @@
+{
+  "type": "FeatureCollection",
+  "properties": {
+    "_nota": "Tracados simplificados (poucos vertices) ao longo do corredor real das rodovias citadas; nao seguem o tracado oficial exato."
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "rod-sp-rj",
+        "nome": "BR-116 (Via Dutra)",
+        "tipo": "federal",
+        "cidadesConectadas": ["sp-capital", "rj-capital"],
+        "capacidade": 80,
+        "status": "normal"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [[-46.6333, -23.5505], [-45.0, -22.9], [-43.98, -22.75], [-43.1729, -22.9068]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "rod-sp-campinas",
+        "nome": "SP-330 (Anhanguera/Bandeirantes)",
+        "tipo": "estadual",
+        "cidadesConectadas": ["sp-capital", "sp-campinas"],
+        "capacidade": 90,
+        "status": "normal"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [[-46.6333, -23.5505], [-46.85, -23.2], [-47.0626, -22.9099]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "rod-rj-mg",
+        "nome": "BR-040",
+        "tipo": "federal",
+        "cidadesConectadas": ["rj-capital", "mg-capital"],
+        "capacidade": 70,
+        "status": "normal"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [[-43.1729, -22.9068], [-43.5, -22.0], [-43.9345, -19.9167]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "rod-mg-es",
+        "nome": "BR-262",
+        "tipo": "federal",
+        "cidadesConectadas": ["mg-capital", "es-capital"],
+        "capacidade": 65,
+        "status": "normal"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [[-43.9345, -19.9167], [-42.0, -19.9], [-40.3128, -20.3155]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "rod-rj-es",
+        "nome": "BR-101 (trecho litoral)",
+        "tipo": "federal",
+        "cidadesConectadas": ["rj-capital", "es-capital"],
+        "capacidade": 60,
+        "status": "normal"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [[-43.1729, -22.9068], [-41.5, -21.5], [-40.3128, -20.3155]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "rod-mg-uberlandia",
+        "nome": "BR-050",
+        "tipo": "federal",
+        "cidadesConectadas": ["mg-capital", "mg-uberlandia"],
+        "capacidade": 55,
+        "status": "normal"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [[-43.9345, -19.9167], [-46.0, -19.4], [-48.2772, -18.9186]]
+      }
+    }
+  ]
+}

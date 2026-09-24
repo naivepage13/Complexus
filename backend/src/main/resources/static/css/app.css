@@ -443,6 +443,90 @@ input:focus, select:focus, textarea:focus {
     color: var(--cor-texto-suave);
 }
 
+/* ------------------------------------------------------------------- mapa
+
+   O mapa veio de um tema escuro e foi trazido para a paleta clara. Duas
+   consequencias: o filtro que invertia os ladrilhos do OpenStreetMap saiu,
+   porque o mapa base ja e claro, e as cores da legenda passaram a ser as
+   mesmas de js/mapa.js.
+   ------------------------------------------------------------------------ */
+
+.mapa-pagina {
+    position: relative;
+}
+
+#mapa-layout {
+    display: flex;
+    height: calc(100vh - 62px);
+}
+
+#mapa-mapa {
+    flex-grow: 1;
+    height: 100%;
+    background: var(--cor-superficie-alt);
+}
+
+#mapa-mapa .leaflet-popup-content-wrapper,
+#mapa-mapa .leaflet-tooltip {
+    background: var(--cor-superficie);
+    color: var(--cor-texto);
+    border: 1px solid var(--cor-borda);
+    box-shadow: none;
+}
+
+#painel-decisao {
+    width: 320px;
+    flex-shrink: 0;
+    background: var(--cor-superficie);
+    border-left: 1px solid var(--cor-borda);
+    padding: var(--espaco);
+    overflow-y: auto;
+    position: relative;
+}
+
+#painel-conteudo h3 {
+    color: var(--cor-primaria-escura);
+    margin-bottom: 4px;
+}
+
+.btn-fechar-painel {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+}
+
+#mapa-legenda {
+    position: fixed;
+    bottom: 15px;
+    left: 15px;
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    background: var(--cor-superficie);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    padding: 8px 14px;
+    font-size: 13px;
+    z-index: 999;
+}
+
+.legenda-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.legenda-cor {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.cor-estado { background: var(--cor-primaria); }
+.cor-cidade { background: var(--cor-negativa); }
+.cor-estrada { background: var(--cor-alerta); }
+
 /* ---------------------------------------------------------------- login page */
 
 .caixa-login {

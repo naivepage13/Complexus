@@ -103,6 +103,7 @@ Retrato do código na versão `0.4.1`, lido direto dos fontes.
 | `backend/src/main/resources/static/index.html` |
 | `backend/src/main/resources/static/investimentos.html` |
 | `backend/src/main/resources/static/login.html` |
+| `backend/src/main/resources/static/mapa.html` |
 | `backend/src/main/resources/static/politica.html` |
 
 ## Testes automatizados
