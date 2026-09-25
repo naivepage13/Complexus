@@ -2,10 +2,10 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "static-server",
-      "runtimeExecutable": "python",
-      "runtimeArgs": ["-m", "http.server", "8123"],
-      "port": 8123
+      "name": "complexus-backend",
+      "runtimeExecutable": "mvn",
+      "runtimeArgs": ["-f", "backend/pom.xml", "spring-boot:run"],
+      "port": 8080
     }
   ]
 }

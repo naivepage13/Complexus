@@ -14,11 +14,11 @@ indicadores macroeconômicos e fecha as estatísticas do período.
 <!-- auto:inicio:estado -->
 | Indicador | Valor |
 |---|---|
-| Versão | `0.4.1` |
+| Versão | `0.6.0` |
 | Requisitos entregues | 20 de 38 (53%) |
 | Requisitos funcionais | 26 |
 | Requisitos não funcionais | 12 |
-| Testes automatizados | 45 (24 Java + 21 Python) |
+| Testes automatizados | 44 (24 Java + 20 Python) |
 | Endpoints da API | 41 públicos + 3 administrativos |
 | Entidades persistidas | 16 |
 | Páginas do frontend | 10 |
@@ -194,7 +194,6 @@ tests/       testes do motor de combate
 ferramentas/ gerador da documentacao viva
 docs/        documentacao do projeto e catalogo de requisitos
 .githooks/   hook que mantem a documentacao sincronizada
-legado/      prototipo original, preservado para referencia
 ```
 
 ## Contribuindo

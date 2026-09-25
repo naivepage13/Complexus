@@ -50,7 +50,6 @@ backend/           nucleo Java (Spring Boot)
   src/test/        testes unitarios e de integracao
 analytics/         servico analitico em Python + testes
 docs/              esta documentacao
-legado/            prototipo original preservado
 ```
 
 ## 3. Camadas

@@ -226,9 +226,3 @@ python -m unittest discover -s tests
 - O frontend ainda não consome o motor. `index.html` tem sua própria cópia dos
   países e a função `atacar()` só escreve no console.
 
-## Arquivos legados
-
-`src/engine_combate.py`, `src/main.py` e `src/pais.py` são a primeira versão do
-combate e foram substituídos por `src/combate/`. `src/pais.py` está quebrado
-(instancia `Pais` com 4 argumentos para 5 parâmetros) e `src/main.py` executa o
-loop do jogo no import. Devem ser removidos quando o frontend migrar.

@@ -113,7 +113,7 @@ def bloco_metricas(inv: Inventario) -> str:
         f"{len(inv.endpoints)} endpoints · {len(inv.entidades)} entidades · "
         f"{len(inv.servicos)} serviços · {len(inv.paginas)} páginas.",
         "",
-        "Linhas de código não vazias, sem contar `legado/` e artefatos de build:",
+        "Linhas de código não vazias, sem contar artefatos de build:",
         "",
         tabela(["Linguagem", "Linhas"], linhas),
     ])

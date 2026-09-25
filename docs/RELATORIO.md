@@ -7,8 +7,8 @@
 
 | Campo | Valor |
 |---|---|
-| Versão atual | **0.4.1** |
-| Data da última atualização | 24/09/2026 |
+| Versão atual | **0.6.0** |
+| Data da última atualização | 25/09/2026 |
 | Repositório | [naivepage13/Complexus](https://github.com/naivepage13/Complexus) |
 | Branch | `claude/business-country-management-game-4bbe6e` |
 | Estado | Núcleo jogável: economia, política, investimentos, turnos e auditoria |
@@ -17,19 +17,19 @@
 ## Números do projeto
 
 <!-- auto:inicio:metricas -->
-Versão `0.4.1` · 45 testes · 44 endpoints · 16 entidades · 10 serviços · 10 páginas.
+Versão `0.6.0` · 44 testes · 44 endpoints · 16 entidades · 10 serviços · 10 páginas.
 
-Linhas de código não vazias, sem contar `legado/` e artefatos de build:
+Linhas de código não vazias, sem contar artefatos de build:
 
 | Linguagem | Linhas |
 |---|---|
 | Java | 6.255 |
-| Python | 2.392 |
+| Python | 2.389 |
 | JavaScript | 1.722 |
 | HTML | 1.194 |
 | CSS | 1.060 |
 | Configuração | 610 |
-| **Total** | **13.233** |
+| **Total** | **13.230** |
 <!-- auto:fim:metricas -->
 
 ## Situação dos requisitos
@@ -168,10 +168,13 @@ Linha de auditoria em [AUDITORIA.md](AUDITORIA.md).
   títulos das páginas, serviço Python e documentação.
 - O banco existente foi renomeado em vez de recriado, então partidas em
   andamento continuam de onde estavam.
-- Mantidos de propósito: o sal do hash de senha (`geohistoricalsim::v1::`),
+- Mantido de propósito: o sal do hash de senha (`geohistoricalsim::v1::`),
   que entra no hash gravado e derrubaria o login de todas as contas se mudasse;
-  o prefixo `jogo.*` das propriedades, que descreve o domínio e não a marca; e
-  a pasta `legado/`, registro do protótipo original.
+  e o prefixo `jogo.*` das propriedades, que descreve o domínio e não a marca.
+  A pasta `legado/` foi mantida até a 0.5.0 e removida na 0.6.0, quando os
+  três arquivos que ela guardava (`engine_combate.py`, `main.py`, `pais.py`
+  — a primeira versão do combate, já substituída por `src/combate/`) deixaram
+  de ter qualquer valor de referência.
 - O sal chegou a ser renomeado junto e quebrou o login das contas existentes.
   Foi revertido e agora há teste (`CredencialEstavelTest`) travando o hash.
 
@@ -240,6 +243,8 @@ token de `jogo.admin.token` (padrão `admin-local`).
 
 | Versão | Data | Entrega |
 |---|---|---|
+| 0.6.0 | 25/09/2026 | Limpeza e organização: pasta `legado/` removida (incluindo os três arquivos Python já documentados como quebrados/obsoletos), correção de versão desalinhada entre pom.xml e changelog, renomeação da pasta raiz do projeto para `Complexus` |
+| 0.5.0 | 24/09/2026 | Integração do motor de combate e do mapa interativo, que corriam em paralelo na `main` |
 | 0.4.1 | 24/09/2026 | Atalho `IniciarComplexus.bat` para Windows, que escolhe o JDK compatível sozinho |
 | 0.4.0 | 21/09/2026 | Documentação viva: catálogo de requisitos, gerador de relatórios, inventário técnico e hook que mantém tudo sincronizado |
 | 0.3.0 | 21/09/2026 | Renomeação do projeto para Complexus em todas as camadas, com a partida local preservada |

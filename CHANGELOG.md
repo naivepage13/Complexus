@@ -4,6 +4,38 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 Este arquivo é a linha de auditoria do desenvolvimento: nenhuma entrega entra
 sem uma linha aqui. Ver também [docs/RELATORIO.md](docs/RELATORIO.md).
 
+## [0.6.0] - 2026-09-25
+
+Organização do repositório: descarta o que não é mais necessário e corrige uma
+sincronia de versão que ficou pra trás. A pasta raiz do projeto também foi
+renomeada de `desenvolvimentoGeoHistoricalSim` para `Complexus`.
+
+### Removido
+- Pasta `legado/` inteira: os quatro HTML e o CSS do protótipo original, e os
+  três arquivos Python já documentados como obsoletos ou quebrados
+  (`engine_combate.py`, `pais.py` — instanciava `Pais` com o número errado de
+  argumentos — e `main.py` — rodava o loop do jogo só por ser importado).
+  Nada no código ativo referenciava esses arquivos; a história continua no
+  Git para quem precisar consultar.
+- Seção "Arquivos legados" de `docs/REGRAS-DE-COMBATE.md`, que descrevia
+  exatamente os três arquivos acima e dizia que deveriam ser removidos.
+
+### Corrigido
+- `backend/pom.xml` estava preso em `0.4.1` desde antes do merge da 0.5.0: o
+  commit que integrou combate e mapa esqueceu de bumpar a versão do artefato.
+  `docs/RELATORIO.md` tinha o mesmo atraso — cabeçalho e tabela de histórico
+  não registravam a 0.5.0. Os dois foram sincronizados.
+- `.claude/launch.json` apontava para `python -m http.server 8123`, o
+  servidor estático que o mapa usava antes de ser servido pelo backend Spring
+  Boot. Atualizado para subir o backend de verdade (`mvn spring-boot:run`).
+
+### Alterado
+- Pasta raiz do projeto renomeada para `Complexus`. O atalho da área de
+  trabalho e as referências de caminho foram atualizados junto.
+- `ferramentas/inventario.py` não exclui mais `legado` do inventário (a pasta
+  não existe mais); `ferramentas/testes_gerador.py` perdeu o teste que
+  verificava essa exclusão, que não tinha mais o que verificar.
+
 ## [0.5.0] - 2026-09-24
 
 Integracao das duas linhas de trabalho que corriam em paralelo. Ate aqui o

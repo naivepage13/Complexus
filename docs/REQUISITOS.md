@@ -2,7 +2,7 @@
 
 <!-- Arquivo gerado por ferramentas/gerar_documentacao.py. Nao edite a mao: mude docs/requisitos.toml ou o codigo e rode o gerador. -->
 
-Projeto **Complexus**, versão `0.4.1`. 20 de 38 requisitos entregues (53%).
+Projeto **Complexus**, versão `0.6.0`. 20 de 38 requisitos entregues (53%).
 
 Cada requisito declara o critério de aceite, os arquivos que o implementam e os testes que o cobrem. O gerador falha se um arquivo declarado não existir, então a rastreabilidade não envelhece em silêncio.
 

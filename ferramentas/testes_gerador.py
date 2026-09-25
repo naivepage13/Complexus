@@ -77,11 +77,6 @@ class TestesInventario(unittest.TestCase):
         for endpoint in administrativas:
             self.assertTrue(endpoint.rota.startswith("/api/admin"))
 
-    def test_ignora_o_legado(self):
-        paginas = " ".join(self.inventario.paginas)
-        self.assertNotIn("legado/", paginas)
-
-
 class TestesGeracao(unittest.TestCase):
 
     def test_documentacao_esta_atualizada(self):

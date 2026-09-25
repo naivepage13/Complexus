@@ -17,7 +17,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 #: Pastas que não contam como código do projeto.
-IGNORADAS = {".git", "target", "data", "__pycache__", ".venv", "venv", ".claude", "legado"}
+IGNORADAS = {".git", "target", "data", "__pycache__", ".venv", "venv", ".claude"}
 
 #: Extensão -> rótulo de linguagem nos relatórios.
 LINGUAGENS = {
