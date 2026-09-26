@@ -2,7 +2,7 @@
 
 <!-- Arquivo gerado por ferramentas/gerar_documentacao.py. Nao edite a mao: mude docs/requisitos.toml ou o codigo e rode o gerador. -->
 
-Projeto **Complexus**, versão `0.8.0`. 22 de 40 requisitos entregues (55%).
+Projeto **Complexus**, versão `0.9.0`. 23 de 40 requisitos entregues (58%).
 
 Cada requisito declara o critério de aceite, os arquivos que o implementam e os testes que o cobrem. O gerador falha se um arquivo declarado não existir, então a rastreabilidade não envelhece em silêncio.
 
@@ -10,17 +10,18 @@ Cada requisito declara o critério de aceite, os arquivos que o implementam e os
 
 | Situação | Funcionais | Não funcionais | Total |
 |---|---|---|---|
-| Entregue | 15 | 7 | 22 |
+| Entregue | 16 | 7 | 23 |
 | Parcial | 1 | 0 | 1 |
-| Planejado | 12 | 5 | 17 |
+| Planejado | 11 | 5 | 16 |
 
-19 dos 22 requisitos entregues têm teste automatizado declarado.
+19 dos 23 requisitos entregues têm teste automatizado declarado.
 
 **Lacunas de cobertura** — entregues sem teste declarado:
 
 | Requisito | Título | Situação |
 |---|---|---|
 | RF-24 | Mapa hierárquico com zoom semântico | entregue |
+| RF-26 | Mapa alimentado pelo backend | entregue |
 | RNF-08 | Resiliência ao serviço analítico | entregue |
 | RNF-11 | Frontend sem dependência externa | entregue |
 
@@ -53,9 +54,9 @@ Cada requisito declara o critério de aceite, os arquivos que o implementam e os
 | RF-23 | Motor de combate por fases | entregue | Alta | 0.5.0 | 1 |
 | RF-24 | Mapa hierárquico com zoom semântico | entregue | Media | 0.5.0 | 0 |
 | RF-25 | Backend consome o motor de combate | planejado | Alta | - | 0 |
-| RF-26 | Mapa alimentado pelo backend | planejado | Media | - | 0 |
-| RF-27 | Menu de configurações e páginas de conta | entregue | Media | 0.7.0 | 2 |
-| RF-28 | Exclusão de conta pelo jogador | entregue | Media | 0.8.0 | 2 |
+| RF-26 | Mapa alimentado pelo backend | entregue | Media | 0.7.0 | 0 |
+| RF-27 | Menu de configurações e páginas de conta | entregue | Media | 0.8.0 | 2 |
+| RF-28 | Exclusão de conta pelo jogador | entregue | Media | 0.9.0 | 2 |
 
 ### RF-01 — Cadastro e identificação de jogadores
 
@@ -417,11 +418,11 @@ Navegar Estados, Cidades e Estradas em três níveis de zoom, com carregamento p
 **Testes:** nenhum declarado.
 
 > Veio da main. Integrado ao frontend do jogo na 0.5.0, com Leaflet servido localmente. 
-Sem teste automatizado: a herança de estado roda só no cliente. 
-Renderização verificada (camadas, paleta, dados servidos pelo backend); o zoom e o drill-down NÃO puderam ser 
-verificados aqui, porque a animação de zoom do Leaflet não completa no navegador embutido usado nos testes — 
-reproduzido com uma instância limpa do Leaflet, e com `zoomAnimation: false` o zoom volta a funcionar. 
-Conferir num navegador comum; se também travar, a correção é criar o mapa com `zoomAnimation: false`.
+A herança de estado só no cliente foi substituída por dados reais da API na RF-26 — os campos mostrados 
+no painel (população, tesouro, alíquota etc.) agora vêm de /api/politica/territorios, e a decisão persiste 
+de verdade via proposta de lei. Ver RF-26. 
+O travamento de zoom/drill-down no navegador embutido de teste foi corrigido de vez: `zoomAnimation: false` 
+no L.map() (aplicado na RF-26), como a observação anterior já indicava.
 
 ### RF-25 — Backend consome o motor de combate
 
@@ -437,19 +438,106 @@ Expor a resolução de guerra pela API do backend Java, chamando o motor Python 
 
 ### RF-26 — Mapa alimentado pelo backend
 
-**Situação:** planejado · **Prioridade:** Media
+**Situação:** entregue · **Prioridade:** Media · **Entregue em:** `0.7.0`
 
 Trocar os dados ilustrativos do mapa pelos territórios reais da partida, servidos pela API, e persistir as decisões tomadas no painel.
 
 **Critério de aceite:** Municípios e estados do mapa vêm de /api/politica/territorios e as decisões mudam o estado da partida.
 
+**Implementação:**
+
+- `backend/src/main/resources/static/mapa.html`
+- `backend/src/main/resources/static/js/mapa.js`
+- `backend/src/main/resources/static/css/app.css`
+- `backend/src/main/resources/static/dados/mapa/estados.geojson`
+- `backend/src/main/resources/static/dados/mapa/cidades.geojson`
+- `backend/src/main/resources/static/dados/mapa/estradas.geojson`
+
 **Testes:** nenhum declarado.
 
-> Hoje o mapa lê GeoJSON estático e a herança de estado vive só no navegador.
+> O GeoJSON estático virou só geometria (id/nome/sigla), casada no cliente por sigla (estado) ou 
+nome+sigla-do-estado (município) com o registro vivo de /api/politica/territorios — recortado pros 3 estados 
+e 4 municípios que a carga inicial (SeedDados) realmente cria, então toda feature no mapa corresponde a um 
+território de verdade. A "herança" de alíquota que rodava só no cliente na RF-24 foi removida: cada painel 
+mostra os campos reais do território (população, tesouro, alíquota, índice etc.), sem recalcular nada — o 
+efeito econômico de verdade já é do motor de simulação do backend, o mapa só exibe. 
+Decisão persistente: em vez de mutar estado local, o painel de Estado/Município propõe um projeto de lei de 
+verdade (POST /api/politica/projetos) quando o jogador tem mandato legislativo ou executivo naquele 
+território — mesmo fluxo de rascunho → pautar → votar → sancionar da página Política, só com o mandato e o 
+território já pré-selecionados. Sem mandato, o painel convida a assumir um cargo em vez de fingir a ação. 
+Testado hoje contra o backend rodando de verdade (não só lido): entrei com a conta demo, assumi um mandato 
+de Deputado Estadual em Minas Gerais via /api/politica/mandatos, propus uma alíquota estadual pelo mapa e 
+confirmei via GET /api/politica/projetos que o rascunho foi persistido no banco (H2). Município e o painel 
+somente-leitura de estrada (a malha viária ainda não é território — ver observação abaixo) também conferidos. 
+Sem teste automatizado: é interação de mapa, mesma limitação da RF-24. 
+Estradas continuam ilustrativas (contexto geográfico entre as cidades da carga inicial): o backend não modela 
+infraestrutura viária como território, então a camada não tem painel de decisão, só um card informativo — 
+não dá pra "persistir uma decisão" que não existe no domínio. 
+De brinde, o travamento de zoom do Leaflet que a observação da RF-24 registrava foi corrigido (`zoomAnimation: 
+false` no L.map()) — o drill-down completa normalmente agora. 
+
+Segunda rodada (mesma versão, antes do commit): a hierarquia semântica ganhou um nível — País > Estado > 
+Cidade, renderização mutuamente exclusiva entre os três (cada camada só existe montada em Leaflet dentro da 
+sua própria faixa de zoom; ao cruzar de nível a anterior é desmontada, não só escondida). País não tem 
+geometria própria no jogo, então é um único marcador clicável no centro do Brasil, com painel alimentado 
+pelos campos reais de Pais (população, tesouro, PIB, alíquota federal, gasto social, estabilidade, aprovação, 
+desemprego, renda média) e o mesmo formulário de proposta de lei, agora também pra esfera FEDERAL (IMPOSTO_ 
+EMPRESARIAL entrou no conjunto de tipos sem setor). estados.geojson trocou a geometria ilustrativa de 3 
+estados por fronteiras reais dos 27 estados brasileiros — dataset público codeforamerica/click_that_hood 
+(brazil-states.geojson), simplificado com Douglas-Peucker (tolerância ~1,3km, 85585 → 12203 pontos) porque 
+não há mapshaper/turf offline neste projeto; arquivo caiu de ~3,3MB pra ~235KB. Dos 27, só os 3 que o 
+SeedDados cria têm registro vivo — os outros 24 aparecem só como contexto geográfico, e o painel deixa isso 
+explícito ("este estado ainda não tem território de partida") em vez de fingir dado que não existe. Estradas 
+passaram a aparecer a partir do nível Estado (antes só em Cidade), pra serem o destaque visual da malha 
+logística contra um território agora estilizado com cor neutra e baixa opacidade — estilo sutil de propósito, 
+ver js/mapa.js. O painel de estrada ganhou uma estrutura de métricas com placeholders explícitos (índice de 
+desenvolvimento, pavimentação, capacidade, todos null no geojson) já pronta pra receber dado real do motor de 
+simulação se um domínio de infraestrutura viária for modelado no futuro — não é dado inventado, é null 
+exibido como "—". Testado de novo ao vivo: painel de País (dado real), Goiás sem dado (fallback correto), 
+Minas Gerais com o formulário de novo funcional, e o painel de estrada com os placeholders. 
+
+Terceira rodada (mesma versão, antes do commit): pedido explícito do usuário — "demarque todas as capitais 
+do país e as principais rodovias, seguindo a malha real". cidades.geojson ganhou as 27 capitais estaduais 
+(coordenadas reais, fato geográfico público, não precisou de dataset externo); só São Paulo, Rio de Janeiro 
+e Belo Horizonte têm município seedado, então o painel de cidade também ganhou o mesmo fallback "sem 
+território de partida" que o de estado já tinha. estradas.geojson trocou as 3 rotas retas ilustrativas por 
+geometria real de 10 rodovias federais principais (BR-101, BR-116, BR-040, BR-153, BR-364, BR-230, BR-070, 
+BR-060, BR-050, BR-262) — extraída do OpenStreetMap via Overpass API (dados sob licença ODbL, atribuição já 
+existe no mapa via o crédito do tile OSM), filtrada pelas classes motorway/trunk/primary (e _link) que 
+carregam a ref BR-xxx, e simplificada com o mesmo Douglas-Peucker (tolerância ~2,2km — escala de país/estado, 
+não navegação turn-by-turn): caiu de ~279 mil pra ~49 mil pontos, arquivo final ~1MB pras 10 rodovias juntas. 
+Cada rodovia virou um MultiLineString (os segmentos do Overpass não vêm ordenados ponta-a-ponta, mas o 
+Leaflet desenha cada um independente, então isso não afeta o resultado visual). bboxDeGeometria precisou 
+aprender a profundidade de MultiLineString (mesma do Polygon) e aoRenderizarEstrada a desenhar um array de 
+segmentos em vez de uma linha só — sem isso o Overpass API do overpass-api.de recusou a conexão (406) e um 
+mirror (osm.ch) provou ser regional (só Suíça); o mirror openstreetmap.fr funcionou, mas bloqueou o 
+User-Agent padrão do urllib (403) até eu forçar um header de navegador. O campo cidadesConectadas, que só 
+fazia sentido pras 3 rotas antigas ligando 2 cidades específicas, saiu das rodovias novas — o painel omite a 
+linha "Conecta" quando o campo não existe. Testado ao vivo: as 10 rodovias renderizam com traçado real 
+(visivelmente sinuoso, não mais linha reta) a partir do nível Estado, painel de rodovia sem a linha "Conecta" 
+e com os placeholders, capital sem dado (Goiânia) com o fallback correto — via fetch com cache:no-store pra 
+contornar cache HTTP do navegador de teste (mesma limitação de ferramenta já documentada nas rodadas 
+anteriores, não um bug do app). 
+
+Quarta rodada (mesma versão, antes do commit): usuário reportou (com print) trecho picotado da BR-230 perto 
+da represa de Boa Esperança (MA/PI). Diagnóstico: não era filtro de classe de via (já tinha sido alargado pra 
+"sem filtro de highway, só ref" na rodada anterior) — era match exato de "ref". Vários trechos de rodovia 
+brasileira são cossinalizados no OSM (a mesma pista carrega duas BRs) e o valor do ref vem combinado, tipo 
+"BR-230;BR-135" — a query `way["ref"="BR-230"]` não casa essa string, então o trecho combinado simplesmente 
+não vinha, abrindo um buraco visível na malha renderizada. Corrigido trocando pra `way["ref"~"(^|;)BR-230($|;)"]` 
+(regex com fronteira de ";", não precisa escapar "-" fora de [...]) e refazendo o download das 10 rodovias — 
+saltou de ~19 mil pra ~26,5 mil vias no total, confirmando que não era só a BR-230: BR-116 quase dobrou (5559 
+→ 8285 vias), BR-050 e BR-364 mais que dobraram também. Escrevi um checador de conectividade à parte 
+(distância euclidiana da ponta de cada segmento até a ponta mais próxima de outro segmento da mesma rodovia, 
+via grade espacial pra não ser O(n²)) pra achar pontas soltas (>1,1km sem vizinho): caiu de dezenas por 
+rodovia pra 1-11, o que sobrou são majoritariamente pontas de rota de verdade (litoral, fronteira, onde o 
+ref muda). Arquivo final ~1,5MB pras 10 rodovias. Reproduzi a visão exata do print do usuário (mesma represa, 
+mesmas cidades — Pastos Bons, São João dos Patos, Guadalupe) e confirmei ao vivo que o traçado agora é 
+contínuo ali.
 
 ### RF-27 — Menu de configurações e páginas de conta
 
-**Situação:** entregue · **Prioridade:** Media · **Entregue em:** `0.7.0`
+**Situação:** entregue · **Prioridade:** Media · **Entregue em:** `0.8.0`
 
 Ícone de engrenagem no cabeçalho com um menu suspenso para Perfil, Novidades, Tutorial e Termos de uso; a página de Perfil permite trocar avatar (guardado no navegador), redefinir senha e alterar e-mail, além de mostrar data de cadastro e horas de partida.
 
@@ -475,7 +563,7 @@ Trocar os dados ilustrativos do mapa pelos territórios reais da partida, servid
 
 ### RF-28 — Exclusão de conta pelo jogador
 
-**Situação:** entregue · **Prioridade:** Media · **Entregue em:** `0.8.0`
+**Situação:** entregue · **Prioridade:** Media · **Entregue em:** `0.9.0`
 
 Zona de risco na página de Perfil com um modal de confirmação: o jogador precisa digitar a senha atual ou a palavra EXCLUIR antes de o botão de exclusão definitiva habilitar. A conta é desativada (exclusão lógica) e deixa de autenticar.
 

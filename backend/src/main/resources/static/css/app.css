@@ -489,6 +489,39 @@ input:focus, select:focus, textarea:focus {
     margin-bottom: 4px;
 }
 
+.painel-tag {
+    color: var(--cor-texto-suave);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 12px;
+}
+
+.painel-linha {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 10px;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--cor-borda);
+    font-size: 14px;
+}
+
+.painel-linha span { color: var(--cor-texto-suave); }
+.painel-linha.destaque strong { color: var(--cor-primaria-escura); }
+
+.painel-nota {
+    margin-top: 12px;
+    font-size: 13px;
+    color: var(--cor-texto-suave);
+}
+
+#painel-conteudo hr {
+    border: none;
+    border-top: 1px solid var(--cor-borda);
+    margin: 16px 0;
+}
+
 .btn-fechar-painel {
     position: absolute;
     top: 10px;
@@ -523,9 +556,24 @@ input:focus, select:focus, textarea:focus {
     display: inline-block;
 }
 
+.cor-pais { background: var(--cor-texto-suave); }
 .cor-estado { background: var(--cor-primaria); }
 .cor-cidade { background: var(--cor-negativa); }
 .cor-estrada { background: var(--cor-alerta); }
+
+.marcador-pais {
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid var(--cor-borda);
+    border-radius: 999px;
+    padding: 5px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    color: var(--cor-texto-suave);
+    text-align: center;
+    white-space: nowrap;
+    box-shadow: 0 1px 4px rgba(28, 36, 48, 0.15);
+}
 
 /* ---------------------------------------------------------------- login page */
 

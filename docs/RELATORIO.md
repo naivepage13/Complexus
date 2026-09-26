@@ -17,7 +17,7 @@
 ## Números do projeto
 
 <!-- auto:inicio:metricas -->
-Versão `0.8.0` · 48 testes · 47 endpoints · 16 entidades · 10 serviços · 14 páginas.
+Versão `0.9.0` · 48 testes · 47 endpoints · 16 entidades · 10 serviços · 14 páginas.
 
 Linhas de código não vazias, sem contar artefatos de build:
 
@@ -25,11 +25,11 @@ Linhas de código não vazias, sem contar artefatos de build:
 |---|---|
 | Java | 6.402 |
 | Python | 2.389 |
-| JavaScript | 2.167 |
-| HTML | 1.581 |
-| CSS | 1.294 |
-| Configuração | 647 |
-| **Total** | **14.480** |
+| JavaScript | 2.309 |
+| HTML | 1.583 |
+| CSS | 1.336 |
+| Configuração | 654 |
+| **Total** | **14.673** |
 <!-- auto:fim:metricas -->
 
 ## Situação dos requisitos
@@ -37,17 +37,18 @@ Linhas de código não vazias, sem contar artefatos de build:
 <!-- auto:inicio:requisitos -->
 | Situação | Funcionais | Não funcionais | Total |
 |---|---|---|---|
-| Entregue | 15 | 7 | 22 |
+| Entregue | 16 | 7 | 23 |
 | Parcial | 1 | 0 | 1 |
-| Planejado | 12 | 5 | 17 |
+| Planejado | 11 | 5 | 16 |
 
-19 dos 22 requisitos entregues têm teste automatizado declarado.
+19 dos 23 requisitos entregues têm teste automatizado declarado.
 
 **Lacunas de cobertura** — entregues sem teste declarado:
 
 | Requisito | Título | Situação |
 |---|---|---|
 | RF-24 | Mapa hierárquico com zoom semântico | entregue |
+| RF-26 | Mapa alimentado pelo backend | entregue |
 | RNF-08 | Resiliência ao serviço analítico | entregue |
 | RNF-11 | Frontend sem dependência externa | entregue |
 <!-- auto:fim:requisitos -->
@@ -148,6 +149,66 @@ Linha de auditoria em [AUDITORIA.md](AUDITORIA.md).
 - **Auditoria virou área administrativa**: rotas em `/api/admin/auditoria/**`
   exigem `X-Admin-Token` e a página saiu para `admin/auditoria.html`.
 
+### 3.10 Mapa alimentado pelo backend (entregue na 0.7.0)
+- Estado, Cidade e Município no mapa mostram dado vivo de
+  `/api/politica/territorios` (população, tesouro, alíquota, índice de
+  desenvolvimento/urbanização, demanda imobiliária, custo do terreno,
+  zoneamento) — o GeoJSON virou só geometria, casada no cliente por
+  sigla/nome com o registro real. Só os 3 estados e 3 municípios que a carga
+  inicial (`SeedDados`) cria têm esse registro vivo.
+- O painel do mapa persiste decisão de verdade: propõe um projeto de lei
+  (`POST /api/politica/projetos`) quando o jogador tem mandato no
+  território, com mandato e território pré-selecionados — mesmo fluxo de
+  rascunho → pautar → votar → sancionar da página Política. Sem mandato, o
+  painel convida a assumir um cargo em vez de fingir a ação.
+- A "herança" de alíquota estadual pra cidade filha, calculada só no
+  JavaScript na 0.5.0, saiu: o motor de simulação do backend já é quem
+  determina o efeito econômico de verdade, então o mapa só exibe.
+- Estradas seguem ilustrativas (contexto geográfico), agora de forma
+  explícita: o painel virou um card informativo, sem botões de "decisão"
+  que antes não persistiam em lugar nenhum — mas com uma estrutura de
+  métricas (índice de desenvolvimento, pavimentação, capacidade) já pronta,
+  em placeholder, pra receber dado real se esse domínio for modelado.
+- Hierarquia de zoom ganhou um terceiro nível, País, com renderização
+  mutuamente exclusiva entre País/Estado/Cidade: cada camada só existe
+  montada dentro da sua própria faixa de zoom. País não tem geometria no
+  jogo, então é um marcador único com painel alimentado pelos campos reais
+  de `Pais` (população, tesouro, PIB, alíquota federal, gasto social,
+  estabilidade, aprovação, desemprego, renda média) e o mesmo formulário de
+  proposta de lei, agora também pra esfera FEDERAL.
+- `estados.geojson` trocou os 3 polígonos ilustrativos por fronteiras reais
+  dos 27 estados brasileiros (dataset público `codeforamerica/
+  click_that_hood`, simplificado com Douglas-Peucker por não haver
+  mapshaper/turf offline no projeto). Só os 3 estados da carga inicial têm
+  registro vivo; os outros 24 aparecem como contexto geográfico, com o
+  painel dizendo explicitamente que não têm território de partida — em vez
+  de esconder o clique ou fingir dado que não existe.
+- Estradas passaram a aparecer a partir do nível "Estado" (antes só em
+  "Cidade"), e o estilo dos polígonos de estado ficou neutro/de baixo
+  contraste, pra malha logística ser o destaque visual da tela.
+- `cidades.geojson` ganhou as 27 capitais estaduais (coordenadas reais, uma
+  por UF). Só São Paulo, Rio de Janeiro e Belo Horizonte têm município de
+  verdade na carga inicial; as outras 24 capitais aparecem como marcador,
+  com o mesmo tratamento honesto dos estados sem dado — o painel diz que
+  não há território de partida em vez de fingir número.
+- `estradas.geojson` trocou as 3 rotas retas ilustrativas por geometria
+  real de 10 rodovias federais principais (BR-101, BR-116, BR-040, BR-153,
+  BR-364, BR-230, BR-070, BR-060, BR-050, BR-262), extraída do OpenStreetMap
+  via Overpass API (licença ODbL) e simplificada com Douglas-Peucker —
+  caiu de ~279 mil para ~49 mil pontos, ~1MB pras 10 rodovias juntas. Cada
+  rodovia é um `MultiLineString` (segmentos do Overpass, sem ordem
+  ponta-a-ponta — o Leaflet desenha cada um independente, então isso não
+  afeta o resultado visual). O campo `cidadesConectadas`, específico das 3
+  rotas antigas, saiu do formato para as rodovias novas.
+- Corrigido trecho picotado que o usuário reportou (com print) na BR-230
+  perto da represa de Boa Esperança (MA/PI): a causa era consulta por `ref`
+  exato, que perdia trechos cossinalizados no OSM (`ref` combinado, ex.
+  `BR-230;BR-135`) — trocado por regex com fronteira de `;`. Refeito o
+  download das 10 rodovias (~19 mil → ~26,5 mil vias no total) e escrito um
+  checador de conectividade (grade espacial, não O(n²)) que confirmou a
+  queda de pontas soltas por rodovia para 1-11 (as que sobraram são pontas
+  de rota reais — litoral, fronteira). Arquivo final ~1,5MB.
+
 ### 3.9 Documentação viva (entregue na 0.4.0)
 - Catálogo de requisitos em [`requisitos.toml`](requisitos.toml) como fonte
   única: 34 requisitos com critério de aceite, implementação e testes.
@@ -162,7 +223,7 @@ Linha de auditoria em [AUDITORIA.md](AUDITORIA.md).
   entregues sem teste, e um deles (RF-04, empreendimentos) foi coberto na mesma
   entrega.
 
-### 3.10 Menu de configurações e páginas de conta (entregue na 0.7.0)
+### 3.11 Menu de configurações e páginas de conta (entregue na 0.8.0)
 - Ícone de engrenagem no cabeçalho de todas as páginas do jogador, com menu
   suspenso para Perfil, Novidades, Tutorial e Termos de uso.
 - **Perfil**: avatar (guardado só no navegador, via `localStorage`), data de
@@ -178,7 +239,7 @@ Linha de auditoria em [AUDITORIA.md](AUDITORIA.md).
 - `Jogador` ganhou o campo `email`; `GET /api/jogadores/{id}` passou a expor
   `email`, `criadoEm` e `horasEmJogo` (horas reais desde o cadastro).
 
-### 3.11 Exclusão de conta (entregue na 0.8.0)
+### 3.12 Exclusão de conta (entregue na 0.9.0)
 - **Zona de risco** na página de Perfil, isolada por borda vermelha sutil, com
   o botão destrutivo "Excluir conta".
 - O clique nunca exclui direto: abre um **modal de confirmação** com um campo
@@ -222,6 +283,7 @@ Linha de auditoria em [AUDITORIA.md](AUDITORIA.md).
 | Documentação viva | Gerador roda, `--verificar` acusa atraso, 12 testes do gerador verdes e hook regenera no commit |
 | Renomeação para Complexus | Build, 22 testes, login de conta anterior e cadeia de auditoria íntegra após o rename |
 | Separação de visibilidade | `/api/admin/auditoria` responde 403 sem token e 200 com token; canal de atualizações sem hash, ator ou detalhe interno |
+| Mapa alimentado pelo backend | Conta demo, mandato de Deputado Estadual assumido em Minas Gerais, projeto de alíquota estadual proposto pelo painel do mapa e confirmado via `GET /api/politica/projetos` como `RASCUNHO` persistido no H2; município, painel de País (dado real de `Pais`), Goiás sem território (fallback correto), painel de estrada com placeholders, as 10 rodovias reais renderizando com traçado sinuoso (não mais linha reta) e capital sem dado (Goiânia) com fallback correto também conferidos ao vivo no navegador |
 
 Balanceamento observado após a calibragem (7 empresas do mundo inicial):
 receita agregada ≈ R$ 3,9 mi/mês, lucro agregado ≈ R$ 150–235 mil/mês,
@@ -256,7 +318,8 @@ margem líquida de 4% a 6% e retorno sobre o capital investido entre 8% e 13% ao
 | L-05 | Cadeia de auditoria depende de escrita em processo único | Vários servidores exigiriam trava distribuída | RNF-03 |
 | L-06 | Balanceamento é inicial | Pode exigir ajuste com jogadores reais | Parâmetros centralizados em `Setor` e `MotorSimulacao` |
 | L-07 | `GET /api/empresas/{id}` devolve o balanço completo de qualquer empresa | Um jogador curioso pode consultar o detalhe de um concorrente pela API | Depende de RNF-01: com autenticação, o detalhe completo fica restrito ao dono |
-| L-08 | Avatar do perfil e estado de leitura de Novidades vivem só em `localStorage` | Trocar de navegador ou de máquina perde o avatar e volta todas as versões a "não lida" | Precisaria de upload real (armazenamento de arquivo) e de uma tabela de notificações no backend |
+| L-08 | Rodovias no mapa são só geometria ilustrativa, sem território nem estado de jogo | Jogador não decide nada sobre infraestrutura viária pelo mapa | Precisaria de um domínio novo no backend (malha viária como território) — sem RF aberta ainda |
+| L-09 | Avatar do perfil e estado de leitura de Novidades vivem só em `localStorage` | Trocar de navegador ou de máquina perde o avatar e volta todas as versões a "não lida" | Precisaria de upload real (armazenamento de arquivo) e de uma tabela de notificações no backend |
 
 ## 7. Como rodar
 
@@ -276,6 +339,7 @@ token de `jogo.admin.token` (padrão `admin-local`).
 
 | Versão | Data | Entrega |
 |---|---|---|
+| 0.7.0 | 25/09/2026 | RF-26: mapa passa a mostrar território real (via API) e a persistir decisão como projeto de lei de verdade, no lugar do dado ilustrativo e da herança só-no-cliente da 0.5.0; hierarquia ganha o nível País e os 27 estados passam a ter fronteira real |
 | 0.6.0 | 25/09/2026 | Limpeza e organização: pasta `legado/` removida (incluindo os três arquivos Python já documentados como quebrados/obsoletos), correção de versão desalinhada entre pom.xml e changelog, renomeação da pasta raiz do projeto para `Complexus` |
 | 0.5.0 | 24/09/2026 | Integração do motor de combate e do mapa interativo, que corriam em paralelo na `main` |
 | 0.4.1 | 24/09/2026 | Atalho `IniciarComplexus.bat` para Windows, que escolhe o JDK compatível sozinho |

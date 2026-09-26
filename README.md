@@ -14,8 +14,8 @@ indicadores macroeconômicos e fecha as estatísticas do período.
 <!-- auto:inicio:estado -->
 | Indicador | Valor |
 |---|---|
-| Versão | `0.8.0` |
-| Requisitos entregues | 22 de 40 (55%) |
+| Versão | `0.9.0` |
+| Requisitos entregues | 23 de 40 (58%) |
 | Requisitos funcionais | 28 |
 | Requisitos não funcionais | 12 |
 | Testes automatizados | 48 (28 Java + 20 Python) |
