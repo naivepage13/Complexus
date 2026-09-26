@@ -382,6 +382,45 @@ implementacao = []
 testes = []
 observacao = "Hoje o mapa lê GeoJSON estático e a herança de estado vive só no navegador."
 
+[[requisito]]
+id = "RF-27"
+titulo = "Menu de configurações e páginas de conta"
+status = "IMPLEMENTADO"
+prioridade = "MEDIA"
+versao = "0.7.0"
+descricao = "Ícone de engrenagem no cabeçalho com um menu suspenso para Perfil, Novidades, Tutorial e Termos de uso; a página de Perfil permite trocar avatar (guardado no navegador), redefinir senha e alterar e-mail, além de mostrar data de cadastro e horas de partida."
+criterio = "O menu abre em qualquer página do jogador e leva às quatro páginas; em Perfil, redefinir senha exige a senha atual e alterar e-mail valida o formato antes de salvar."
+implementacao = [
+  "backend/src/main/java/com/complexus/jogador/ServicoJogador.java",
+  "backend/src/main/java/com/complexus/jogador/JogadorController.java",
+  "backend/src/main/java/com/complexus/comum/Mapeadores.java",
+  "backend/src/main/resources/static/perfil.html",
+  "backend/src/main/resources/static/novidades.html",
+  "backend/src/main/resources/static/tutorial.html",
+  "backend/src/main/resources/static/termos.html",
+  "backend/src/main/resources/static/js/app.js",
+]
+testes = ["ContaDoJogadorTest#redefinirSenha", "ContaDoJogadorTest#alterarEmail"]
+observacao = "Avatar e o estado de leitura de Novidades ficam só no navegador (localStorage): não há upload nem tabela de notificações no backend ainda."
+
+[[requisito]]
+id = "RF-28"
+titulo = "Exclusão de conta pelo jogador"
+status = "IMPLEMENTADO"
+prioridade = "MEDIA"
+versao = "0.8.0"
+descricao = "Zona de risco na página de Perfil com um modal de confirmação: o jogador precisa digitar a senha atual ou a palavra EXCLUIR antes de o botão de exclusão definitiva habilitar. A conta é desativada (exclusão lógica) e deixa de autenticar."
+criterio = "Clicar em 'Excluir conta' nunca exclui direto: abre um modal cujo botão final começa desabilitado e só habilita com senha válida ou a palavra EXCLUIR; após o sucesso, o navegador limpa a sessão e volta para o login, e a conta não autentica mais."
+implementacao = [
+  "backend/src/main/java/com/complexus/jogador/ServicoJogador.java",
+  "backend/src/main/java/com/complexus/jogador/JogadorController.java",
+  "backend/src/main/resources/static/perfil.html",
+  "backend/src/main/resources/static/js/perfil.js",
+  "backend/src/main/resources/static/css/app.css",
+]
+testes = ["ContaDoJogadorTest#excluirContaComSenha", "ContaDoJogadorTest#excluirContaComPalavraChave"]
+observacao = "Exclusão lógica (Jogador.ativo = false), não exclusão física: apagar a linha quebraria as referências da cadeia de auditoria (ADR-06) e o histórico de empresas/investimentos/mandatos do jogador."
+
 # ---------------------------------------------------------------------------
 # Requisitos não funcionais
 # ---------------------------------------------------------------------------

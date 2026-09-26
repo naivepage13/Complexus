@@ -103,6 +103,12 @@ const Formato = {
     }
 };
 
+const Validacao = {
+    email(valor) {
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(valor || '').trim());
+    }
+};
+
 const Interface = {
     /** Escreve uma mensagem de erro ou sucesso no elemento indicado. */
     mensagem(seletor, texto, tipo = 'erro') {
@@ -119,10 +125,41 @@ const Interface = {
     /** Marca o item do menu correspondente a pagina aberta. */
     marcarMenu() {
         const pagina = window.location.pathname.split('/').pop() || 'index.html';
-        document.querySelectorAll('.menu a').forEach((link) => {
+        document.querySelectorAll('.menu a, .config-dropdown a').forEach((link) => {
             if (link.getAttribute('href') === pagina) {
                 link.classList.add('ativo');
             }
+        });
+    },
+    /** Liga o icone de engrenagem do cabecalho ao seu menu suspenso. */
+    montarMenuConfiguracoes() {
+        const botao = document.querySelector('#botao-config');
+        const dropdown = document.querySelector('#dropdown-config');
+        if (!botao || !dropdown) return;
+
+        const fechar = () => {
+            dropdown.classList.add('oculto');
+            botao.classList.remove('aberto');
+            botao.setAttribute('aria-expanded', 'false');
+        };
+        const alternar = (evento) => {
+            evento.stopPropagation();
+            const abrindo = dropdown.classList.contains('oculto');
+            if (abrindo) {
+                dropdown.classList.remove('oculto');
+                botao.classList.add('aberto');
+                botao.setAttribute('aria-expanded', 'true');
+            } else {
+                fechar();
+            }
+        };
+
+        botao.addEventListener('click', alternar);
+        document.addEventListener('click', (evento) => {
+            if (!dropdown.contains(evento.target)) fechar();
+        });
+        document.addEventListener('keydown', (evento) => {
+            if (evento.key === 'Escape') fechar();
         });
     },
     /** Mostra nome e saldo do jogador e liga o botao de sair. */
@@ -215,4 +252,5 @@ const Interface = {
 
 document.addEventListener('DOMContentLoaded', () => {
     Interface.montarCabecalho();
+    Interface.montarMenuConfiguracoes();
 });

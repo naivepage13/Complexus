@@ -26,6 +26,15 @@ public class JogadorController {
     public record LoginRequest(@NotBlank String usuario, @NotBlank String senha) {
     }
 
+    public record AlterarSenhaRequest(@NotBlank String senhaAtual, @NotBlank String novaSenha) {
+    }
+
+    public record AlterarEmailRequest(@NotBlank String email) {
+    }
+
+    public record ExcluirContaRequest(String senha, String confirmacao) {
+    }
+
     private final ServicoJogador servicoJogador;
     private final ServicoEmpresa servicoEmpresa;
     private final ServicoInvestimento servicoInvestimento;
@@ -55,6 +64,22 @@ public class JogadorController {
     @GetMapping("/{id}")
     public Map<String, Object> buscar(@PathVariable Long id) {
         return Mapeadores.jogador(servicoJogador.buscar(id));
+    }
+
+    @PostMapping("/{id}/senha")
+    public Map<String, Object> alterarSenha(@PathVariable Long id, @RequestBody AlterarSenhaRequest requisicao) {
+        return Mapeadores.jogador(servicoJogador.alterarSenha(id, requisicao.senhaAtual(), requisicao.novaSenha()));
+    }
+
+    @PostMapping("/{id}/email")
+    public Map<String, Object> alterarEmail(@PathVariable Long id, @RequestBody AlterarEmailRequest requisicao) {
+        return Mapeadores.jogador(servicoJogador.alterarEmail(id, requisicao.email()));
+    }
+
+    @PostMapping("/{id}/excluir")
+    public Map<String, Object> excluirConta(@PathVariable Long id, @RequestBody ExcluirContaRequest requisicao) {
+        servicoJogador.excluirConta(id, requisicao.senha(), requisicao.confirmacao());
+        return Map.of("excluida", true);
     }
 
     /** Visao consolidada usada pelo painel inicial do jogador. */

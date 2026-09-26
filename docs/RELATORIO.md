@@ -17,19 +17,19 @@
 ## Números do projeto
 
 <!-- auto:inicio:metricas -->
-Versão `0.6.0` · 44 testes · 44 endpoints · 16 entidades · 10 serviços · 10 páginas.
+Versão `0.8.0` · 48 testes · 47 endpoints · 16 entidades · 10 serviços · 14 páginas.
 
 Linhas de código não vazias, sem contar artefatos de build:
 
 | Linguagem | Linhas |
 |---|---|
-| Java | 6.255 |
+| Java | 6.402 |
 | Python | 2.389 |
-| JavaScript | 1.722 |
-| HTML | 1.194 |
-| CSS | 1.060 |
-| Configuração | 610 |
-| **Total** | **13.230** |
+| JavaScript | 2.167 |
+| HTML | 1.581 |
+| CSS | 1.294 |
+| Configuração | 647 |
+| **Total** | **14.480** |
 <!-- auto:fim:metricas -->
 
 ## Situação dos requisitos
@@ -37,11 +37,11 @@ Linhas de código não vazias, sem contar artefatos de build:
 <!-- auto:inicio:requisitos -->
 | Situação | Funcionais | Não funcionais | Total |
 |---|---|---|---|
-| Entregue | 13 | 7 | 20 |
+| Entregue | 15 | 7 | 22 |
 | Parcial | 1 | 0 | 1 |
 | Planejado | 12 | 5 | 17 |
 
-17 dos 20 requisitos entregues têm teste automatizado declarado.
+19 dos 22 requisitos entregues têm teste automatizado declarado.
 
 **Lacunas de cobertura** — entregues sem teste declarado:
 
@@ -162,6 +162,38 @@ Linha de auditoria em [AUDITORIA.md](AUDITORIA.md).
   entregues sem teste, e um deles (RF-04, empreendimentos) foi coberto na mesma
   entrega.
 
+### 3.10 Menu de configurações e páginas de conta (entregue na 0.7.0)
+- Ícone de engrenagem no cabeçalho de todas as páginas do jogador, com menu
+  suspenso para Perfil, Novidades, Tutorial e Termos de uso.
+- **Perfil**: avatar (guardado só no navegador, via `localStorage`), data de
+  cadastro e horas de partida em campos somente leitura, e dois formulários
+  independentes — redefinir senha (exige a senha atual) e alterar e-mail
+  (valida o formato) — cada um com estado de carregamento no botão.
+- **Novidades**: histórico de versões do jogo (fonte: `CHANGELOG.md`) com
+  estado de leitura por versão, também em `localStorage`: envelope fechado e
+  com brilho quando não lida, aberto e neutro depois que o card é aberto.
+- **Tutorial**: guia em accordion, uma categoria macro por painel (primeiros
+  passos, empresas, investimentos, política, mapa).
+- **Termos de uso**: PDF estático embutido na página, com botão de download.
+- `Jogador` ganhou o campo `email`; `GET /api/jogadores/{id}` passou a expor
+  `email`, `criadoEm` e `horasEmJogo` (horas reais desde o cadastro).
+
+### 3.11 Exclusão de conta (entregue na 0.8.0)
+- **Zona de risco** na página de Perfil, isolada por borda vermelha sutil, com
+  o botão destrutivo "Excluir conta".
+- O clique nunca exclui direto: abre um **modal de confirmação** com um campo
+  de texto único. O botão final ("Excluir definitivamente") nasce desabilitado
+  e só habilita quando o jogador digita a própria senha atual ou a palavra
+  **EXCLUIR** — a mesma regra é checada de novo no servidor, então digitar
+  qualquer coisa no cliente não basta sem uma das duas condições.
+- `ServicoJogador.excluirConta` desativa a conta (`Jogador.ativo = false`),
+  registra `CONTA_EXCLUIDA` na auditoria e nunca apaga a linha: apagar de
+  verdade quebraria a cadeia de auditoria (ADR-06) e as referências de
+  empresas, carteira e mandatos do jogador.
+- Depois do sucesso, o navegador limpa o `localStorage` inteiro (sessão,
+  avatar, estado de leitura de Novidades) e redireciona para `login.html`; a
+  conta desativada deixa de autenticar (`ServicoJogador.autenticar`).
+
 ### 3.8 Identidade do projeto (entregue na 0.3.0)
 - O jogo passou a se chamar **Complexus**, em todas as camadas: pacote Java
   (`com.complexus`), artefato Maven (`complexus-backend`), banco local,
@@ -224,6 +256,7 @@ margem líquida de 4% a 6% e retorno sobre o capital investido entre 8% e 13% ao
 | L-05 | Cadeia de auditoria depende de escrita em processo único | Vários servidores exigiriam trava distribuída | RNF-03 |
 | L-06 | Balanceamento é inicial | Pode exigir ajuste com jogadores reais | Parâmetros centralizados em `Setor` e `MotorSimulacao` |
 | L-07 | `GET /api/empresas/{id}` devolve o balanço completo de qualquer empresa | Um jogador curioso pode consultar o detalhe de um concorrente pela API | Depende de RNF-01: com autenticação, o detalhe completo fica restrito ao dono |
+| L-08 | Avatar do perfil e estado de leitura de Novidades vivem só em `localStorage` | Trocar de navegador ou de máquina perde o avatar e volta todas as versões a "não lida" | Precisaria de upload real (armazenamento de arquivo) e de uma tabela de notificações no backend |
 
 ## 7. Como rodar
 

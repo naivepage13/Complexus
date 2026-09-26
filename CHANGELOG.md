@@ -4,6 +4,61 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 Este arquivo é a linha de auditoria do desenvolvimento: nenhuma entrega entra
 sem uma linha aqui. Ver também [docs/RELATORIO.md](docs/RELATORIO.md).
 
+## [0.8.0] - 2026-09-26
+
+Exclusão de conta pelo jogador, com confirmação em duas etapas.
+
+### Adicionado
+- **Zona de risco** no final da página de Perfil (`perfil.html`), isolada por
+  borda vermelha, com o botão destrutivo "Excluir conta".
+- Modal de confirmação: o botão final começa desabilitado e só habilita
+  quando o jogador digita a própria senha atual ou a palavra "EXCLUIR"
+  (`js/perfil.js`); nenhuma das duas hipóteses dispara a exclusão sem passar
+  pelo modal.
+- `ServicoJogador.excluirConta` e `POST /api/jogadores/{id}/excluir`: exigem
+  senha atual válida ou a palavra "EXCLUIR" (verificado de novo no servidor),
+  desativam a conta (`Jogador.ativo = false`) e registram `CONTA_EXCLUIDA` na
+  auditoria. A conta desativada deixa de autenticar.
+- Após o sucesso, o navegador limpa o `localStorage` inteiro e redireciona
+  para `login.html`.
+- `ContaDoJogadorTest#excluirContaComSenha` e `#excluirContaComPalavraChave`.
+
+### Observação
+Exclusão lógica, não física: apagar a linha do jogador quebraria a cadeia de
+auditoria (ADR-06) e as referências de empresas, carteira e mandatos que
+apontam para ele.
+
+## [0.7.0] - 2026-09-26
+
+Menu de configurações e páginas de conta do jogador.
+
+### Adicionado
+- Ícone de engrenagem no cabeçalho de todas as páginas do jogador, com menu
+  suspenso para Perfil, Novidades, Tutorial e Termos de uso
+  (`Interface.montarMenuConfiguracoes` em `js/app.js`).
+- **Página Perfil** (`perfil.html`): avatar (upload restrito a PNG/JPEG,
+  guardado só no navegador), data de cadastro e horas de partida em campos
+  somente leitura, formulário de redefinir senha (exige a senha atual) e
+  formulário de alterar e-mail (valida o formato), ambos com estado de
+  carregamento no botão de salvar.
+- **Página Novidades** (`novidades.html`): histórico de versões do jogo com
+  estado de leitura por card (`localStorage`), envelope fechado e com brilho
+  quando não lida, aberto e neutro depois de aberta.
+- **Página Tutorial** (`tutorial.html`): guia em accordion por categoria
+  macro (primeiros passos, empresas, investimentos, política, mapa).
+- **Página Termos de uso** (`termos.html`): PDF estático embutido na página
+  (`termos-de-uso.pdf`), com botão de download.
+- `Jogador.email` e os endpoints `POST /api/jogadores/{id}/senha` e
+  `POST /api/jogadores/{id}/email`; `GET /api/jogadores/{id}` passou a
+  devolver `email`, `criadoEm` e `horasEmJogo`.
+- `ContaDoJogadorTest`, cobrindo redefinição de senha (senha atual incorreta
+  recusada) e alteração de e-mail (formato inválido recusado).
+
+### Observação
+Avatar e estado de leitura de Novidades ficam só no navegador: não há upload
+de arquivo nem tabela de notificações no backend ainda (ver L-08 em
+[docs/RELATORIO.md](docs/RELATORIO.md)).
+
 ## [0.6.0] - 2026-09-25
 
 Organização do repositório: descarta o que não é mais necessário e corrige uma

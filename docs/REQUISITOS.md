@@ -2,7 +2,7 @@
 
 <!-- Arquivo gerado por ferramentas/gerar_documentacao.py. Nao edite a mao: mude docs/requisitos.toml ou o codigo e rode o gerador. -->
 
-Projeto **Complexus**, versão `0.6.0`. 20 de 38 requisitos entregues (53%).
+Projeto **Complexus**, versão `0.8.0`. 22 de 40 requisitos entregues (55%).
 
 Cada requisito declara o critério de aceite, os arquivos que o implementam e os testes que o cobrem. O gerador falha se um arquivo declarado não existir, então a rastreabilidade não envelhece em silêncio.
 
@@ -10,11 +10,11 @@ Cada requisito declara o critério de aceite, os arquivos que o implementam e os
 
 | Situação | Funcionais | Não funcionais | Total |
 |---|---|---|---|
-| Entregue | 13 | 7 | 20 |
+| Entregue | 15 | 7 | 22 |
 | Parcial | 1 | 0 | 1 |
 | Planejado | 12 | 5 | 17 |
 
-17 dos 20 requisitos entregues têm teste automatizado declarado.
+19 dos 22 requisitos entregues têm teste automatizado declarado.
 
 **Lacunas de cobertura** — entregues sem teste declarado:
 
@@ -54,6 +54,8 @@ Cada requisito declara o critério de aceite, os arquivos que o implementam e os
 | RF-24 | Mapa hierárquico com zoom semântico | entregue | Media | 0.5.0 | 0 |
 | RF-25 | Backend consome o motor de combate | planejado | Alta | - | 0 |
 | RF-26 | Mapa alimentado pelo backend | planejado | Media | - | 0 |
+| RF-27 | Menu de configurações e páginas de conta | entregue | Media | 0.7.0 | 2 |
+| RF-28 | Exclusão de conta pelo jogador | entregue | Media | 0.8.0 | 2 |
 
 ### RF-01 — Cadastro e identificação de jogadores
 
@@ -444,6 +446,55 @@ Trocar os dados ilustrativos do mapa pelos territórios reais da partida, servid
 **Testes:** nenhum declarado.
 
 > Hoje o mapa lê GeoJSON estático e a herança de estado vive só no navegador.
+
+### RF-27 — Menu de configurações e páginas de conta
+
+**Situação:** entregue · **Prioridade:** Media · **Entregue em:** `0.7.0`
+
+Ícone de engrenagem no cabeçalho com um menu suspenso para Perfil, Novidades, Tutorial e Termos de uso; a página de Perfil permite trocar avatar (guardado no navegador), redefinir senha e alterar e-mail, além de mostrar data de cadastro e horas de partida.
+
+**Critério de aceite:** O menu abre em qualquer página do jogador e leva às quatro páginas; em Perfil, redefinir senha exige a senha atual e alterar e-mail valida o formato antes de salvar.
+
+**Implementação:**
+
+- `backend/src/main/java/com/complexus/jogador/ServicoJogador.java`
+- `backend/src/main/java/com/complexus/jogador/JogadorController.java`
+- `backend/src/main/java/com/complexus/comum/Mapeadores.java`
+- `backend/src/main/resources/static/perfil.html`
+- `backend/src/main/resources/static/novidades.html`
+- `backend/src/main/resources/static/tutorial.html`
+- `backend/src/main/resources/static/termos.html`
+- `backend/src/main/resources/static/js/app.js`
+
+**Testes:**
+
+- `ContaDoJogadorTest#redefinirSenha`
+- `ContaDoJogadorTest#alterarEmail`
+
+> Avatar e o estado de leitura de Novidades ficam só no navegador (localStorage): não há upload nem tabela de notificações no backend ainda.
+
+### RF-28 — Exclusão de conta pelo jogador
+
+**Situação:** entregue · **Prioridade:** Media · **Entregue em:** `0.8.0`
+
+Zona de risco na página de Perfil com um modal de confirmação: o jogador precisa digitar a senha atual ou a palavra EXCLUIR antes de o botão de exclusão definitiva habilitar. A conta é desativada (exclusão lógica) e deixa de autenticar.
+
+**Critério de aceite:** Clicar em 'Excluir conta' nunca exclui direto: abre um modal cujo botão final começa desabilitado e só habilita com senha válida ou a palavra EXCLUIR; após o sucesso, o navegador limpa a sessão e volta para o login, e a conta não autentica mais.
+
+**Implementação:**
+
+- `backend/src/main/java/com/complexus/jogador/ServicoJogador.java`
+- `backend/src/main/java/com/complexus/jogador/JogadorController.java`
+- `backend/src/main/resources/static/perfil.html`
+- `backend/src/main/resources/static/js/perfil.js`
+- `backend/src/main/resources/static/css/app.css`
+
+**Testes:**
+
+- `ContaDoJogadorTest#excluirContaComSenha`
+- `ContaDoJogadorTest#excluirContaComPalavraChave`
+
+> Exclusão lógica (Jogador.ativo = false), não exclusão física: apagar a linha quebraria as referências da cadeia de auditoria (ADR-06) e o histórico de empresas/investimentos/mandatos do jogador.
 
 ## Requisitos não funcionais
 

@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Perfil - Complexus</title>
+    <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+<header class="cabecalho">
+    <div class="cabecalho-conteudo">
+        <span class="marca">Complexus</span>
+        <nav class="menu">
+            <a href="index.html">Painel</a>
+            <a href="empresas.html">Empresas</a>
+            <a href="investimentos.html">Investimentos</a>
+            <a href="politica.html">Politica</a>
+            <a href="mapa.html">Mapa</a>
+            <a href="estatisticas.html">Estatisticas</a>
+            <a href="atualizacoes.html">Atualizacoes</a>
+        </nav>
+        <div class="identificacao" id="relogio-turno"></div>
+        <div class="identificacao" id="identificacao"></div>
+        <div class="config-menu">
+            <button class="config-engrenagem" id="botao-config" type="button" aria-haspopup="true" aria-expanded="false" aria-label="Configuracoes" title="Configuracoes">&#9881;</button>
+            <div class="config-dropdown oculto" id="dropdown-config">
+                <a href="perfil.html">Perfil</a>
+                <a href="novidades.html">Novidades</a>
+                <a href="tutorial.html">Tutorial</a>
+                <a href="termos.html">Termos de uso</a>
+            </div>
+        </div>
+    </div>
+</header>
+
+<main class="pagina">
+    <div class="titulo-pagina">
+        <div>
+            <h1>Perfil</h1>
+            <p>Avatar, dados da conta e credenciais de acesso.</p>
+        </div>
+    </div>
+
+    <div id="mensagem" class="oculto"></div>
+
+    <section class="cartao">
+        <div class="cartao-cabecalho">
+            <h2>Avatar</h2>
+        </div>
+        <div class="avatar-linha">
+            <img id="avatar-preview" class="avatar-preview" src="" alt="Avatar do jogador">
+            <div class="campo">
+                <label for="avatar-arquivo">Escolher imagem (PNG ou JPEG)</label>
+                <input type="file" id="avatar-arquivo" accept="image/png, image/jpeg">
+                <p class="suave pequeno">A imagem fica guardada apenas neste navegador.</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="grade-2">
+        <div class="cartao">
+            <div class="cartao-cabecalho">
+                <h2>Dados da conta</h2>
+            </div>
+            <div class="formulario">
+                <div class="campo">
+                    <label>Usuario</label>
+                    <span class="campo-leitura" id="dado-usuario">-</span>
+                </div>
+                <div class="campo">
+                    <label>Data e hora de cadastro</label>
+                    <span class="campo-leitura" id="dado-cadastro">-</span>
+                </div>
+                <div class="campo">
+                    <label>Quantidade de horas em jogo</label>
+                    <span class="campo-leitura" id="dado-horas">-</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="cartao">
+            <div class="cartao-cabecalho">
+                <h2>Alterar e-mail</h2>
+            </div>
+            <form class="formulario" id="form-email">
+                <div class="campo">
+                    <label>E-mail atual</label>
+                    <span class="campo-leitura" id="dado-email">nao cadastrado</span>
+                </div>
+                <div class="campo">
+                    <label for="novo-email">Novo e-mail</label>
+                    <input type="email" id="novo-email" placeholder="voce@exemplo.com" required>
+                </div>
+                <div class="acoes">
+                    <button type="submit" class="botao" id="botao-email">Salvar e-mail</button>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <section class="cartao">
+        <div class="cartao-cabecalho">
+            <h2>Redefinir senha</h2>
+        </div>
+        <form class="formulario" id="form-senha">
+            <div class="linha-campos">
+                <div class="campo">
+                    <label for="senha-atual">Senha atual</label>
+                    <input type="password" id="senha-atual" required minlength="4">
+                </div>
+                <div class="campo">
+                    <label for="senha-nova">Nova senha</label>
+                    <input type="password" id="senha-nova" required minlength="4">
+                </div>
+                <div class="campo">
+                    <label for="senha-confirmar">Confirmar nova senha</label>
+                    <input type="password" id="senha-confirmar" required minlength="4">
+                </div>
+            </div>
+            <div class="acoes">
+                <button type="submit" class="botao" id="botao-senha">Redefinir senha</button>
+            </div>
+        </form>
+    </section>
+
+    <section class="cartao cartao-perigo">
+        <div class="cartao-cabecalho">
+            <h2>Zona de risco</h2>
+        </div>
+        <p class="suave pequeno">
+            Excluir sua conta desativa o acesso ao Complexus imediatamente. Suas
+            empresas, investimentos e mandatos deixam de poder ser administrados.
+            Essa acao nao pode ser desfeita pelo proprio jogador.
+        </p>
+        <div class="acoes">
+            <button type="button" class="botao botao-perigo" id="botao-abrir-exclusao">Excluir conta</button>
+        </div>
+    </section>
+</main>
+
+<footer class="rodape">
+    Complexus - 1 turno = 1 hora real = 1 mes de jogo.
+</footer>
+
+<div class="modal-fundo oculto" id="modal-exclusao">
+    <div class="modal-caixa" role="dialog" aria-modal="true" aria-labelledby="titulo-modal-exclusao">
+        <h2 id="titulo-modal-exclusao">Excluir conta</h2>
+        <p>
+            Essa acao desativa sua conta e voce sera desconectado agora. Para
+            confirmar, digite sua senha atual ou a palavra <strong>EXCLUIR</strong>.
+        </p>
+        <div class="campo">
+            <label for="confirmacao-exclusao">Senha atual ou "EXCLUIR"</label>
+            <input type="text" id="confirmacao-exclusao" autocomplete="off" autocapitalize="off" spellcheck="false">
+        </div>
+        <div id="mensagem-exclusao" class="oculto"></div>
+        <div class="acoes">
+            <button type="button" class="botao botao-neutro" id="botao-cancelar-exclusao">Cancelar</button>
+            <button type="button" class="botao botao-perigo" id="botao-confirmar-exclusao" disabled>Excluir definitivamente</button>
+        </div>
+    </div>
+</div>
+
+<script src="js/app.js"></script>
+<script src="js/perfil.js"></script>
+</body>
+</html>

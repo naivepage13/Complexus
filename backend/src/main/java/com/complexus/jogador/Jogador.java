@@ -29,6 +29,9 @@ public class Jogador {
     @Column(nullable = false, length = 128)
     private String senhaHash;
 
+    @Column(length = 160)
+    private String email;
+
     /** Caixa pessoal do jogador, em R$ de jogo. */
     @Column(nullable = false)
     private double saldo;
@@ -47,6 +50,8 @@ public class Jogador {
     public void setNome(String nome) { this.nome = nome; }
     public String getSenhaHash() { return senhaHash; }
     public void setSenhaHash(String senhaHash) { this.senhaHash = senhaHash; }
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
     public double getSaldo() { return saldo; }
     public void setSaldo(double saldo) { this.saldo = saldo; }
     public Instant getCriadoEm() { return criadoEm; }
