@@ -99,14 +99,16 @@ function renderizar() {
                 <span>${categoria.titulo}</span>
                 <span class="accordion-seta">&#9660;</span>
             </button>
-            <div class="accordion-corpo oculto">${categoria.html}</div>
+            <div class="accordion-corpo">
+                <div class="accordion-corpo-conteudo">${categoria.html}</div>
+            </div>
         </div>`).join('');
 
     lista.querySelectorAll('.accordion-cabecalho').forEach((botao) => {
         botao.addEventListener('click', () => {
             const item = botao.closest('.accordion-item');
             item.classList.toggle('aberto');
-            item.querySelector('.accordion-corpo').classList.toggle('oculto');
+            item.querySelector('.accordion-corpo').classList.toggle('aberto');
         });
     });
 }

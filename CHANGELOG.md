@@ -4,6 +4,32 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 Este arquivo é a linha de auditoria do desenvolvimento: nenhuma entrega entra
 sem uma linha aqui. Ver também [docs/RELATORIO.md](docs/RELATORIO.md).
 
+## [0.9.1] - 2026-09-26
+
+Correções encontradas testando o menu de configurações na página do Mapa, mais
+polimento visual nos accordions.
+
+### Corrigido
+- Menu suspenso da engrenagem abria atrás do mapa Leaflet em `mapa.html`: o
+  Leaflet usa `z-index` de até `1000` nos próprios controles, e o `.cabecalho`
+  não tinha contexto de empilhamento (`position`/`z-index`) próprio. Corrigido
+  com `position: relative; z-index: 1100` em `.cabecalho`.
+- Recursos estáticos (HTML/CSS/JS) não enviavam `Cache-Control`, então o
+  navegador aplicava cache heurístico (RFC 7234) sobre o `Last-Modified` e
+  podia servir uma versão desatualizada mesmo após um F5 comum. Adicionado
+  `spring.web.resources.cache.cachecontrol.no-cache: true` em
+  `application.yml`, forçando revalidação condicional a cada carga.
+
+### Adicionado
+- Auto-reload de desenvolvimento em `js/app.js`, desligado por padrão: só liga
+  com `localStorage.complexus.devAutoReload = '1'` no navegador, e recarrega a
+  página quando o `Last-Modified` dela ou de um CSS/JS carregado muda no
+  disco. Nunca afeta jogadores reais.
+- Animação suave ao abrir/fechar os detalhes em Novidades (`.novidade-corpo`)
+  e nos painéis do Tutorial (`.accordion-corpo`): transição de
+  `grid-template-rows` de `0fr` até a altura natural do conteúdo, com fade de
+  opacidade, respeitando `prefers-reduced-motion`.
+
 ## [0.9.0] - 2026-09-26
 
 Exclusão de conta pelo jogador, com confirmação em duas etapas.

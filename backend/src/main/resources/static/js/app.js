@@ -254,3 +254,42 @@ document.addEventListener('DOMContentLoaded', () => {
     Interface.montarCabecalho();
     Interface.montarMenuConfiguracoes();
 });
+
+/**
+ * Auto-reload de desenvolvimento: desligado por padrao, so roda quando o
+ * proprio navegador tem `localStorage.complexus.devAutoReload = '1'`
+ * (ative rodando isso uma vez no console). Recarrega a pagina quando o
+ * `Last-Modified` da propria pagina ou de um CSS/JS carregado muda no disco.
+ * Nunca entra em builds de verdade nem afeta outros jogadores.
+ */
+if (localStorage.getItem('complexus.devAutoReload') === '1') {
+    document.addEventListener('DOMContentLoaded', () => {
+        // Espera o DOMContentLoaded (nao roda no topo do arquivo) para o
+        // script da propria pagina (carregado depois de app.js no HTML) ja
+        // ter sido parseado e executado, e estar no DOM.
+        const arquivosObservados = [
+            window.location.pathname,
+            ...[...document.querySelectorAll('link[rel="stylesheet"], script[src]')]
+                .map((el) => el.href || el.src)
+        ].filter((url, indice, lista) => url && lista.indexOf(url) === indice);
+
+        const ultimaModificacao = {};
+        setInterval(async () => {
+            for (const url of arquivosObservados) {
+                try {
+                    const resposta = await fetch(url, { method: 'HEAD', cache: 'no-store' });
+                    const modificado = resposta.headers.get('Last-Modified');
+                    if (!modificado) continue;
+                    if (ultimaModificacao[url] === undefined) {
+                        ultimaModificacao[url] = modificado;
+                    } else if (ultimaModificacao[url] !== modificado) {
+                        window.location.reload();
+                        return;
+                    }
+                } catch (erro) {
+                    // servidor reiniciando (build em andamento); tenta de novo no proximo ciclo
+                }
+            }
+        }, 1500);
+    });
+}
