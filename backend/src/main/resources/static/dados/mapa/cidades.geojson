@@ -1,112 +1,148 @@
 {
   "type": "FeatureCollection",
   "properties": {
-    "_nota": "Coordenadas reais das cidades; estatisticas (PIB, infraestrutura, tropas) sao ilustrativas para o prototipo."
+    "_nota": "Coordenadas reais das cidades. As 27 capitais estaduais (uma por UF) foram acrescentadas por completude geografica; so as que a carga inicial (SeedDados) realmente cria — Sao Paulo, Rio de Janeiro, Belo Horizonte — tem registro vivo em /api/politica/territorios (populacao, tesouro, aliquota etc.). As demais aparecem so como marcador, e o painel diz isso explicitamente. Campinas e a unica nao-capital, tambem seedada. Casamento com a API por nome+estado — ver js/mapa.js."
   },
   "features": [
     {
       "type": "Feature",
-      "properties": {
-        "id": "sp-capital",
-        "nome": "São Paulo",
-        "estadoId": "sp",
-        "capital": true,
-        "pibMunicipal": 780000000000,
-        "infraestrutura": 82,
-        "tropasGuarnecidas": 4200
-      },
+      "properties": { "id": "sp-capital", "nome": "São Paulo", "estadoId": "sp", "capital": true },
       "geometry": { "type": "Point", "coordinates": [-46.6333, -23.5505] }
     },
     {
       "type": "Feature",
-      "properties": {
-        "id": "sp-campinas",
-        "nome": "Campinas",
-        "estadoId": "sp",
-        "capital": false,
-        "pibMunicipal": 65000000000,
-        "infraestrutura": 74,
-        "tropasGuarnecidas": 900
-      },
+      "properties": { "id": "sp-campinas", "nome": "Campinas", "estadoId": "sp", "capital": false },
       "geometry": { "type": "Point", "coordinates": [-47.0626, -22.9099] }
     },
     {
       "type": "Feature",
-      "properties": {
-        "id": "rj-capital",
-        "nome": "Rio de Janeiro",
-        "estadoId": "rj",
-        "capital": true,
-        "pibMunicipal": 340000000000,
-        "infraestrutura": 70,
-        "tropasGuarnecidas": 5200
-      },
+      "properties": { "id": "rj-capital", "nome": "Rio de Janeiro", "estadoId": "rj", "capital": true },
       "geometry": { "type": "Point", "coordinates": [-43.1729, -22.9068] }
     },
     {
       "type": "Feature",
-      "properties": {
-        "id": "rj-niteroi",
-        "nome": "Niterói",
-        "estadoId": "rj",
-        "capital": false,
-        "pibMunicipal": 22000000000,
-        "infraestrutura": 68,
-        "tropasGuarnecidas": 600
-      },
-      "geometry": { "type": "Point", "coordinates": [-43.1036, -22.8833] }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "mg-capital",
-        "nome": "Belo Horizonte",
-        "estadoId": "mg",
-        "capital": true,
-        "pibMunicipal": 95000000000,
-        "infraestrutura": 65,
-        "tropasGuarnecidas": 1800
-      },
+      "properties": { "id": "mg-capital", "nome": "Belo Horizonte", "estadoId": "mg", "capital": true },
       "geometry": { "type": "Point", "coordinates": [-43.9345, -19.9167] }
     },
     {
       "type": "Feature",
-      "properties": {
-        "id": "mg-uberlandia",
-        "nome": "Uberlândia",
-        "estadoId": "mg",
-        "capital": false,
-        "pibMunicipal": 28000000000,
-        "infraestrutura": 60,
-        "tropasGuarnecidas": 400
-      },
-      "geometry": { "type": "Point", "coordinates": [-48.2772, -18.9186] }
+      "properties": { "id": "ac-capital", "nome": "Rio Branco", "estadoId": "ac", "capital": true },
+      "geometry": { "type": "Point", "coordinates": [-67.8249, -9.9754] }
     },
     {
       "type": "Feature",
-      "properties": {
-        "id": "es-capital",
-        "nome": "Vitória",
-        "estadoId": "es",
-        "capital": true,
-        "pibMunicipal": 18000000000,
-        "infraestrutura": 63,
-        "tropasGuarnecidas": 1100
-      },
+      "properties": { "id": "al-capital", "nome": "Maceió", "estadoId": "al", "capital": true },
+      "geometry": { "type": "Point", "coordinates": [-35.7089, -9.6498] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "id": "ap-capital", "nome": "Macapá", "estadoId": "ap", "capital": true },
+      "geometry": { "type": "Point", "coordinates": [-51.0664, 0.0389] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "id": "am-capital", "nome": "Manaus", "estadoId": "am", "capital": true },
+      "geometry": { "type": "Point", "coordinates": [-60.0217, -3.1190] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "id": "ba-capital", "nome": "Salvador", "estadoId": "ba", "capital": true },
+      "geometry": { "type": "Point", "coordinates": [-38.5011, -12.9718] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "id": "ce-capital", "nome": "Fortaleza", "estadoId": "ce", "capital": true },
+      "geometry": { "type": "Point", "coordinates": [-38.5433, -3.7172] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "id": "df-capital", "nome": "Brasília", "estadoId": "df", "capital": true },
+      "geometry": { "type": "Point", "coordinates": [-47.8828, -15.7939] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "id": "es-capital", "nome": "Vitória", "estadoId": "es", "capital": true },
       "geometry": { "type": "Point", "coordinates": [-40.3128, -20.3155] }
     },
     {
       "type": "Feature",
-      "properties": {
-        "id": "es-vilavelha",
-        "nome": "Vila Velha",
-        "estadoId": "es",
-        "capital": false,
-        "pibMunicipal": 9000000000,
-        "infraestrutura": 58,
-        "tropasGuarnecidas": 250
-      },
-      "geometry": { "type": "Point", "coordinates": [-40.2925, -20.3297] }
+      "properties": { "id": "go-capital", "nome": "Goiânia", "estadoId": "go", "capital": true },
+      "geometry": { "type": "Point", "coordinates": [-49.2643, -16.6864] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "id": "ma-capital", "nome": "São Luís", "estadoId": "ma", "capital": true },
+      "geometry": { "type": "Point", "coordinates": [-44.3028, -2.5297] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "id": "mt-capital", "nome": "Cuiabá", "estadoId": "mt", "capital": true },
+      "geometry": { "type": "Point", "coordinates": [-56.0979, -15.6014] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "id": "ms-capital", "nome": "Campo Grande", "estadoId": "ms", "capital": true },
+      "geometry": { "type": "Point", "coordinates": [-54.6201, -20.4697] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "id": "pa-capital", "nome": "Belém", "estadoId": "pa", "capital": true },
+      "geometry": { "type": "Point", "coordinates": [-48.4902, -1.4558] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "id": "pb-capital", "nome": "João Pessoa", "estadoId": "pb", "capital": true },
+      "geometry": { "type": "Point", "coordinates": [-34.8450, -7.1195] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "id": "pr-capital", "nome": "Curitiba", "estadoId": "pr", "capital": true },
+      "geometry": { "type": "Point", "coordinates": [-49.2733, -25.4284] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "id": "pe-capital", "nome": "Recife", "estadoId": "pe", "capital": true },
+      "geometry": { "type": "Point", "coordinates": [-34.8770, -8.0476] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "id": "pi-capital", "nome": "Teresina", "estadoId": "pi", "capital": true },
+      "geometry": { "type": "Point", "coordinates": [-42.8019, -5.0892] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "id": "rn-capital", "nome": "Natal", "estadoId": "rn", "capital": true },
+      "geometry": { "type": "Point", "coordinates": [-35.2110, -5.7945] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "id": "rs-capital", "nome": "Porto Alegre", "estadoId": "rs", "capital": true },
+      "geometry": { "type": "Point", "coordinates": [-51.2177, -30.0346] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "id": "ro-capital", "nome": "Porto Velho", "estadoId": "ro", "capital": true },
+      "geometry": { "type": "Point", "coordinates": [-63.9039, -8.7619] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "id": "rr-capital", "nome": "Boa Vista", "estadoId": "rr", "capital": true },
+      "geometry": { "type": "Point", "coordinates": [-60.6758, 2.8235] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "id": "sc-capital", "nome": "Florianópolis", "estadoId": "sc", "capital": true },
+      "geometry": { "type": "Point", "coordinates": [-48.5480, -27.5954] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "id": "se-capital", "nome": "Aracaju", "estadoId": "se", "capital": true },
+      "geometry": { "type": "Point", "coordinates": [-37.0731, -10.9472] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "id": "to-capital", "nome": "Palmas", "estadoId": "to", "capital": true },
+      "geometry": { "type": "Point", "coordinates": [-48.3317, -10.1689] }
     }
   ]
 }

@@ -19,7 +19,6 @@ mudar a situação de um requisito lá muda este roadmap e o relatório junto.
 | Media | RF-11 | Quarto setor econômico | planejado | Acrescentar um setor novo (varejo ou energia) para validar que o motor aceita setores apenas com parâmetros. |
 | Media | RF-12 | Contratos entre empresas | planejado | Fornecimento entre empresas, ligando construção e imobiliário em cadeia produtiva. |
 | Media | RF-13 | Eventos de mundo | planejado | Crises, secas, booms setoriais e outros choques narrativos que quebrem a previsibilidade do ciclo. |
-| Media | RF-26 | Mapa alimentado pelo backend | planejado | Trocar os dados ilustrativos do mapa pelos territórios reais da partida, servidos pela API, e persistir as decisões tomadas no painel. |
 | Media | RNF-03 | Trava distribuída para a auditoria | planejado | Garantir a ordem da cadeia de hashes com mais de um servidor gravando. |
 | Baixa | RF-14 | Notificações de turno para o jogador | planejado | Avisar o jogador do que aconteceu no fechamento sem exigir que ele abra a tela. |
 | Baixa | RF-15 | Mais municípios e estados | planejado | Ampliar o mapa para aumentar a disputa local e a variedade de mercados. |

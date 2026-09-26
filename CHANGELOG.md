@@ -4,6 +4,78 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 Este arquivo é a linha de auditoria do desenvolvimento: nenhuma entrega entra
 sem uma linha aqui. Ver também [docs/RELATORIO.md](docs/RELATORIO.md).
 
+## [0.7.0] - 2026-09-25
+
+RF-26: o mapa deixa de ser uma prova de conceito com dado inventado e passa a
+mostrar a partida de verdade.
+
+### Adicionado
+- Painel do mapa propõe um projeto de lei de verdade (`POST
+  /api/politica/projetos`) quando o jogador tem mandato no território
+  clicado — mesmo fluxo de rascunho → pautar → votar → sancionar da página
+  Política, com mandato e território já pré-selecionados. Sem mandato, o
+  painel convida a assumir um cargo em vez de fingir a ação. Cobre as três
+  esferas agora, incluindo FEDERAL a partir do painel de País.
+- Nível de zoom "País" na hierarquia semântica (País > Estado > Cidade):
+  marcador único no centro do Brasil, com painel alimentado pelos campos
+  reais de `Pais` (população, tesouro, PIB, alíquota federal, gasto social,
+  estabilidade, aprovação, desemprego, renda média).
+- Fronteiras reais dos 27 estados brasileiros em `estados.geojson`
+  (dataset público `codeforamerica/click_that_hood`, simplificado com
+  Douglas-Peucker), substituindo os 3 polígonos ilustrativos desenhados à
+  mão. Estados fora da carga inicial aparecem só como contexto geográfico,
+  com o painel dizendo explicitamente que não têm território de partida.
+- `zoomAnimation: false` no mapa Leaflet, corrigindo o travamento de
+  zoom/drill-down registrado como observação na RF-24.
+- As 27 capitais estaduais em `cidades.geojson` (coordenadas reais), uma por
+  UF — completando a demarcação de capitais pedida. São Paulo, Rio de
+  Janeiro e Belo Horizonte continuam com município de verdade; as outras 24
+  aparecem como marcador, com o painel dizendo que não têm território de
+  partida (mesmo tratamento honesto já usado nos estados sem dado).
+- Geometria real de 10 rodovias federais principais (BR-101, BR-116, BR-040,
+  BR-153, BR-364, BR-230, BR-070, BR-060, BR-050, BR-262) em
+  `estradas.geojson`, extraída do OpenStreetMap via Overpass API e
+  simplificada com Douglas-Peucker — substitui as 3 linhas retas
+  ilustrativas entre pares de cidade por traçado real, seguindo a malha
+  rodoviária de verdade.
+
+### Alterado
+- Estado, Cidade e Município no mapa agora leem `população`, `tesouro`,
+  `alíquota`, `índice de desenvolvimento`/`urbanização`, `demanda
+  imobiliária`, `custo do terreno` e `zoneamento` ao vivo de
+  `/api/politica/territorios`, em vez de valores fixos no GeoJSON.
+- Os `.geojson` do mapa viraram só geometria (id/nome/sigla), casada por
+  sigla/nome no cliente com o registro vivo de `/api/politica/territorios`
+  — só os 3 estados e 3 municípios que a carga inicial (`SeedDados`)
+  realmente cria têm esse registro; as demais features (24 capitais, 24
+  estados) existem só por completude geográfica e o painel diz isso.
+- A "herança" de alíquota estadual pra cidade filha, que rodava só no
+  JavaScript do navegador, foi removida: o efeito econômico de verdade já
+  roda no motor de simulação do backend, então o mapa só exibe o que a API
+  devolve, sem recalcular nada por conta própria.
+- Renderização das três camadas territoriais virou mutuamente exclusiva por
+  zoom (País, Estado, Cidade nunca coexistem na tela) e o estilo dos
+  polígonos de estado ficou neutro/de baixo contraste, pra malha logística
+  (estradas) ser o destaque visual. Estradas passaram a aparecer a partir do
+  nível "Estado" (antes só em "Cidade").
+- Estradas continuam ilustrativas — o backend ainda não modela
+  infraestrutura viária como território, então não há decisão associada.
+  O painel de clique agora mostra uma estrutura explícita de métricas
+  (índice de desenvolvimento, pavimentação, capacidade) com placeholder
+  `—`, pronta para receber dado real se esse domínio for modelado. O campo
+  `cidadesConectadas` (só fazia sentido pras 3 rotas retas antigas) saiu do
+  formato; o painel omite a linha "Conecta" quando ele não existe.
+
+### Corrigido
+- Classes CSS `.painel-tag`, `.painel-linha`, `.painel-nota` que o painel do
+  mapa já usava desde a RF-24 mas nunca tinham sido definidas em `app.css`
+  (o conteúdo renderizava sem estilo nenhum).
+- Rodovias picotadas (`estradas.geojson`): trechos cossinalizados no OSM
+  (a mesma pista carregando duas referências, ex. `BR-230;BR-135`) ficavam
+  de fora porque a consulta usava `ref` exato — trocado por um regex com
+  fronteira de `;` que casa o valor combinado também. O total de vias das
+  10 rodovias subiu de ~19 mil para ~26,5 mil depois da correção.
+
 ## [0.6.0] - 2026-09-25
 
 Organização do repositório: descarta o que não é mais necessário e corrige uma
