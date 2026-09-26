@@ -56,6 +56,8 @@ h3 { font-size: 16px; }
 /* -------------------------------------------------------------- cabecalho */
 
 .cabecalho {
+    position: relative;
+    z-index: 1100;
     background: var(--cor-superficie);
     border-bottom: 1px solid var(--cor-borda);
 }
@@ -702,13 +704,26 @@ input:focus, select:focus, textarea:focus {
 }
 
 .novidade-corpo {
+    display: grid;
+    grid-template-rows: 0fr;
+    opacity: 0;
+    transition: grid-template-rows 0.32s ease, opacity 0.28s ease;
+}
+
+.novidade-corpo.aberto {
+    grid-template-rows: 1fr;
+    opacity: 1;
+}
+
+.novidade-corpo-conteudo {
+    overflow: hidden;
+    min-height: 0;
+}
+
+.novidade-corpo-miolo {
     margin-top: 10px;
     padding-top: 10px;
     border-top: 1px solid var(--cor-borda);
-}
-
-.novidade-corpo.oculto {
-    display: none;
 }
 
 .novidade-corpo ul {
@@ -718,6 +733,12 @@ input:focus, select:focus, textarea:focus {
 
 .novidade-corpo li {
     margin-bottom: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .novidade-corpo {
+        transition: none;
+    }
 }
 
 .envelope {
@@ -784,13 +805,23 @@ input:focus, select:focus, textarea:focus {
 }
 
 .accordion-corpo {
-    padding: 0 var(--espaco) 14px;
+    display: grid;
+    grid-template-rows: 0fr;
+    opacity: 0;
     color: var(--cor-texto-suave);
     font-size: 14px;
+    transition: grid-template-rows 0.32s ease, opacity 0.28s ease;
 }
 
-.accordion-corpo.oculto {
-    display: none;
+.accordion-corpo.aberto {
+    grid-template-rows: 1fr;
+    opacity: 1;
+}
+
+.accordion-corpo-conteudo {
+    overflow: hidden;
+    min-height: 0;
+    padding: 0 var(--espaco) 14px;
 }
 
 .accordion-corpo p {
@@ -800,6 +831,12 @@ input:focus, select:focus, textarea:focus {
 .accordion-corpo ul {
     margin: 0 0 8px;
     padding-left: 18px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .accordion-corpo {
+        transition: none;
+    }
 }
 
 /* ---------------------------------------------------------------- termos */

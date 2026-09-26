@@ -108,8 +108,12 @@ function renderizar() {
                     </div>
                     ${envelope}
                 </div>
-                <div class="novidade-corpo oculto">
-                    <ul>${itens}</ul>
+                <div class="novidade-corpo">
+                    <div class="novidade-corpo-conteudo">
+                        <div class="novidade-corpo-miolo">
+                            <ul>${itens}</ul>
+                        </div>
+                    </div>
                 </div>
             </article>`;
     }).join('');
@@ -118,7 +122,7 @@ function renderizar() {
         card.addEventListener('click', () => {
             const versao = card.dataset.versao;
             const corpo = card.querySelector('.novidade-corpo');
-            corpo.classList.toggle('oculto');
+            corpo.classList.toggle('aberto');
             if (!lerLidas().includes(versao)) {
                 marcarComoLida(versao);
                 const envelope = card.querySelector('.envelope');

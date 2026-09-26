@@ -13,6 +13,14 @@ spring:
     hibernate:
       ddl-auto: update
     open-in-view: false
+  web:
+    resources:
+      # Sem Cache-Control/ETag, o navegador aplica cache heuristico (RFC 7234)
+      # sobre o Last-Modified e pode servir HTML/CSS/JS desatualizado mesmo
+      # apos um F5 comum. no-cache forca revalidacao condicional a cada carga.
+      cache:
+        cachecontrol:
+          no-cache: true
   h2:
     console:
       enabled: true

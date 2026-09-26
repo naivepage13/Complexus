@@ -17,7 +17,7 @@
 ## Números do projeto
 
 <!-- auto:inicio:metricas -->
-Versão `0.9.0` · 48 testes · 47 endpoints · 16 entidades · 10 serviços · 14 páginas.
+Versão `0.9.1` · 48 testes · 47 endpoints · 16 entidades · 10 serviços · 14 páginas.
 
 Linhas de código não vazias, sem contar artefatos de build:
 
@@ -25,11 +25,11 @@ Linhas de código não vazias, sem contar artefatos de build:
 |---|---|
 | Java | 6.402 |
 | Python | 2.389 |
-| JavaScript | 2.309 |
+| JavaScript | 2.352 |
 | HTML | 1.583 |
-| CSS | 1.336 |
-| Configuração | 654 |
-| **Total** | **14.673** |
+| CSS | 1.368 |
+| Configuração | 662 |
+| **Total** | **14.756** |
 <!-- auto:fim:metricas -->
 
 ## Situação dos requisitos
@@ -238,6 +238,10 @@ Linha de auditoria em [AUDITORIA.md](AUDITORIA.md).
 - **Termos de uso**: PDF estático embutido na página, com botão de download.
 - `Jogador` ganhou o campo `email`; `GET /api/jogadores/{id}` passou a expor
   `email`, `criadoEm` e `horasEmJogo` (horas reais desde o cadastro).
+- Corrigido na 0.9.1: o menu abria atrás do mapa Leaflet em `mapa.html` (o
+  Leaflet usa `z-index` até `1000`; o `.cabecalho` ganhou seu próprio
+  `z-index: 1100`). Novidades e Tutorial ganharam animação suave ao
+  expandir/recolher os detalhes.
 
 ### 3.12 Exclusão de conta (entregue na 0.9.0)
 - **Zona de risco** na página de Perfil, isolada por borda vermelha sutil, com
