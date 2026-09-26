@@ -14,14 +14,14 @@ indicadores macroeconômicos e fecha as estatísticas do período.
 <!-- auto:inicio:estado -->
 | Indicador | Valor |
 |---|---|
-| Versão | `0.7.0` |
-| Requisitos entregues | 21 de 38 (55%) |
-| Requisitos funcionais | 26 |
+| Versão | `0.9.0` |
+| Requisitos entregues | 23 de 40 (58%) |
+| Requisitos funcionais | 28 |
 | Requisitos não funcionais | 12 |
-| Testes automatizados | 44 (24 Java + 20 Python) |
-| Endpoints da API | 41 públicos + 3 administrativos |
+| Testes automatizados | 48 (28 Java + 20 Python) |
+| Endpoints da API | 44 públicos + 3 administrativos |
 | Entidades persistidas | 16 |
-| Páginas do frontend | 10 |
+| Páginas do frontend | 14 |
 
 Situação por requisito em [docs/REQUISITOS.md](docs/REQUISITOS.md); mapa do código em [docs/INVENTARIO.md](docs/INVENTARIO.md).
 <!-- auto:fim:estado -->

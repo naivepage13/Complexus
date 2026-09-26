@@ -1,0 +1,66 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /Resources << /Font << /F1 4 0 R >> >> /MediaBox [0 0 612 792] /Contents 5 0 R >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+5 0 obj
+<< /Length 1406 >>
+stream
+BT
+/F1 11 Tf
+12 TL
+72 740 Td
+(TERMOS DE USO - COMPLEXUS) Tj
+T* () Tj
+T* (1. Natureza do servico) Tj
+T* (O Complexus e uma simulacao de negocios e governo para fins de) Tj
+T* (entretenimento e estudo. Caixa, empresas, mandatos e indicadores) Tj
+T* (macroeconomicos sao inteiramente ficticios e nao representam) Tj
+T* (nenhum valor ou instrumento financeiro real.) Tj
+T* () Tj
+T* (2. Conta e credenciais) Tj
+T* (Cada jogador e responsavel por manter sua senha em sigilo. O) Tj
+T* (cadastro exige usuario e senha proprios; o e-mail informado no) Tj
+T* (perfil e usado apenas para identificacao dentro do jogo.) Tj
+T* () Tj
+T* (3. Uso aceitavel) Tj
+T* (E vedado automatizar chamadas a API do jogo de forma a burlar o) Tj
+T* (ritmo de turnos, explorar falhas de calculo de proposito ou) Tj
+T* (interferir na experiencia de outros jogadores.) Tj
+T* () Tj
+T* (4. Dados e persistencia) Tj
+T* (O estado da partida e mantido em banco local do servidor que) Tj
+T* (hospeda o jogo. Nao ha garantia de continuidade entre versoes) Tj
+T* (incompativeis do banco de dados.) Tj
+T* () Tj
+T* (5. Alteracoes destes termos) Tj
+T* (Estes termos podem ser atualizados conforme o jogo evolui. A) Tj
+T* (pagina de Novidades registra as mudancas relevantes de cada versao.) Tj
+T* () Tj
+T* (6. Contato) Tj
+T* (Duvidas sobre estes termos podem ser tratadas com quem administra) Tj
+T* (a instancia do jogo que voce esta jogando.) Tj
+ET
+endstream
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000241 00000 n 
+0000000311 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+1769
+%%EOF

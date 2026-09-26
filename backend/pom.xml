@@ -13,7 +13,7 @@
 
     <groupId>com.complexus</groupId>
     <artifactId>complexus-backend</artifactId>
-    <version>0.7.0</version>
+    <version>0.9.0</version>
     <name>Complexus Backend</name>
     <description>Nucleo de simulacao economica e politica do Complexus</description>
 

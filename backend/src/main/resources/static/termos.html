@@ -3,15 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Mapa - Complexus</title>
-    <link rel="stylesheet" href="vendor/leaflet/leaflet.css">
+    <title>Termos de uso - Complexus</title>
     <link rel="stylesheet" href="css/app.css">
 </head>
 <body>
-<!--
-  Mapa hierarquico: Estados -> Cidades -> Estradas, com zoom semantico.
-  O Leaflet vem da pasta vendor/, nao de CDN: o jogo roda offline.
--->
 <header class="cabecalho">
     <div class="cabecalho-conteudo">
         <span class="marca">Complexus</span>
@@ -38,29 +33,29 @@
     </div>
 </header>
 
-<main class="mapa-pagina">
-    <div id="mensagem" class="oculto"></div>
-
-    <div id="mapa-layout">
-        <div id="mapa-mapa"></div>
-
-        <aside id="painel-decisao" class="oculto">
-            <button class="botao botao-neutro botao-pequeno btn-fechar-painel" onclick="fecharPainel()">Fechar</button>
-            <div id="painel-conteudo"></div>
-        </aside>
+<main class="pagina">
+    <div class="titulo-pagina">
+        <div>
+            <h1>Termos de uso</h1>
+            <p>Condicoes de uso do Complexus.</p>
+        </div>
+        <div class="acoes">
+            <a class="botao" href="termos-de-uso.pdf" download="Complexus-Termos-de-Uso.pdf">Fazer download do PDF</a>
+        </div>
     </div>
 
-    <div id="mapa-legenda">
-        <span class="legenda-item"><span class="legenda-cor cor-pais"></span>País</span>
-        <span class="legenda-item"><span class="legenda-cor cor-estado"></span>Estado</span>
-        <span class="legenda-item"><span class="legenda-cor cor-cidade"></span>Cidade</span>
-        <span class="legenda-item"><span class="legenda-cor cor-estrada"></span>Estrada</span>
-        <span id="indicador-zoom" class="legenda-item suave"></span>
-    </div>
+    <section class="cartao">
+        <embed class="visualizador-pdf" src="termos-de-uso.pdf" type="application/pdf">
+        <p class="suave pequeno espacado">
+            Se o documento nao aparecer acima, <a href="termos-de-uso.pdf" target="_blank" rel="noopener">abra o PDF em outra aba</a>.
+        </p>
+    </section>
 </main>
 
-<script src="vendor/leaflet/leaflet.js"></script>
+<footer class="rodape">
+    Complexus - 1 turno = 1 hora real = 1 mes de jogo.
+</footer>
+
 <script src="js/app.js"></script>
-<script src="js/mapa.js"></script>
 </body>
 </html>

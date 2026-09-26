@@ -14,6 +14,8 @@ import com.complexus.politica.Mandato;
 import com.complexus.politica.Municipio;
 import com.complexus.politica.Pais;
 import com.complexus.politica.ProjetoDeLei;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -39,7 +41,10 @@ public final class Mapeadores {
         mapa.put("id", jogador.getId());
         mapa.put("usuario", jogador.getUsuario());
         mapa.put("nome", jogador.getNome());
+        mapa.put("email", jogador.getEmail());
         mapa.put("saldo", jogador.getSaldo());
+        mapa.put("criadoEm", jogador.getCriadoEm().toString());
+        mapa.put("horasEmJogo", Duration.between(jogador.getCriadoEm(), Instant.now()).toHours());
         return mapa;
     }
 

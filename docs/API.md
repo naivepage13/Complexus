@@ -33,8 +33,11 @@ Erros seguem um formato único:
 |---|---|---|
 | POST | `/jogadores/registrar` | `{usuario, nome, senha}` |
 | POST | `/jogadores/login` | `{usuario, senha}` |
-| GET | `/jogadores/{id}` | — |
+| GET | `/jogadores/{id}` | — (inclui `email`, `criadoEm` e `horasEmJogo`) |
 | GET | `/jogadores/{id}/painel` | — (empresas, carteira, mandatos e patrimônio consolidado) |
+| POST | `/jogadores/{id}/senha` | `{senhaAtual, novaSenha}` |
+| POST | `/jogadores/{id}/email` | `{email}` |
+| POST | `/jogadores/{id}/excluir` | `{senha}` ou `{confirmacao: "EXCLUIR"}` — desativa a conta (exclusão lógica) |
 
 ## Empresas
 

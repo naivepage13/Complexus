@@ -2,11 +2,11 @@
 
 <!-- Arquivo gerado por ferramentas/gerar_documentacao.py. Nao edite a mao: mude docs/requisitos.toml ou o codigo e rode o gerador. -->
 
-Retrato do código na versão `0.7.0`, lido direto dos fontes.
+Retrato do código na versão `0.9.0`, lido direto dos fontes.
 
 ## Endpoints da API
 
-41 públicos e 3 administrativos (estes exigem o cabeçalho `X-Admin-Token`).
+44 públicos e 3 administrativos (estes exigem o cabeçalho `X-Admin-Token`).
 
 | Método | Rota | Controlador | Acesso |
 |---|---|---|---|
@@ -37,7 +37,10 @@ Retrato do código na versão `0.7.0`, lido direto dos fontes.
 | POST | `/api/jogadores/login` | JogadorController | jogador |
 | POST | `/api/jogadores/registrar` | JogadorController | jogador |
 | GET | `/api/jogadores/{id}` | JogadorController | jogador |
+| POST | `/api/jogadores/{id}/email` | JogadorController | jogador |
+| POST | `/api/jogadores/{id}/excluir` | JogadorController | jogador |
 | GET | `/api/jogadores/{id}/painel` | JogadorController | jogador |
+| POST | `/api/jogadores/{id}/senha` | JogadorController | jogador |
 | GET | `/api/jogo/estado` | JogoController | jogador |
 | POST | `/api/jogo/turno/avancar` | JogoController | jogador |
 | GET | `/api/politica/cargos` | PoliticaController | jogador |
@@ -104,12 +107,16 @@ Retrato do código na versão `0.7.0`, lido direto dos fontes.
 | `backend/src/main/resources/static/investimentos.html` |
 | `backend/src/main/resources/static/login.html` |
 | `backend/src/main/resources/static/mapa.html` |
+| `backend/src/main/resources/static/novidades.html` |
+| `backend/src/main/resources/static/perfil.html` |
 | `backend/src/main/resources/static/politica.html` |
+| `backend/src/main/resources/static/termos.html` |
+| `backend/src/main/resources/static/tutorial.html` |
 
 ## Testes automatizados
 
 | Origem | Quantidade |
 |---|---|
-| Java (JUnit) | 24 |
+| Java (JUnit) | 28 |
 | Python (unittest) | 20 |
-| **Total** | **44** |
+| **Total** | **48** |
