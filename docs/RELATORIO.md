@@ -28,8 +28,8 @@ Linhas de código não vazias, sem contar artefatos de build:
 | JavaScript | 2.361 |
 | HTML | 1.857 |
 | CSS | 1.407 |
-| Configuração | 662 |
-| **Total** | **15.078** |
+| Configuração | 677 |
+| **Total** | **15.093** |
 <!-- auto:fim:metricas -->
 
 ## Situação dos requisitos
@@ -279,7 +279,8 @@ Linha de auditoria em [AUDITORIA.md](AUDITORIA.md).
 
 | Verificação | Resultado |
 |---|---|
-| `mvn test` (backend) | 22 testes, 0 falhas |
+| `mvn test` (backend) | 28 testes, 0 falhas |
+| Isolamento dos testes | Com e sem `src/test/resources/application.yml`, só H2 em memória e nenhuma pasta `backend/data` criada pelos testes |
 | `python -m unittest` (analytics) | 9 testes, 0 falhas |
 | Subida da aplicação + carga do mundo | OK |
 | Fluxo ponta a ponta pela API | Empresa → turno → IPO → compra → dividendo → lei sancionada → auditoria íntegra |

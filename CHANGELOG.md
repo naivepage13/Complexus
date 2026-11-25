@@ -21,6 +21,14 @@ propostas em `docs/redesign/variantes.html`).
 - Link "Pular para o conteúdo", foco visível amarelo, alvos de clique de 40px
   ou mais, página atual marcada com `aria-current`.
 
+### Corrigido
+- Os testes do backend só deixavam de usar a partida salva
+  (`backend/data/complexus`) por causa de `src/test/resources/application.yml`:
+  sem esse arquivo, `mvn test` passava normalmente e gravava no banco em
+  arquivo. O Surefire (`backend/pom.xml`) agora também fixa o datasource em H2
+  em memória; um `@SpringBootTest(properties=...)` continua tendo precedência.
+  A trava cobre apenas o banco e só vale para execuções via Maven.
+
 ## [0.9.1] - 2026-09-26
 
 Correções encontradas testando o menu de configurações na página do Mapa, mais
