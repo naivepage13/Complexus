@@ -4,6 +4,23 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 Este arquivo é a linha de auditoria do desenvolvimento: nenhuma entrega entra
 sem uma linha aqui. Ver também [docs/RELATORIO.md](docs/RELATORIO.md).
 
+## [Não lançado]
+
+Redesign da interface (variante "Terminal Executivo", aprovada entre cinco
+propostas em `docs/redesign/variantes.html`).
+
+### Alterado
+- Tema escuro e sóbrio em `css/app.css`: novos tokens de cor, dados e rótulos
+  em fonte monoespaçada, ladrilhos do mapa escurecidos.
+- Navegação reorganizada em 5 categorias (Operações, Mercado, Governo,
+  Informação, Conta) em duas faixas: categorias e páginas da categoria. A
+  estrutura vive em `CATEGORIAS` (`js/app.js`) e substitui o menu plano de cada
+  HTML; a engrenagem de configurações foi absorvida pela categoria Conta.
+
+### Acessibilidade
+- Link "Pular para o conteúdo", foco visível amarelo, alvos de clique de 40px
+  ou mais, página atual marcada com `aria-current`.
+
 ## [0.9.1] - 2026-09-26
 
 Correções encontradas testando o menu de configurações na página do Mapa, mais

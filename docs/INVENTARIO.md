@@ -112,6 +112,7 @@ Retrato do código na versão `0.9.1`, lido direto dos fontes.
 | `backend/src/main/resources/static/politica.html` |
 | `backend/src/main/resources/static/termos.html` |
 | `backend/src/main/resources/static/tutorial.html` |
+| `docs/redesign/variantes.html` |
 
 ## Testes automatizados
 

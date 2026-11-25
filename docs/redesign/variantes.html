@@ -1,0 +1,287 @@
+<title>Complexus Redesign</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:wght@500;600&display=swap">
+<style>
+:root{
+  --bg:#eceff3;--fg:#141b24;--mut:#4a5565;--line:#c9d0da;--sur:#fff;--acc:#1f4e8c;--accfg:#fff;
+  --sans:"IBM Plex Sans",system-ui,"Segoe UI",sans-serif;--mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;--serif:"Source Serif 4",Georgia,serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#10151c;--fg:#e8ecf2;--mut:#a3adbb;--line:#2c3644;--sur:#18202a;--acc:#7fb0f0;--accfg:#10151c;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#10151c;--fg:#e8ecf2;--mut:#a3adbb;--line:#2c3644;--sur:#18202a;--acc:#7fb0f0;--accfg:#10151c;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 var(--sans);padding-block:0;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+:focus-visible{outline:3px solid #f2a900;outline-offset:2px}
+.wrap{max-width:1240px;margin:0 auto;padding-block:20px 40px}
+h1{font:600 22px/1.2 var(--sans);margin:0 0 4px;text-wrap:balance}
+.intro{color:var(--mut);margin:0 0 16px;max-width:70ch}
+.seletor{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.seletor button{font:500 14px var(--sans);padding:10px 14px;border:1px solid var(--line);background:var(--sur);color:var(--fg);border-radius:4px;cursor:pointer;min-height:44px}
+.seletor button[aria-selected="true"]{background:var(--acc);color:var(--accfg);border-color:var(--acc)}
+.nota{background:var(--sur);border:1px solid var(--line);padding:12px 14px;border-radius:4px;margin-bottom:14px;display:grid;gap:4px}
+.nota b{font-weight:600}
+.nota ul{margin:4px 0 0;padding-left:18px;color:var(--mut)}
+.moldura{border:1px solid var(--line);border-radius:4px;overflow:hidden;background:var(--sur)}
+.moldura-topo{font:12px var(--mono);color:var(--mut);padding:6px 10px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.tela{overflow-x:auto}
+.tela>div{min-width:900px}
+.tema{margin-left:auto}
+.tema button{font:500 13px var(--sans);padding:8px 12px;min-height:44px;border:1px solid var(--line);background:var(--sur);color:var(--fg);border-radius:4px;cursor:pointer}
+.topo-pagina{display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap}
+
+/* ===== comuns dos mockups ===== */
+.m{--m-bg:#fff;--m-sur:#fff;--m-fg:#141b24;--m-mut:#4a5565;--m-line:#cfd5de;--m-acc:#1f4e8c;--m-pos:#14683a;--m-neg:#a3262f;--m-warn:#8a5300;
+  background:var(--m-bg);color:var(--m-fg);font:14px/1.5 var(--sans);min-height:560px}
+.m a{color:inherit;text-decoration:none}
+.m button{font:inherit;color:inherit}
+.m .num{font-variant-numeric:tabular-nums}
+.m table{width:100%;border-collapse:collapse}
+.m th{text-align:left;font-weight:600;font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--m-mut);padding:8px 10px;border-bottom:2px solid var(--m-fg)}
+.m td{padding:9px 10px;border-bottom:1px solid var(--m-line)}
+.m td.r,.m th.r{text-align:right}
+.tag{display:inline-block;font-size:12px;font-weight:600;padding:1px 8px;border:1px solid currentColor;border-radius:2px}
+.pos{color:var(--m-pos)}.neg{color:var(--m-neg)}.warn{color:var(--m-warn)}
+.skip{position:absolute;left:-9999px}.skip:focus{left:8px;top:8px;background:#f2a900;color:#000;padding:8px 12px;z-index:9}
+.m [aria-current="page"]{font-weight:600}
+.btn{padding:9px 14px;min-height:40px;border:1px solid var(--m-fg);background:var(--m-fg);color:var(--m-bg);border-radius:2px;cursor:pointer;font-weight:500}
+.btn.sec{background:transparent;color:var(--m-fg)}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:0}
+.kpi{padding:12px 16px;border-right:1px solid var(--m-line)}
+.kpi:last-child{border-right:0}
+.kpi small{display:block;font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:var(--m-mut)}
+.kpi strong{font-size:22px;font-weight:600}
+.feed{list-style:none;margin:0;padding:0}
+.feed li{display:grid;grid-template-columns:78px 1fr auto;gap:12px;padding:10px 0;border-bottom:1px solid var(--m-line);align-items:baseline}
+.feed time{font:12px var(--mono);color:var(--m-mut)}
+.sh{font:600 12px var(--sans);letter-spacing:.08em;text-transform:uppercase}
+
+/* V1 Chancelaria: sidebar agrupada */
+.v1{display:grid;grid-template-columns:248px 1fr}
+.v1 aside{background:#16202e;color:#dfe6f0;padding:18px 0}
+.v1 .marca{font:600 20px var(--serif);padding:0 20px 14px;border-bottom:1px solid #2c3a4e;margin-bottom:8px}
+.v1 .marca small{display:block;font:12px var(--mono);color:#9fb0c6;margin-top:2px}
+.v1 h2{font:600 11px var(--sans);letter-spacing:.12em;text-transform:uppercase;color:#9fb0c6;margin:16px 20px 4px}
+.v1 nav a{display:block;padding:9px 20px 9px 17px;border-left:3px solid transparent;min-height:40px}
+.v1 nav a:hover{background:#1e2c40}
+.v1 nav a[aria-current]{background:#22344d;border-left-color:#e9b949;color:#fff}
+.v1 main{padding:24px 28px}
+.v1 .cab{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;border-bottom:2px solid var(--m-fg);padding-bottom:12px;margin-bottom:18px}
+.v1 .cab h3{font:600 26px var(--serif);margin:0}
+.v1 .cab p{margin:2px 0 0;color:var(--m-mut)}
+.v1 .kpis{border:1px solid var(--m-line);margin-bottom:20px}
+.v1 .cols{display:grid;grid-template-columns:1.6fr 1fr;gap:28px}
+.v1 h4{font:600 12px var(--sans);letter-spacing:.08em;text-transform:uppercase;margin:0 0 6px;padding-bottom:6px;border-bottom:1px solid var(--m-line)}
+
+/* V2 Terminal executivo: escuro denso */
+.v2{--m-bg:#0d1218;--m-sur:#151c25;--m-fg:#e3e9f1;--m-mut:#9aa7b8;--m-line:#2a3441;--m-acc:#6fb1ff;--m-pos:#4fd18b;--m-neg:#ff7b84;--m-warn:#f2b84b;font-family:var(--mono);font-size:13px}
+.v2 .barra{display:flex;align-items:center;gap:18px;padding:0 16px;background:#080c11;border-bottom:1px solid var(--m-line);min-height:44px;flex-wrap:wrap}
+.v2 .barra b{font:600 14px var(--mono);letter-spacing:.14em;color:var(--m-acc)}
+.v2 .barra .r{margin-left:auto;color:var(--m-mut);display:flex;gap:16px}
+.v2 .cats{display:flex;gap:0;background:var(--m-sur);border-bottom:1px solid var(--m-line)}
+.v2 .cats button{background:none;border:0;border-bottom:3px solid transparent;padding:10px 18px;cursor:pointer;color:var(--m-mut);font-family:var(--mono);min-height:44px}
+.v2 .cats button[aria-selected="true"]{color:var(--m-fg);border-bottom-color:var(--m-acc);background:#0d1218}
+.v2 .sub{display:flex;gap:6px;padding:8px 16px;border-bottom:1px solid var(--m-line);flex-wrap:wrap}
+.v2 .sub a{padding:6px 12px;border:1px solid var(--m-line);min-height:32px}
+.v2 .sub a[aria-current]{background:var(--m-acc);color:#08121f;border-color:var(--m-acc)}
+.v2 .corpo{display:grid;grid-template-columns:repeat(12,1fr);gap:1px;background:var(--m-line)}
+.v2 .p{background:var(--m-sur);padding:12px 14px}
+.v2 .p h3{font:600 11px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--m-mut);margin:0 0 8px}
+.v2 .c3{grid-column:span 3}.v2 .c8{grid-column:span 8}.v2 .c4{grid-column:span 4}.v2 .c12{grid-column:span 12}
+.v2 .big{font-size:24px;font-weight:500}
+.v2 th{border-bottom-color:var(--m-line);font-family:var(--mono)}
+.v2 .btn{background:var(--m-acc);color:#08121f;border-color:var(--m-acc)}
+
+/* V3 Gabinete: documento, cabecalho com categorias */
+.v3{--m-bg:#f6f3ec;--m-sur:#fffdf8;--m-line:#cdc6b6;--m-acc:#6b1d2a;--m-fg:#1b1a17;--m-mut:#55524a}
+.v3 .brasao{background:#2b2a26;color:#f2ecdc;padding:14px 28px;display:flex;align-items:center;gap:24px;flex-wrap:wrap}
+.v3 .brasao b{font:600 22px var(--serif);letter-spacing:.02em}
+.v3 .brasao .r{margin-left:auto;font-size:13px;color:#d6cfbb;display:flex;gap:18px}
+.v3 .cats{display:flex;background:#fffdf8;border-bottom:1px solid var(--m-line);padding:0 28px}
+.v3 .cats button{background:none;border:0;border-bottom:4px solid transparent;padding:12px 18px;min-height:46px;cursor:pointer;font-weight:500}
+.v3 .cats button[aria-selected="true"]{border-bottom-color:var(--m-acc);color:var(--m-acc);font-weight:600}
+.v3 .sub{padding:10px 28px;background:#ece7da;display:flex;gap:6px;flex-wrap:wrap;border-bottom:1px solid var(--m-line)}
+.v3 .sub a{padding:6px 12px;min-height:36px}
+.v3 .sub a[aria-current]{background:var(--m-acc);color:#fff;border-radius:2px}
+.v3 main{padding:26px 28px;max-width:1040px}
+.v3 h3{font:600 28px var(--serif);margin:0 0 4px}
+.v3 .sec{background:var(--m-sur);border:1px solid var(--m-line);padding:16px 20px;margin-top:16px}
+.v3 .sec h4{font:600 17px var(--serif);margin:0 0 8px}
+.v3 .tres{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:16px}
+.v3 .btn{background:var(--m-acc);border-color:var(--m-acc);color:#fff}
+
+/* V4 Situacao: trilho de icones + painel de categoria */
+.v4{--m-bg:#e9edec;--m-sur:#fff;--m-fg:#0f1d1b;--m-mut:#44524f;--m-line:#c3cdca;--m-acc:#0b5d52;display:grid;grid-template-columns:72px 220px 1fr}
+.v4 .trilho{background:#0b2723;color:#cfe4df;display:flex;flex-direction:column;padding:10px 0;gap:2px}
+.v4 .trilho button{background:none;border:0;border-left:4px solid transparent;color:inherit;padding:12px 4px;font-size:11px;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;min-height:64px}
+.v4 .trilho button[aria-selected="true"]{background:#14403a;border-left-color:#7fe0cc;color:#fff}
+.v4 .trilho svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.7}
+.v4 .painel{background:#f5f8f7;border-right:1px solid var(--m-line);padding:18px 0}
+.v4 .painel h2{font:600 12px var(--sans);letter-spacing:.1em;text-transform:uppercase;margin:0 16px 8px;color:var(--m-mut)}
+.v4 .painel a{display:block;padding:10px 16px;border-left:4px solid transparent;min-height:42px}
+.v4 .painel a[aria-current]{background:#fff;border-left-color:var(--m-acc);font-weight:600}
+.v4 main{padding:20px 24px}
+.v4 .alerta{display:flex;gap:10px;align-items:center;background:#fff4dd;border:1px solid #d6a63c;padding:8px 12px;margin-bottom:14px}
+.v4 .grade{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.v4 .cx{background:var(--m-sur);border:1px solid var(--m-line);padding:14px 16px}
+.v4 .cx h3{font:600 12px var(--sans);letter-spacing:.08em;text-transform:uppercase;margin:0 0 8px;color:var(--m-mut)}
+.v4 .cx.l2{grid-column:span 2}
+.v4 .cx strong.g{font-size:28px;font-weight:600}
+.v4 h1.t{font:600 24px var(--sans);margin:0 0 12px}
+
+/* V5 Relatorio: alto contraste, migalhas, subnav lateral */
+.v5{--m-bg:#fff;--m-fg:#000;--m-mut:#333;--m-line:#8a8a8a;--m-acc:#00338d;font-size:16px}
+.v5 .topo{border-bottom:4px solid #000;padding:12px 28px;display:flex;align-items:center;gap:22px;flex-wrap:wrap}
+.v5 .topo b{font-size:22px;font-weight:600}
+.v5 .topo .r{margin-left:auto;display:flex;gap:16px;font-size:14px}
+.v5 .cats{display:flex;border-bottom:1px solid #000;padding:0 28px;gap:4px}
+.v5 .cats button{background:none;border:2px solid transparent;border-bottom:0;padding:11px 18px;min-height:46px;cursor:pointer;font-weight:500}
+.v5 .cats button[aria-selected="true"]{border-color:#000;background:#fff;font-weight:600;margin-bottom:-1px;background:#fff}
+.v5 .area{display:grid;grid-template-columns:230px 1fr}
+.v5 .lat{border-right:1px solid var(--m-line);padding:20px 0}
+.v5 .lat a{display:block;padding:11px 28px;min-height:44px;text-decoration:underline;text-underline-offset:3px}
+.v5 .lat a[aria-current]{background:#000;color:#fff;text-decoration:none;font-weight:600}
+.v5 main{padding:20px 28px}
+.v5 .mig{font-size:14px;color:var(--m-mut);margin-bottom:8px}
+.v5 h3{font:600 30px var(--sans);margin:0 0 14px}
+.v5 .blocos{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.v5 .bl{border:2px solid #000;padding:14px 18px}
+.v5 .bl h4{margin:0 0 8px;font-size:17px;font-weight:600}
+.v5 .lista dt{color:var(--m-mut);font-size:14px}
+.v5 .lista dd{margin:0 0 8px;font-size:22px;font-weight:600}
+.v5 .btn{background:var(--m-acc);border-color:var(--m-acc);color:#fff;font-size:16px;min-height:46px}
+/* V6 Recomendada: sidebar V1 + legibilidade V5 + caixas V4 */
+.v6{--m-bg:#f4f6f8;--m-fg:#0d141c;--m-mut:#3a4553;--m-line:#b7c0cb;--m-acc:#12467f;display:grid;grid-template-columns:250px 1fr;font-size:15px}
+.v6 aside{background:#14202f;color:#e6ecf4;padding:16px 0}
+.v6 .marca{font:600 20px var(--serif);padding:0 20px 12px;border-bottom:1px solid #2c3a4e}
+.v6 .marca small{display:block;font:12px var(--mono);color:#aebcce;margin-top:2px}
+.v6 h2{font:600 12px var(--sans);letter-spacing:.1em;text-transform:uppercase;color:#aebcce;margin:16px 20px 4px}
+.v6 nav a{display:block;padding:10px 20px 10px 17px;border-left:4px solid transparent;min-height:44px}
+.v6 nav a:hover{background:#1e2e43;text-decoration:underline}
+.v6 nav a[aria-current]{background:#fff;color:#0d141c;border-left-color:#e9b949;font-weight:600}
+.v6 main{padding:18px 28px}
+.v6 .mig{font-size:14px;color:var(--m-mut);margin-bottom:6px}
+.v6 .cab{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:14px}
+.v6 h3{font:600 26px var(--serif);margin:0}
+.v6 .alerta{display:flex;gap:10px;background:#fff4dd;border:2px solid #8a5300;padding:9px 12px;margin-bottom:14px}
+.v6 .grade{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.v6 .cx{background:#fff;border:1px solid var(--m-line);padding:14px 16px}
+.v6 .cx h4{font:600 12px var(--sans);letter-spacing:.08em;text-transform:uppercase;margin:0 0 8px;color:var(--m-mut)}
+.v6 .cx.l2{grid-column:span 2}
+.v6 .cx strong.g{font-size:28px;font-weight:600}
+.v6 .btn{background:var(--m-acc);border-color:var(--m-acc);color:#fff}
+@media (max-width:700px){.tela>div{min-width:900px}}
+@media (prefers-reduced-motion:no-preference){.m *{transition:background .15s,color .15s}}
+</style>
+
+<div class="wrap">
+  <div class="topo-pagina">
+    <div>
+      <h1>Complexus: 5 variantes de interface</h1>
+      <p class="intro">Mesmo painel (turno, empresas, carteira, mandatos e canal de atualizações) em cinco linguagens visuais. Todas reorganizam o menu plano de 7 itens em 5 categorias. Os números são exemplos.</p>
+    </div>
+    <div class="tema"><button type="button" id="tema" aria-pressed="false">Alternar tema desta página</button></div>
+  </div>
+  <div class="seletor" role="tablist" aria-label="Variantes" id="seletor"></div>
+  <div class="nota" id="nota" aria-live="polite"></div>
+  <div class="moldura">
+    <div class="moldura-topo"><span id="url">localhost:8080/index.html</span><span>mockup interativo: troque de categoria</span></div>
+    <div class="tela"><div id="tela"></div></div>
+  </div>
+</div>
+
+<script>
+const CATS=[
+ {id:'op',n:'Operações',i:'M3 9l9-6 9 6v11H3zM9 20v-7h6v7',itens:['Painel','Empresas']},
+ {id:'me',n:'Mercado',i:'M3 20h18M6 16V9M11 16V5M16 16v-5M21 16V8',itens:['Investimentos','Estatísticas']},
+ {id:'go',n:'Governo',i:'M3 21h18M5 21V10M10 21V10M14 21V10M19 21V10M2 10l10-6 10 6z',itens:['Política','Mapa']},
+ {id:'in',n:'Informação',i:'M4 5h16v14H4zM8 9h8M8 13h8',itens:['Atualizações']},
+ {id:'co',n:'Conta',i:'M12 12a4 4 0 100-8 4 4 0 000 8zM4 21c1-5 15-5 16 0',itens:['Perfil','Novidades','Tutorial','Termos de uso']}
+];
+const FEED=[['T14','Lei de incentivo à construção sancionada no município','Política'],['T14','Sua empresa “Alvorada Alimentos” distribuiu dividendos','Empresa'],['T13','Inflação do mês: 0,42%','Macro'],['T13','Votação do Orçamento Estadual encerra no próximo turno','Política'],['T12','Novo empreendimento iniciado em Campinas','Construção']];
+const EMP=[['Alvorada Alimentos','Alimentos','Campinas','Ativa','pos'],['Terra Forte Imóveis','Imobiliário','São Paulo','Ativa','pos'],['Obra Prima Construções','Construção','Campinas','Em obra','warn']];
+const feedLi=()=>'<ul class="feed">'+FEED.map(f=>`<li><time>${f[0]}</time><span>${f[1]}</span><span class="tag">${f[2]}</span></li>`).join('')+'</ul>';
+const empTab=()=>'<table><thead><tr><th scope="col">Empresa</th><th scope="col">Setor</th><th scope="col">Município</th><th scope="col">Situação</th></tr></thead><tbody>'+EMP.map(e=>`<tr><td>${e[0]}</td><td>${e[1]}</td><td>${e[2]}</td><td class="${e[4]}"><b>${e[3]}</b></td></tr>`).join('')+'</tbody></table>';
+const ico=c=>`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${c.i}"/></svg>`;
+const st={};   // categoria ativa por variante
+const nav=(v)=>CATS.find(c=>c.id===(st[v]||'op'));
+const sub=(v,cls)=>`<nav class="sub" aria-label="Seções de ${nav(v).n}">`+nav(v).itens.map((x,k)=>`<a href="#" ${k===0?'aria-current="page"':''}>${x}</a>`).join('')+'</nav>';
+const catBtns=v=>CATS.map(c=>`<button type="button" role="tab" data-v="${v}" data-c="${c.id}" aria-selected="${(st[v]||'op')===c.id}">${c.n}</button>`).join('');
+const kp=(a)=>'<div class="kpis">'+a.map(k=>`<div class="kpi"><small>${k[0]}</small><strong class="num ${k[2]||''}">${k[1]}</strong></div>`).join('')+'</div>';
+const K=[['Turno','14 / mês 2'],['Empresas','3'],['Carteira','R$ 128.400','pos'],['Mandatos','1 ativo']];
+
+const V={
+1:{nome:'1 · Chancelaria',nota:['Barra lateral escura com 5 grupos rotulados; página clara e sóbria, títulos em serifa.','Lista vertical sempre visível: o jogador vê todas as categorias de uma vez, sem esconder nada em menus.','Acessibilidade: landmarks (nav/main), item atual com barra + negrito (não só cor), alvos de 40px+, contraste AAA no texto principal.'],
+ r:()=>`<div class="m v1"><a class="skip" href="#c1">Pular para o conteúdo</a>
+ <aside><div class="marca">Complexus<small>Turno 14 · Mês 2</small></div>
+ <nav aria-label="Principal">${CATS.map(c=>`<h2>${c.n}</h2>`+c.itens.map(x=>`<a href="#" ${x==='Painel'?'aria-current="page"':''}>${x}</a>`).join('')).join('')}</nav></aside>
+ <main id="c1"><div class="cab"><div><h3>Painel do jogador</h3><p>Resumo da partida no turno 14.</p></div><button class="btn" type="button">Avançar turno agora</button></div>
+ ${kp(K)}
+ <div class="cols"><section aria-labelledby="a1"><h4 id="a1">Canal de atualizações</h4>${feedLi()}</section><section aria-labelledby="a2"><h4 id="a2">Suas empresas</h4>${empTab()}</section></div></main></div>`},
+
+2:{nome:'2 · Terminal Executivo',nota:['Tema escuro de alta densidade: barra de status, abas de categoria e subabas; dados em fonte monoespaçada alinhada.','Pensado para quem gerencia muitas empresas e quer ver tudo em uma tela, estilo mesa de operações.','Acessibilidade: abas com role=tablist, setas de estado (+/−) além de cor, contraste ≥ 7:1, texto mínimo de 13px.'],
+ r:()=>`<div class="m v2"><div class="barra"><b>COMPLEXUS</b><span>T14 · M2</span><span class="r"><span>Jogador: demo</span><span>Conta</span></span></div>
+ <div class="cats" role="tablist" aria-label="Categorias">${catBtns(2)}</div>${sub(2)}
+ <div class="corpo"><section class="p c3"><h3>Turno</h3><div class="big num">14</div><small>próximo em 22 min</small></section>
+ <section class="p c3"><h3>Empresas</h3><div class="big num">3</div><small class="pos">▲ 2 lucrativas</small></section>
+ <section class="p c3"><h3>Carteira</h3><div class="big num pos">R$ 128.4k</div><small class="pos">▲ +3,1%</small></section>
+ <section class="p c3"><h3>Inflação</h3><div class="big num warn">0,42%</div><small class="neg">▼ acima da meta</small></section>
+ <section class="p c8"><h3>Empresas</h3>${empTab()}</section>
+ <section class="p c4"><h3>Canal</h3>${feedLi()}</section></div></div>`},
+
+3:{nome:'3 · Gabinete',nota:['Visual de documento oficial: papel quente, vinho institucional, títulos em serifa; faixa escura com cabeçalho e categorias como abas.','Combina com o tema político do jogo. Seções viram “peças” com título claro e agrupamento por bordas.','Acessibilidade: texto escuro sobre papel (contraste ~15:1), hierarquia tipográfica forte, subitens sempre rotulados.'],
+ r:()=>`<div class="m v3"><div class="brasao"><b>Complexus</b><span>Turno 14 · Mês 2</span><span class="r"><span>demo</span><span>Sair</span></span></div>
+ <div class="cats" role="tablist" aria-label="Categorias">${catBtns(3)}</div>${sub(3)}
+ <main><h3>Painel do jogador</h3><p style="margin:0;color:var(--m-mut)">Situação geral no turno 14.</p>
+ <div class="tres">${[['Empresas','3 em operação'],['Carteira','R$ 128.400'],['Mandatos','1 ativo']].map(a=>`<div class="sec" style="margin:0"><small style="color:var(--m-mut);letter-spacing:.06em;text-transform:uppercase;font-size:12px">${a[0]}</small><div style="font:600 22px var(--serif)" class="num">${a[1]}</div></div>`).join('')}</div>
+ <section class="sec"><h4>Canal de atualizações</h4>${feedLi()}</section>
+ <div style="margin-top:16px"><button class="btn" type="button">Avançar turno agora</button></div></main></div>`},
+
+4:{nome:'4 · Sala de Situação',nota:['Três níveis: trilho de ícones com rótulo (categoria), painel com as páginas, e grade de caixas por conteúdo.','Foco em monitoramento: faixa de alerta no topo e caixas com um número de destaque cada.','Acessibilidade: ícone sempre com rótulo de texto, alerta com texto + borda (não só cor), foco amarelo visível.'],
+ r:()=>`<div class="m v4"><nav class="trilho" aria-label="Categorias" role="tablist">${CATS.map(c=>`<button type="button" role="tab" data-v="4" data-c="${c.id}" aria-selected="${(st[4]||'op')===c.id}">${ico(c)}<span>${c.n}</span></button>`).join('')}</nav>
+ <nav class="painel" aria-label="Páginas de ${nav(4).n}"><h2>${nav(4).n}</h2>${nav(4).itens.map((x,k)=>`<a href="#" ${k===0?'aria-current="page"':''}>${x}</a>`).join('')}</nav>
+ <main><h1 class="t">Painel · Turno 14</h1>
+ <div class="alerta" role="status"><b>Atenção:</b> votação do Orçamento Estadual encerra no próximo turno.</div>
+ <div class="grade"><div class="cx"><h3>Empresas</h3><strong class="g num">3</strong><div class="pos">▲ 2 lucrativas</div></div>
+ <div class="cx"><h3>Carteira</h3><strong class="g num">R$ 128.400</strong><div class="pos">▲ +3,1% no mês</div></div>
+ <div class="cx"><h3>Mandatos</h3><strong class="g num">1</strong><div>Vereador · Campinas</div></div>
+ <div class="cx l2"><h3>Canal de atualizações</h3>${feedLi()}</div>
+ <div class="cx"><h3>Ação</h3><p style="margin:0 0 10px">Próximo turno em 22 min.</p><button class="btn" type="button">Avançar turno</button></div></div></main></div>`},
+
+5:{nome:'5 · Relatório Público',nota:['Alto contraste preto/branco com um azul institucional; migalhas de pão, abas por categoria e menu lateral textual com sublinhado.','Máxima legibilidade: fonte de 16px, bordas firmes, quase sem decoração. Inspirado em portais de governo.','Acessibilidade: AAA de contraste, links sublinhados, migalhas para orientação, alvos de 44px+.'],
+ r:()=>`<div class="m v5"><div class="topo"><b>Complexus</b><span>Turno 14 · Mês 2</span><span class="r"><a href="#">Perfil</a><a href="#">Sair</a></span></div>
+ <div class="cats" role="tablist" aria-label="Categorias">${catBtns(5)}</div>
+ <div class="area"><nav class="lat" aria-label="Seções de ${nav(5).n}">${nav(5).itens.map((x,k)=>`<a href="#" ${k===0?'aria-current="page"':''}>${x}</a>`).join('')}</nav>
+ <main><div class="mig">Início › ${nav(5).n} › ${nav(5).itens[0]}</div><h3>${nav(5).itens[0]==='Painel'?'Painel do jogador':nav(5).itens[0]}</h3>
+ <div class="blocos"><section class="bl"><h4>Resumo</h4><dl class="lista"><dt>Empresas</dt><dd class="num">3</dd><dt>Carteira</dt><dd class="num">R$ 128.400</dd><dt>Mandatos ativos</dt><dd class="num">1</dd></dl><button class="btn" type="button">Avançar turno agora</button></section>
+ <section class="bl"><h4>Canal de atualizações</h4>${feedLi()}</section></div></main></div></div>`}
+,
+6:{nome:'6 · Recomendada (híbrida)',nota:['Menu lateral agrupado em 5 categorias (V1), sempre visível, com item atual em fundo branco e barra dourada.','Migalhas, fonte de 15px e links sublinhados no hover (V5); caixas com número de destaque e faixa de alerta com texto e borda (V4).','Serifa só nos títulos; dados em sans com números tabulares. Contraste mínimo 7:1, alvos de 44px, foco amarelo, link “pular para o conteúdo”.'],
+ r:()=>`<div class="m v6"><a class="skip" href="#c6">Pular para o conteúdo</a>
+ <aside><div class="marca">Complexus<small>Turno 14 · Mês 2</small></div>
+ <nav aria-label="Principal">${CATS.map(c=>`<h2>${c.n}</h2>`+c.itens.map(x=>`<a href="#" ${x==='Painel'?'aria-current="page"':''}>${x}</a>`).join('')).join('')}</nav></aside>
+ <main id="c6"><div class="mig">Operações › Painel</div>
+ <div class="cab"><h3>Painel do jogador</h3><button class="btn" type="button">Avançar turno agora</button></div>
+ <div class="alerta" role="status"><b>Atenção:</b> votação do Orçamento Estadual encerra no próximo turno.</div>
+ <div class="grade"><div class="cx"><h4>Empresas</h4><strong class="g num">3</strong><div class="pos">▲ 2 lucrativas</div></div>
+ <div class="cx"><h4>Carteira</h4><strong class="g num">R$ 128.400</strong><div class="pos">▲ +3,1% no mês</div></div>
+ <div class="cx"><h4>Mandatos</h4><strong class="g num">1</strong><div>Vereador · Campinas</div></div>
+ <div class="cx l2"><h4>Canal de atualizações</h4>${feedLi()}</div>
+ <div class="cx"><h4>Suas empresas</h4><ul class="feed" style="display:block">${EMP.map(e=>`<li style="grid-template-columns:1fr auto"><span>${e[0]}</span><b class="${e[4]}">${e[3]}</b></li>`).join('')}</ul></div></div></main></div>`}
+};
+let atual=+(location.hash.slice(1))||1; if(!V[atual])atual=1;
+function desenhar(){
+  document.getElementById('seletor').innerHTML=Object.keys(V).map(k=>`<button type="button" role="tab" aria-selected="${+k===atual}" data-k="${k}">${V[k].nome}</button>`).join('');
+  document.getElementById('nota').innerHTML='<b>'+V[atual].nome.replace(/^\d · /,'')+'</b><ul>'+V[atual].nota.map(n=>`<li>${n}</li>`).join('')+'</ul>';
+  document.getElementById('tela').innerHTML=V[atual].r();
+}
+document.addEventListener('click',e=>{
+  const k=e.target.closest('[data-k]'); if(k){atual=+k.dataset.k;location.hash=atual;desenhar();return}
+  const c=e.target.closest('[data-c]'); if(c){st[c.dataset.v]=c.dataset.c;desenhar();document.querySelector(`[data-c="${c.dataset.c}"][data-v="${c.dataset.v}"]`)?.focus();return}
+  if(e.target.closest('.m a[href="#"]'))e.preventDefault();
+});
+document.getElementById('tema').addEventListener('click',()=>{
+  const r=document.documentElement,d=r.dataset.theme==='dark'||(!r.dataset.theme&&matchMedia('(prefers-color-scheme:dark)').matches);
+  r.dataset.theme=d?'light':'dark';
+});
+addEventListener('hashchange',()=>{const n=+location.hash.slice(1);if(V[n]){atual=n;desenhar()}});
+desenhar();
+</script>

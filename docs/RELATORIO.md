@@ -17,7 +17,7 @@
 ## Números do projeto
 
 <!-- auto:inicio:metricas -->
-Versão `0.9.1` · 48 testes · 47 endpoints · 16 entidades · 10 serviços · 14 páginas.
+Versão `0.9.1` · 48 testes · 47 endpoints · 16 entidades · 10 serviços · 15 páginas.
 
 Linhas de código não vazias, sem contar artefatos de build:
 
@@ -25,11 +25,11 @@ Linhas de código não vazias, sem contar artefatos de build:
 |---|---|
 | Java | 6.402 |
 | Python | 2.389 |
-| JavaScript | 2.352 |
-| HTML | 1.583 |
-| CSS | 1.368 |
+| JavaScript | 2.361 |
+| HTML | 1.857 |
+| CSS | 1.407 |
 | Configuração | 662 |
-| **Total** | **14.756** |
+| **Total** | **15.078** |
 <!-- auto:fim:metricas -->
 
 ## Situação dos requisitos
