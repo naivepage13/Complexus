@@ -33,8 +33,8 @@
     // propósito: a identidade visual do território fica sutil pra não
     // competir com a estrada, que é o destaque absoluto na tela.
     const CORES = {
-        estado: '#8a93a3',
-        estadoArea: '#eef1f6',
+        estado: '#7f8ea3',
+        estadoArea: '#1c2530',
         cidade: '#d1495b',
         estrada: '#c77700'
     };

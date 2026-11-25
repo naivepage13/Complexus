@@ -5,9 +5,9 @@
 
 const AVATAR_PADRAO = 'data:image/svg+xml;utf8,' + encodeURIComponent(
     '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72">'
-    + '<rect width="72" height="72" fill="#eef1f6"/>'
-    + '<circle cx="36" cy="28" r="14" fill="#c3cbd6"/>'
-    + '<path d="M10 66c4-16 18-24 26-24s22 8 26 24" fill="#c3cbd6"/>'
+    + '<rect width="72" height="72" fill="#1c2530"/>'
+    + '<circle cx="36" cy="28" r="14" fill="#4a5666"/>'
+    + '<path d="M10 66c4-16 18-24 26-24s22 8 26 24" fill="#4a5666"/>'
     + '</svg>'
 );
 

@@ -109,6 +109,15 @@ const Validacao = {
     }
 };
 
+/** Estrutura de navegacao: categoria -> paginas [rotulo, arquivo]. */
+const CATEGORIAS = [
+    { nome: 'Operacoes', itens: [['Painel', 'index.html'], ['Empresas', 'empresas.html']] },
+    { nome: 'Mercado', itens: [['Investimentos', 'investimentos.html'], ['Estatisticas', 'estatisticas.html']] },
+    { nome: 'Governo', itens: [['Politica', 'politica.html'], ['Mapa', 'mapa.html']] },
+    { nome: 'Informacao', itens: [['Atualizacoes', 'atualizacoes.html']] },
+    { nome: 'Conta', itens: [['Perfil', 'perfil.html'], ['Novidades', 'novidades.html'], ['Tutorial', 'tutorial.html'], ['Termos de uso', 'termos.html']] }
+];
+
 const Interface = {
     /** Escreve uma mensagem de erro ou sucesso no elemento indicado. */
     mensagem(seletor, texto, tipo = 'erro') {
@@ -122,45 +131,49 @@ const Interface = {
         alvo.className = `mensagem mensagem-${tipo}`;
         alvo.textContent = texto;
     },
-    /** Marca o item do menu correspondente a pagina aberta. */
+    /**
+     * Monta a navegacao em duas faixas: categorias e paginas da categoria
+     * aberta. O menu plano que cada HTML traz (e a engrenagem de
+     * configuracoes) e substituido aqui, para a estrutura viver num so lugar.
+     */
     marcarMenu() {
+        const cabecalho = document.querySelector('.cabecalho');
+        const menuAntigo = cabecalho && cabecalho.querySelector('.menu a[href="index.html"]');
+        if (!menuAntigo) return; // login e paginas de admin mantem o cabecalho proprio
+
         const pagina = window.location.pathname.split('/').pop() || 'index.html';
-        document.querySelectorAll('.menu a, .config-dropdown a').forEach((link) => {
-            if (link.getAttribute('href') === pagina) {
-                link.classList.add('ativo');
-            }
-        });
-    },
-    /** Liga o icone de engrenagem do cabecalho ao seu menu suspenso. */
-    montarMenuConfiguracoes() {
-        const botao = document.querySelector('#botao-config');
-        const dropdown = document.querySelector('#dropdown-config');
-        if (!botao || !dropdown) return;
+        const alias = { 'empresa.html': 'empresas.html' };
+        const alvo = alias[pagina] || pagina;
+        const atual = CATEGORIAS.find((c) => c.itens.some((i) => i[1] === alvo)) || CATEGORIAS[0];
 
-        const fechar = () => {
-            dropdown.classList.add('oculto');
-            botao.classList.remove('aberto');
-            botao.setAttribute('aria-expanded', 'false');
-        };
-        const alternar = (evento) => {
-            evento.stopPropagation();
-            const abrindo = dropdown.classList.contains('oculto');
-            if (abrindo) {
-                dropdown.classList.remove('oculto');
-                botao.classList.add('aberto');
-                botao.setAttribute('aria-expanded', 'true');
-            } else {
-                fechar();
-            }
-        };
+        cabecalho.querySelector('.menu').remove();
+        const engrenagem = cabecalho.querySelector('.config-menu');
+        if (engrenagem) engrenagem.remove();
 
-        botao.addEventListener('click', alternar);
-        document.addEventListener('click', (evento) => {
-            if (!dropdown.contains(evento.target)) fechar();
-        });
-        document.addEventListener('keydown', (evento) => {
-            if (evento.key === 'Escape') fechar();
-        });
+        const link = (rotulo, href, ativo) =>
+            `<a href="${href}"${ativo ? ' class="ativo" aria-current="page"' : ''}>${rotulo}</a>`;
+        const faixas = document.createElement('div');
+        faixas.className = 'navegacao';
+        faixas.innerHTML = `
+            <nav class="categorias" aria-label="Categorias">
+                <div class="navegacao-conteudo">${CATEGORIAS.map((c) =>
+                    `<a href="${c.itens[0][1]}"${c === atual ? ' class="ativo" aria-current="true"' : ''}>${c.nome}</a>`
+                ).join('')}</div>
+            </nav>
+            <nav class="subnav" aria-label="Paginas de ${atual.nome}">
+                <div class="navegacao-conteudo">${atual.itens.map((i) => link(i[0], i[1], i[1] === alvo)).join('')}</div>
+            </nav>`;
+        cabecalho.appendChild(faixas);
+
+        const principal = document.querySelector('main');
+        if (principal) {
+            if (!principal.id) principal.id = 'conteudo';
+            const pular = document.createElement('a');
+            pular.className = 'pular';
+            pular.href = `#${principal.id}`;
+            pular.textContent = 'Pular para o conteudo';
+            document.body.prepend(pular);
+        }
     },
     /** Mostra nome e saldo do jogador e liga o botao de sair. */
     async montarCabecalho() {
@@ -252,7 +265,6 @@ const Interface = {
 
 document.addEventListener('DOMContentLoaded', () => {
     Interface.montarCabecalho();
-    Interface.montarMenuConfiguracoes();
 });
 
 /**
