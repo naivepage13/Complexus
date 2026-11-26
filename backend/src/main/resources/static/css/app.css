@@ -364,6 +364,14 @@ input, select, textarea {
     width: 100%;
 }
 
+input[type="checkbox"], input[type="radio"] {
+    width: 18px;
+    height: 18px;
+    min-height: 0;
+    padding: 0;
+    accent-color: var(--cor-primaria);
+}
+
 input:focus, select:focus, textarea:focus {
     outline: 3px solid var(--cor-foco);
     outline-offset: 1px;

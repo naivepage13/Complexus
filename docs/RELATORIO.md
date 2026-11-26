@@ -27,9 +27,9 @@ Linhas de código não vazias, sem contar artefatos de build:
 | JavaScript | 3.237 |
 | Python | 2.389 |
 | HTML | 1.879 |
-| CSS | 1.514 |
+| CSS | 1.521 |
 | Configuração | 742 |
-| **Total** | **17.936** |
+| **Total** | **17.943** |
 <!-- auto:fim:metricas -->
 
 ## Situação dos requisitos

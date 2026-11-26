@@ -20,6 +20,7 @@ propostas em `docs/redesign/variantes.html`).
 ### Acessibilidade
 - Link "Pular para o conteúdo", foco visível amarelo, alvos de clique de 40px
   ou mais, página atual marcada com `aria-current`.
+  Caixas de marcação ficam fora da regra de altura mínima dos campos.
 
 ### Corrigido
 - Os testes do backend só deixavam de usar a partida salva
