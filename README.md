@@ -52,6 +52,31 @@ máquina apontando para uma versão mais antiga.
 
 Para encerrar, feche a janela ou pressione Ctrl+C.
 
+### Windows: modo ao vivo (desenvolvimento)
+
+Dê dois cliques em **`IniciarComplexusAoVivo.bat`** (ou rode
+`IniciarComplexus.bat ao-vivo`). Neste modo:
+
+- o HTML, o CSS e o JavaScript são servidos direto de
+  `backend/src/main/resources`, então uma mudança vale sem recompilar. Mudanças
+  em Java ou no `application.yml` ainda exigem reiniciar;
+- o banco fica em memória: cada subida começa um mundo novo e a partida salva
+  não é tocada;
+- o serviço analítico não é iniciado;
+- se a porta 8080 já estiver em uso, o script para com erro, em vez de abrir o
+  servidor que está no ar.
+
+Para a página recarregar sozinha, rode uma vez no console do navegador:
+
+```js
+localStorage.setItem('complexus.devAutoReload', '1')
+```
+
+A recarga observa a página aberta e os CSS e JS que ela carrega; arquivos de
+dados buscados por `fetch` não contam. No painel de navegador do Claude Code, a
+configuração `complexus-ao-vivo` de `.claude/launch.json` sobe o mesmo modo sem
+abrir o navegador do sistema.
+
 ### Qualquer sistema: na mão
 
 ```bash
@@ -186,6 +211,7 @@ existe mais, o gerador falha em vez de publicar uma referência morta.
 
 ```
 IniciarComplexus.bat  sobe tudo e abre o navegador (Windows)
+IniciarComplexusAoVivo.bat  modo de desenvolvimento ao vivo (Windows)
 backend/     nucleo Java (Spring Boot) + frontend estatico
 analytics/   servico analitico em Python (choques setoriais)
 src/combate/ motor de combate por fases, em Python
