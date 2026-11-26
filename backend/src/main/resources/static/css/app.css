@@ -26,7 +26,6 @@
     --raio: 3px;
     --espaco: 16px;
     --largura-maxima: 1240px;
-    --altura-cabecalho: 128px;
 }
 
 * {
@@ -365,6 +364,14 @@ input, select, textarea {
     width: 100%;
 }
 
+input[type="checkbox"], input[type="radio"] {
+    width: 18px;
+    height: 18px;
+    min-height: 0;
+    padding: 0;
+    accent-color: var(--cor-primaria);
+}
+
 input:focus, select:focus, textarea:focus {
     outline: 3px solid var(--cor-foco);
     outline-offset: 1px;
@@ -544,43 +551,215 @@ input:focus, select:focus, textarea:focus {
 
 /* ------------------------------------------------------------------- mapa
 
-   O mapa veio de um tema escuro e foi trazido para a paleta clara. Duas
-   consequencias: o filtro que invertia os ladrilhos do OpenStreetMap saiu,
-   porque o mapa base ja e claro, e as cores da legenda passaram a ser as
-   mesmas de js/mapa.js.
+   Mapa tatico em pixels: o canvas ocupa a area toda e os controles flutuam
+   sobre ele. As amostras dos filtros repetem as cores de js/mapa.js.
    ------------------------------------------------------------------------ */
+
+/* O cabecalho muda de altura (quebra em duas linhas em telas estreitas), entao
+   o mapa ocupa o que sobrar em vez de descontar um valor fixo. */
+.pagina-mapa {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
 
 .mapa-pagina {
     position: relative;
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
 }
 
 #mapa-layout {
     display: flex;
-    height: calc(100vh - var(--altura-cabecalho));
+    flex: 1;
+    min-height: 0;
+    position: relative;
 }
 
 #mapa-mapa {
     flex-grow: 1;
+    min-width: 0;
     height: 100%;
-    background: var(--cor-superficie-alt);
-}
-
-#mapa-mapa .leaflet-popup-content-wrapper,
-#mapa-mapa .leaflet-tooltip {
-    background: var(--cor-superficie);
-    color: var(--cor-texto);
-    border: 1px solid var(--cor-borda);
-    box-shadow: none;
-}
-
-#painel-decisao {
-    width: 320px;
-    flex-shrink: 0;
-    background: var(--cor-superficie);
-    border-left: 1px solid var(--cor-borda);
-    padding: var(--espaco);
-    overflow-y: auto;
     position: relative;
+    overflow: hidden;
+    background: #7fb2d9;
+}
+
+#tela-mapa {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    cursor: grab;
+    image-rendering: pixelated;
+    touch-action: none;
+}
+
+#tela-mapa:active { cursor: grabbing; }
+#tela-mapa.sobre-alvo { cursor: pointer; }
+#tela-mapa.ordenando { cursor: crosshair; }
+
+#mapa-filtros,
+#mapa-legenda {
+    position: absolute;
+    background: var(--cor-superficie);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    font-size: 13px;
+}
+
+#mapa-filtros {
+    top: 12px;
+    left: 12px;
+    margin: 0;
+    padding: 6px 12px 8px;
+    max-height: calc(100% - 80px);
+    overflow-y: auto;
+}
+
+#mapa-filtros legend {
+    float: left;
+    width: 100%;
+    padding: 0;
+    font-weight: 600;
+}
+
+#mapa-filtros label {
+    clear: both;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+}
+
+#mapa-filtros input {
+    width: auto;
+    margin: 0;
+}
+
+#mapa-filtros label.inativa { opacity: 0.45; }
+
+.amostra {
+    width: 10px;
+    height: 10px;
+    display: inline-block;
+    border: 1px solid var(--cor-texto-suave);
+}
+
+.amostra-estados { background: #cfdfae; }
+.amostra-cidades { background: #8c2f39; }
+.amostra-rodovias { background: #b0651f; }
+.amostra-caminhoes { background: #6e2f00; }
+.amostra-portos { background: #12466e; }
+.amostra-navios { background: #ffffff; }
+.amostra-aeroportos { background: #4b3f72; }
+.amostra-avioes { background: #f4f8fb; }
+.amostra-exercito { background: #2f6b1d; }
+.amostra-marinha { background: #0a2a57; }
+.amostra-aeronautica { background: #6b2f9c; }
+
+#mapa-zoom {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+#mapa-zoom .botao {
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    font-size: 18px;
+    background: var(--cor-superficie);
+}
+
+#mapa-legenda {
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+    width: fit-content;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 16px;
+    align-items: center;
+    padding: 6px 12px;
+}
+
+.escala {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+#escala-barra {
+    display: inline-block;
+    height: 6px;
+    border: 2px solid var(--cor-texto);
+    border-top: none;
+}
+
+#aviso-ordem {
+    position: absolute;
+    top: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: max-content;
+    max-width: min(520px, calc(100% - 260px));
+    padding: 8px 14px;
+    background: var(--cor-texto);
+    color: var(--cor-superficie);
+    border-radius: var(--raio);
+    font-size: 14px;
+    text-align: center;
+    z-index: 4;
+}
+
+#dica-mapa {
+    position: absolute;
+    pointer-events: none;
+    padding: 3px 8px;
+    background: var(--cor-superficie);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+.painel-acoes {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+/* Caixa flutuante e translucida sobre o mapa: o canvas continua ocupando a
+   area toda. Fica a esquerda dos botoes de zoom e acima da legenda. */
+#painel-decisao {
+    position: absolute;
+    top: 12px;
+    right: 60px;
+    width: min(320px, calc(100% - 72px));
+    max-height: calc(100% - 72px);
+    overflow-y: auto;
+    z-index: 3;
+    padding: var(--espaco);
+    background: rgba(21, 28, 37, 0.74);
+    backdrop-filter: blur(6px);
+    border: 1px solid rgba(227, 233, 241, 0.22);
+    border-radius: 8px;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+    /* texto secundario mais claro para manter o contraste sobre o mapa */
+    --cor-texto-suave: #c3cedc;
+}
+
+@media (prefers-reduced-transparency: reduce) {
+    #painel-decisao {
+        background: var(--cor-superficie);
+        backdrop-filter: none;
+    }
 }
 
 #painel-conteudo h3 {
@@ -627,51 +806,26 @@ input:focus, select:focus, textarea:focus {
     right: 10px;
 }
 
-#mapa-legenda {
-    position: fixed;
-    bottom: 15px;
-    left: 15px;
-    display: flex;
-    gap: 15px;
-    align-items: center;
-    background: var(--cor-superficie);
-    border: 1px solid var(--cor-borda);
-    border-radius: var(--raio);
-    padding: 8px 14px;
-    font-size: 13px;
-    z-index: 999;
-}
+@media (max-width: 720px) {
+    #painel-decisao {
+        top: auto;
+        left: 8px;
+        right: 8px;
+        bottom: 8px;
+        width: auto;
+        max-height: 60%;
+    }
 
-.legenda-item {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
+    #mapa-filtros {
+        right: 60px;
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 0 8px;
+        font-size: 12px;
+    }
 
-.legenda-cor {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    display: inline-block;
-}
-
-.cor-pais { background: var(--cor-texto-suave); }
-.cor-estado { background: var(--cor-primaria); }
-.cor-cidade { background: var(--cor-negativa); }
-.cor-estrada { background: var(--cor-alerta); }
-
-.marcador-pais {
-    background: rgba(21, 28, 37, 0.92);
-    border: 1px solid var(--cor-borda);
-    border-radius: 999px;
-    padding: 5px 12px;
-    font-size: 12px;
-    font-weight: 600;
-    letter-spacing: 0.03em;
-    color: var(--cor-texto-suave);
-    text-align: center;
-    white-space: nowrap;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+    #mapa-filtros legend { display: none; }
+    #aviso-ordem { top: auto; bottom: 90px; max-width: calc(100% - 24px); }
 }
 
 /* ---------------------------------------------------------------- login page */
@@ -952,9 +1106,4 @@ input:focus, select:focus, textarea:focus {
 
 @media (prefers-reduced-motion: reduce) {
     .envelope-nao-lido { animation: none; }
-}
-
-/* ladrilhos do mapa base escurecidos para combinar com o tema */
-#mapa-mapa .leaflet-tile-pane {
-    filter: invert(1) hue-rotate(180deg) brightness(0.85) contrast(0.9);
 }

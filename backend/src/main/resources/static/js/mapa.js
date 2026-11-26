@@ -1,27 +1,19 @@
-// Mapa interativo hierárquico: Estados -> Cidades -> Estradas, com zoom
-// semântico. Implementa a RF-26: a geometria continua em GeoJSON estático
-// (o backend não guarda coordenadas), mas todo dado de jogo — população,
-// tesouro, alíquotas, índices — vem ao vivo de /api/politica/territorios, e
-// as decisões do painel persistem de verdade via /api/politica/projetos
-// (o mesmo fluxo de proposta de lei da página Política, exigindo mandato).
+// Mapa tatico em pixels (RF-29 a RF-31). O desenho acontece em uma imagem de
+// baixa resolucao, em que cada pixel vale uma quantidade fixa de quilometros,
+// ampliada sem suavizacao. As contas ficam em mapa-nucleo.js e o painel
+// lateral em mapa-paineis.js. Nada aqui busca recurso fora do proprio jogo.
 (function () {
     'use strict';
 
-    const jogadorMapa = Sessao.exigir();
-    if (!jogadorMapa) return;
+    const jogador = Sessao.exigir();
+    if (!jogador) return;
 
-    // Hierarquia de zoom semântico País > Estado > Cidade, com renderização
-    // mutuamente exclusiva entre os três: cada camada só existe (é montada em
-    // Leaflet) dentro da sua própria faixa — ao cruzar a fronteira de um
-    // nível pro outro, a camada anterior é desmontada por completo, não só
-    // escondida (ver criarCamadaLazy).
-    const ZOOM = {
-        min: 4,        // País: visão geral do Brasil inteiro, só o marcador do país
-        estados: 6,    // a partir daqui, os 27 estados entram (país sai de cena)
-        cidades: 8,    // a partir daqui, cidades entram em cena
-        max: 10,       // nível mais profundo permitido: Cidades (sem zoom de rua)
-        flyToEstado: 7 // zoom alvo do flyTo ao clicar num estado sem cidades mapeadas
-    };
+    const N = MapaNucleo;
+    const PIXEL_NA_TELA = 3;       // pixels de tela por pixel do jogo
+    const QUADRO_MS = 66;          // ~15 quadros por segundo bastam para pixels
+    const CONSULTA_MS = 5000;      // de quanto em quanto tempo perguntar pelas forcas
+    const LIMITES = { oeste: -80, leste: -25, norte: 10, sul: -38 };
+    const CHAVE_CAMADAS = 'complexus.mapa.camadas';
 
     const URLS = {
         estados: 'dados/mapa/estados.geojson',
@@ -29,560 +21,823 @@
         estradas: 'dados/mapa/estradas.geojson'
     };
 
-    // Cores neutras e de baixo contraste para as malhas territoriais — de
-    // propósito: a identidade visual do território fica sutil pra não
-    // competir com a estrada, que é o destaque absoluto na tela.
     const CORES = {
-        estado: '#7f8ea3',
-        estadoArea: '#1c2530',
-        cidade: '#d1495b',
-        estrada: '#c77700'
+        mar: '#7fb2d9', rotaMaritima: '#cfe6f7', rotaAerea: '#f4f8fb',
+        terra: '#cfdfae', terraComDado: '#dce9b4', selecao: '#f1dc82', divisa: '#85995c',
+        rodovia: '#b0651f', rodoviaSelecionada: '#5a2d06',
+        cidade: '#8c2f39', porto: '#12466e', aeroporto: '#4b3f72',
+        caminhao: '#6e2f00', navio: '#ffffff', aviao: '#ffffff',
+        EXERCITO: '#2f6b1d', MARINHA: '#0a2a57', AERONAUTICA: '#6b2f9c',
+        contornoClaro: '#ffffff', contornoEscuro: '#1c2430'
     };
 
-    // Tipos de projeto que dá pra propor direto do painel do mapa: só os que
-    // não exigem setor alvo (SUBSIDIO_SETORIAL e REGULACAO_SETORIAL ficam de
-    // fora — pedem um formulário maior e já têm espaço dedicado em Política).
-    const TIPOS_SEM_SETOR = new Set([
-        'IMPOSTO_EMPRESARIAL', 'IMPOSTO_ESTADUAL', 'IMPOSTO_MUNICIPAL',
-        'INVESTIMENTO_INFRAESTRUTURA', 'PROGRAMA_SOCIAL', 'ZONEAMENTO_URBANO'
-    ]);
+    // Desenhos em pixel art; '#' e um pixel cheio.
+    const SPRITES = {
+        caminhao: ['###..', '#####', '#####', '.#.#.'],
+        navio: ['..#..', '..##.', '#####', '.###.'],
+        aviao: ['..#..', '..#..', '#####', '..#..', '.###.'],
+        porto: ['..#..', '.###.', '..#..', '#.#.#', '.###.'],
+        aeroporto: ['.###.', '#.#.#', '#####', '#.#.#', '.###.'],
+        EXERCITO: ['..###..', '..#####', '#######', '#.#.#.#'],
+        MARINHA: ['...#...', '..###..', '#######', '.#####.'],
+        SUBMARINO: ['...##..', '...#...', '.#####.', '#######', '.#####.'],
+        AERONAUTICA: ['...#...', '..###..', '#######', '...#...', '..###..'],
+        destino: ['#...#', '.#.#.', '..#..', '.#.#.', '#...#'],
+        ponto: ['##', '##']
+    };
 
-    function normalizar(texto) {
-        return (texto || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
-    }
+    const registro = {
+        pais: null,
+        estados: new Map(), cidades: new Map(), estradas: new Map(),
+        portos: new Map(), aeroportos: new Map(), rotas: new Map(),
+        veiculos: new Map(), unidades: new Map()
+    };
+    const politica = { mandatos: [], tipos: [] };
+
+    const containerEl = document.getElementById('mapa-mapa');
+    const tela = document.getElementById('tela-mapa');
+    const contexto = tela.getContext('2d');
+    const base = document.createElement('canvas');
+    const contextoBase = base.getContext('2d');
+    const dicaEl = document.getElementById('dica-mapa');
+    const avisoEl = document.getElementById('aviso-ordem');
+
+    let camera = null;
+    let ampliacao = PIXEL_NA_TELA;
+    let densidade = 1;
+    let baseSuja = true;
+    let relogio = null;
+    let horasPorSegundo = 0;
+    let podeComandar = false;
+    let ordemPara = null;          // id da unidade aguardando destino
+    let enviandoOrdem = false;
+    let alvos = [];                // o que foi desenhado e pode ser clicado
 
     // ---------------------------------------------------------------
-    // Estado global do mapa: geometria estática casada com o registro vivo
-    // da API. Nenhum campo de jogo é guardado aqui além do que a API devolve
-    // — o painel sempre lê o valor corrente, nunca uma cópia recalculada no
-    // cliente (era assim que a versão anterior "herdava" alíquota pra
-    // cidade; a herança de verdade já acontece no motor de simulação do
-    // backend, então o mapa só mostra o que a API diz).
+    // Camadas
     // ---------------------------------------------------------------
-    const registro = { estados: new Map(), cidades: new Map(), estradas: new Map(), pais: null };
-    let mandatosJogador = [];
-    let tiposProjeto = [];
+    const filtros = [...document.querySelectorAll('#mapa-filtros input')];
+    const camadas = {};
 
-    function mandatosNoTerritorio(esfera, territorioId) {
-        return mandatosJogador.filter((m) => m.esfera === esfera
-            && m.territorioId === territorioId && (m.legislativo || m.executivo));
-    }
-
-    function tiposDaEsfera(esfera) {
-        return tiposProjeto.filter((t) => t.esferas.includes(esfera) && TIPOS_SEM_SETOR.has(t.nome));
-    }
-
-    // ---------------------------------------------------------------
-    // Painel de decisão (lateral)
-    // ---------------------------------------------------------------
-    const painelEl = document.getElementById('painel-decisao');
-    const painelConteudoEl = document.getElementById('painel-conteudo');
-    let painelAtual = null; // { tipo, id }
-
-    function formatarMoeda(valor) {
-        return Formato.dinheiroCurto(valor);
-    }
-
-    function fecharPainel() {
-        painelAtual = null;
-        painelEl.classList.add('oculto');
-        painelConteudoEl.innerHTML = '';
-    }
-    window.fecharPainel = fecharPainel;
-
-    function abrirPainelPais() {
-        painelAtual = { tipo: 'pais' };
-        renderizarPainel();
-    }
-
-    function abrirPainelEstado(estadoId) {
-        painelAtual = { tipo: 'estado', id: estadoId };
-        renderizarPainel();
-    }
-
-    function abrirPainelCidade(cidadeId) {
-        painelAtual = { tipo: 'cidade', id: cidadeId };
-        renderizarPainel();
-    }
-
-    function abrirPainelEstrada(estradaId) {
-        painelAtual = { tipo: 'estrada', id: estradaId };
-        renderizarPainel();
-    }
-
-    // Bloco de formulário compacto que propõe uma lei pro território aberto
-    // no painel — é o que persiste a decisão de verdade (POST
-    // /politica/projetos), no lugar da mutação só-no-cliente da versão
-    // anterior. Exige que o jogador já tenha mandato ali; sem mandato, só
-    // convida a assumir um cargo em Política.
-    function blocoDecisao(esfera, territorioId) {
-        const mandatos = mandatosNoTerritorio(esfera, territorioId);
-        if (mandatos.length === 0) {
-            return `
-                <hr>
-                <p class="painel-nota">Você não tem mandato legislativo nem executivo aqui.
-                <a href="politica.html">Assuma um cargo em Política</a> pra propor decisões neste território.</p>
-            `;
+    function carregarCamadas() {
+        let salvas = {};
+        try {
+            salvas = JSON.parse(localStorage.getItem(CHAVE_CAMADAS)) || {};
+        } catch (erro) {
+            salvas = {};
         }
-        const tipos = tiposDaEsfera(esfera);
-        return `
-            <hr>
-            <form class="formulario" id="form-decisao-mapa">
-                <div class="campo">
-                    <label for="mandato-decisao-mapa">Mandato proponente</label>
-                    <select id="mandato-decisao-mapa">
-                        ${mandatos.map((m) => `<option value="${m.id}">${m.cargoRotulo}</option>`).join('')}
-                    </select>
-                </div>
-                <div class="campo">
-                    <label for="tipo-decisao-mapa">Instrumento</label>
-                    <select id="tipo-decisao-mapa">
-                        ${tipos.map((t) => `<option value="${t.nome}">${t.descricao}</option>`).join('')}
-                    </select>
-                </div>
-                <div class="campo">
-                    <label for="parametro-decisao-mapa">Parâmetro</label>
-                    <input type="number" id="parametro-decisao-mapa" step="0.001" required>
-                </div>
-                <div class="campo">
-                    <label for="titulo-decisao-mapa">Título</label>
-                    <input type="text" id="titulo-decisao-mapa" placeholder="Ex.: Redução do ICMS">
-                </div>
-                <button class="botao botao-pequeno" type="submit">Propor projeto</button>
-            </form>
-            <div id="mensagem-decisao-mapa"></div>
-            <p class="painel-nota">O projeto entra como rascunho — pauta, vota e sanciona em
-            <a href="politica.html">Política</a>, como qualquer outra lei.</p>
-        `;
+        filtros.forEach((caixa) => {
+            const nome = caixa.dataset.camada;
+            camadas[nome] = salvas[nome] !== false;
+            caixa.checked = camadas[nome];
+            caixa.addEventListener('change', () => {
+                camadas[nome] = caixa.checked;
+                try {
+                    localStorage.setItem(CHAVE_CAMADAS, JSON.stringify(camadas));
+                } catch (erro) {
+                    // sem armazenamento local o filtro vale so para esta visita
+                }
+                baseSuja = true;
+                desenhar();
+            });
+        });
     }
 
-    function ligarFormularioDecisao() {
-        const form = document.getElementById('form-decisao-mapa');
-        if (!form) return;
-        form.addEventListener('submit', async (evento) => {
-            evento.preventDefault();
-            Interface.mensagem('#mensagem-decisao-mapa', '');
-            try {
-                await API.post('/politica/projetos', {
-                    jogadorId: jogadorMapa.id,
-                    mandatoId: Number(document.getElementById('mandato-decisao-mapa').value),
-                    titulo: document.getElementById('titulo-decisao-mapa').value,
-                    ementa: '',
-                    tipo: document.getElementById('tipo-decisao-mapa').value,
-                    setorAlvo: null,
-                    parametro: Number(document.getElementById('parametro-decisao-mapa').value)
+    const nivelAtual = () => N.nivel(camera.kmPorPixel);
+
+    /** Rodovias, caminhoes e divisas so aparecem de Estados para dentro. */
+    function visivel(camada) {
+        if (!camadas[camada]) return false;
+        const nivel = nivelAtual();
+        if (camada === 'cidades') return nivel === 'CIDADES';
+        if (['estados', 'rodovias', 'caminhoes'].includes(camada)) return nivel !== 'PAIS';
+        return true;
+    }
+
+    // ---------------------------------------------------------------
+    // Geometria em quilometros, convertida uma vez so
+    // ---------------------------------------------------------------
+    const emKm = (pontos) => pontos.map(([lon, lat]) => N.paraMundo(lon, lat));
+
+    function naTela(pontosKm) {
+        const { centroX, centroY, kmPorPixel, largura, altura } = camera;
+        return pontosKm.map(([x, y]) => [
+            (x - centroX) / kmPorPixel + largura / 2,
+            (y - centroY) / kmPorPixel + altura / 2
+        ]);
+    }
+
+    function caixaDe(grupos) {
+        const caixa = [Infinity, Infinity, -Infinity, -Infinity];
+        grupos.forEach((pontos) => pontos.forEach(([x, y]) => {
+            caixa[0] = Math.min(caixa[0], x);
+            caixa[1] = Math.min(caixa[1], y);
+            caixa[2] = Math.max(caixa[2], x);
+            caixa[3] = Math.max(caixa[3], y);
+        }));
+        return caixa;
+    }
+
+    function naVista([x0, y0, x1, y1]) {
+        const meiaLargura = camera.largura / 2 * camera.kmPorPixel;
+        const meiaAltura = camera.altura / 2 * camera.kmPorPixel;
+        return x1 >= camera.centroX - meiaLargura && x0 <= camera.centroX + meiaLargura
+            && y1 >= camera.centroY - meiaAltura && y0 <= camera.centroY + meiaAltura;
+    }
+
+    /** Centro de area do maior anel, para o rotulo do estado. */
+    function pontoDeRotulo(poligonos) {
+        let melhor = { area: 0, ponto: poligonos[0].aneis[0][0] };
+        poligonos.forEach(({ aneis }) => {
+            const anel = aneis[0];
+            let area = 0;
+            let x = 0;
+            let y = 0;
+            for (let i = 0, j = anel.length - 1; i < anel.length; j = i++) {
+                const cruzado = anel[j][0] * anel[i][1] - anel[i][0] * anel[j][1];
+                area += cruzado;
+                x += (anel[j][0] + anel[i][0]) * cruzado;
+                y += (anel[j][1] + anel[i][1]) * cruzado;
+            }
+            if (Math.abs(area) > melhor.area) {
+                melhor = { area: Math.abs(area), ponto: [x / (3 * area), y / (3 * area)] };
+            }
+        });
+        return melhor.ponto;
+    }
+
+    // ---------------------------------------------------------------
+    // Camada de fundo: um pixel por vez, so quando camera ou filtro mudam
+    // ---------------------------------------------------------------
+    const corDeImagem = (hex) => {
+        const n = parseInt(hex.slice(1), 16);
+        return (0xff000000 | ((n & 0xff) << 16) | (n & 0xff00) | (n >> 16)) >>> 0;
+    };
+
+    function desenharBase() {
+        const { largura, altura } = camera;
+        const imagem = contextoBase.createImageData(largura, altura);
+        const pixels = new Uint32Array(imagem.data.buffer);
+        const selecionado = paineis.selecionado() || {};
+
+        const ponto = (x, y, cor) => {
+            if (x >= 0 && y >= 0 && x < largura && y < altura) pixels[y * largura + x] = cor;
+        };
+        /** Linha continua (passo 1) ou pontilhada (um pixel a cada `passo`). */
+        const tracar = (pontos, hex, passo = 1, grossa = false) => {
+            const cor = corDeImagem(hex);
+            let contador = 0;
+            for (let i = 1; i < pontos.length; i++) {
+                N.linha(pontos[i - 1][0], pontos[i - 1][1], pontos[i][0], pontos[i][1], (x, y) => {
+                    if (contador++ % passo !== 0) return;
+                    ponto(x, y, cor);
+                    if (grossa) {
+                        ponto(x + 1, y, cor);
+                        ponto(x, y + 1, cor);
+                    }
+                }, largura, altura);
+            }
+        };
+
+        pixels.fill(corDeImagem(CORES.mar));
+
+        const estadosNaVista = [...registro.estados.values()].filter((e) => naVista(e.caixa));
+        const mostraDivisas = visivel('estados');
+        estadosNaVista.forEach((estado) => {
+            let hex = CORES.terra;
+            if (mostraDivisas && estado.api) hex = CORES.terraComDado;
+            if (selecionado.tipo === 'estado' && selecionado.id === estado.id) hex = CORES.selecao;
+            const cor = corDeImagem(hex);
+            estado.poligonos.forEach(({ aneis }) => {
+                N.preencher(aneis.map(naTela), largura, altura,
+                    (y, x0, x1) => pixels.fill(cor, y * largura + x0, y * largura + x1 + 1));
+            });
+        });
+        if (mostraDivisas) {
+            estadosNaVista.forEach((estado) => estado.poligonos.forEach(({ aneis }) => {
+                aneis.forEach((anel) => tracar(naTela([...anel, anel[0]]), CORES.divisa));
+            }));
+        }
+
+        registro.rotas.forEach((rota) => {
+            if (rota.tipo === 'NAVIO_CARGA' && visivel('navios')) {
+                tracar(naTela(rota.km), CORES.rotaMaritima, 3);
+            }
+            if (rota.tipo === 'AVIAO_COMERCIAL' && visivel('avioes')) {
+                tracar(naTela(rota.km), CORES.rotaAerea, 6);
+            }
+        });
+
+        if (visivel('rodovias')) {
+            registro.estradas.forEach((estrada) => {
+                const marcada = selecionado.tipo === 'estrada' && selecionado.id === estrada.id;
+                estrada.trechos.forEach((trecho) => {
+                    if (!naVista(trecho.caixa)) return;
+                    tracar(naTela(trecho.km), marcada ? CORES.rodoviaSelecionada : CORES.rodovia, 1, marcada);
                 });
-                Interface.mensagem('#mensagem-decisao-mapa',
-                    'Projeto protocolado como rascunho. Pauta-o em Política para ir a votação.', 'sucesso');
-                form.reset();
+            });
+        }
+
+        contextoBase.putImageData(imagem, 0, 0);
+
+        if (visivel('cidades')) {
+            registro.cidades.forEach((cidade) => {
+                const [x, y] = N.paraTela(camera, ...cidade.coordenadas).map(Math.round);
+                const lado = cidade.capital ? 5 : 3;
+                contextoBase.fillStyle = CORES.contornoClaro;
+                contextoBase.fillRect(x - (lado + 1) / 2, y - (lado + 1) / 2, lado + 2, lado + 2);
+                contextoBase.fillStyle = CORES.cidade;
+                contextoBase.fillRect(x - (lado - 1) / 2, y - (lado - 1) / 2, lado, lado);
+            });
+        }
+        baseSuja = false;
+    }
+
+    // ---------------------------------------------------------------
+    // Quadro: fundo ampliado + o que se move + rotulos
+    // ---------------------------------------------------------------
+    function sprite(nome, x, y, cor, contorno) {
+        const linhas = SPRITES[nome];
+        const x0 = Math.round(x) - Math.floor(linhas[0].length / 2);
+        const y0 = Math.round(y) - Math.floor(linhas.length / 2);
+        const pintar = (dx, dy) => contexto.fillRect((x0 + dx) * ampliacao, (y0 + dy) * ampliacao,
+            ampliacao, ampliacao);
+        const cheios = [];
+        linhas.forEach((texto, dy) => [...texto].forEach((c, dx) => {
+            if (c === '#') cheios.push([dx, dy]);
+        }));
+        contexto.fillStyle = contorno;
+        cheios.forEach(([dx, dy]) => {
+            pintar(dx - 1, dy);
+            pintar(dx + 1, dy);
+            pintar(dx, dy - 1);
+            pintar(dx, dy + 1);
+        });
+        contexto.fillStyle = cor;
+        cheios.forEach(([dx, dy]) => pintar(dx, dy));
+    }
+
+    function dentroDaTela(x, y) {
+        return x > -8 && y > -8 && x < camera.largura + 8 && y < camera.altura + 8;
+    }
+
+    /** Desenha um marcador e o registra como alvo de clique. */
+    function marcar(alvo, nomeSprite, lonLat, cor, contorno) {
+        const [x, y] = N.paraTela(camera, ...lonLat);
+        if (!dentroDaTela(x, y)) return;
+        sprite(nomeSprite, x, y, cor, contorno);
+        alvos.push({ ...alvo, x, y });
+    }
+
+    /** Na visao do pais, o que e civil vira um ponto para as forcas aparecerem. */
+    const reduzido = (nome) => (nivelAtual() === 'PAIS' ? 'ponto' : nome);
+
+    /** Posicao atual da unidade; ao fim do trajeto ela passa a estar parada. */
+    function posicaoDe(unidade, agora) {
+        if (!unidade.emMovimento) return unidade.posicao;
+        const horas = relogio.horasDesde(unidade.partidaEm, agora);
+        if (horas >= unidade.trajeto[unidade.trajeto.length - 1][2]) {
+            const fim = unidade.trajeto[unidade.trajeto.length - 1];
+            unidade.emMovimento = false;
+            unidade.posicao = [fim[0], fim[1]];
+            return unidade.posicao;
+        }
+        return N.posicaoNoTrajeto(unidade.trajeto, horas);
+    }
+
+    const camadaDaUnidade = (unidade) => unidade.ramo.toLowerCase();
+
+    function desenharCaminho(unidade, posicao, destacado) {
+        const horas = relogio.horasDesde(unidade.partidaEm, Date.now());
+        const restante = [posicao, ...unidade.trajeto.filter((m) => m[2] > horas)]
+            .map(([lon, lat]) => N.paraTela(camera, lon, lat));
+        contexto.fillStyle = CORES[unidade.ramo];
+        const passo = destacado ? 2 : 4;
+        let contador = 0;
+        for (let i = 1; i < restante.length; i++) {
+            N.linha(restante[i - 1][0], restante[i - 1][1], restante[i][0], restante[i][1], (x, y) => {
+                if (contador++ % passo === 0) {
+                    contexto.fillRect(x * ampliacao, y * ampliacao, ampliacao, ampliacao);
+                }
+            }, camera.largura, camera.altura);
+        }
+        const fim = unidade.trajeto[unidade.trajeto.length - 1];
+        const [x, y] = N.paraTela(camera, fim[0], fim[1]);
+        sprite('destino', x, y, CORES[unidade.ramo], CORES.contornoClaro);
+    }
+
+    function rotulo(texto, lonLat, deslocamento = 0, tamanho = 12) {
+        const [x, y] = N.paraTela(camera, ...lonLat);
+        if (!dentroDaTela(x, y)) return;
+        contexto.font = `bold ${Math.round(tamanho * densidade)}px Consolas, monospace`;
+        contexto.textAlign = 'center';
+        contexto.textBaseline = 'middle';
+        contexto.lineWidth = 3 * densidade;
+        contexto.strokeStyle = CORES.contornoClaro;
+        const py = y * ampliacao + deslocamento * densidade;
+        contexto.strokeText(texto, x * ampliacao, py);
+        contexto.fillStyle = CORES.contornoEscuro;
+        contexto.fillText(texto, x * ampliacao, py);
+    }
+
+    function desenhar() {
+        if (!camera || !relogio) return;
+        if (baseSuja) desenharBase();
+        const agora = Date.now();
+        const selecionado = paineis.selecionado() || {};
+        alvos = [];
+
+        contexto.imageSmoothingEnabled = false;
+        contexto.drawImage(base, 0, 0, camera.largura * ampliacao, camera.altura * ampliacao);
+
+        if (visivel('portos')) {
+            registro.portos.forEach((porto) => marcar({ tipo: 'porto', id: porto.id, nome: porto.nome },
+                reduzido('porto'), porto.posicao, CORES.porto, CORES.contornoClaro));
+        }
+        if (visivel('aeroportos')) {
+            registro.aeroportos.forEach((a) => marcar({ tipo: 'aeroporto', id: a.id, nome: `Aeroporto ${a.nome}` },
+                reduzido('aeroporto'), a.posicao, CORES.aeroporto, CORES.contornoClaro));
+        }
+
+        const unidades = [...registro.unidades.values()].filter((u) => visivel(camadaDaUnidade(u)));
+        unidades.forEach((unidade) => {
+            const posicao = posicaoDe(unidade, agora);
+            if (unidade.emMovimento) {
+                desenharCaminho(unidade, posicao,
+                    selecionado.tipo === 'unidade' && selecionado.id === unidade.id);
+            }
+        });
+
+        const civis = {
+            CAMINHAO: ['caminhoes', 'caminhao', CORES.caminhao, CORES.contornoClaro],
+            NAVIO_CARGA: ['navios', 'navio', CORES.navio, CORES.contornoEscuro],
+            AVIAO_COMERCIAL: ['avioes', 'aviao', CORES.aviao, CORES.contornoEscuro]
+        };
+        registro.veiculos.forEach((veiculo) => {
+            const rota = registro.rotas.get(veiculo.rotaId);
+            const [camada, desenho, cor, contorno] = civis[rota.tipo];
+            if (!visivel(camada)) return;
+            marcar({ tipo: 'veiculo', id: veiculo.id, nome: `${rota.rotulo}: ${rota.nome}` },
+                reduzido(desenho), viagem(veiculo, agora).posicao, cor, contorno);
+        });
+
+        unidades.forEach((unidade) => {
+            const desenho = unidade.tipo === 'SUBMARINO' ? 'SUBMARINO' : unidade.ramo;
+            const posicao = posicaoDe(unidade, agora);
+            marcar({ tipo: 'unidade', id: unidade.id, nome: unidade.nome },
+                desenho, posicao, CORES[unidade.ramo], CORES.contornoClaro);
+            if (selecionado.tipo === 'unidade' && selecionado.id === unidade.id) {
+                const [x, y] = N.paraTela(camera, ...posicao).map(Math.round);
+                contexto.strokeStyle = CORES.contornoEscuro;
+                contexto.lineWidth = ampliacao;
+                contexto.strokeRect((x - 6) * ampliacao, (y - 5) * ampliacao, 13 * ampliacao, 11 * ampliacao);
+            }
+        });
+
+        desenharRotulos(unidades, selecionado, agora);
+    }
+
+    function desenharRotulos(unidades, selecionado, agora) {
+        const nivel = nivelAtual();
+        if (nivel === 'PAIS' && registro.pais) {
+            rotulo('BRASIL', [-53, -10.5], 0, 16);
+        }
+        if (nivel === 'ESTADOS' && visivel('estados')) {
+            registro.estados.forEach((estado) => rotulo(estado.sigla, estado.rotulo));
+        }
+        if (visivel('cidades')) {
+            registro.cidades.forEach((cidade) => rotulo(cidade.nome, cidade.coordenadas, -16));
+        }
+        unidades.forEach((unidade) => {
+            const marcada = selecionado.tipo === 'unidade' && selecionado.id === unidade.id;
+            if (marcada || nivel === 'CIDADES') rotulo(unidade.nome, posicaoDe(unidade, agora), 22);
+        });
+    }
+
+    function viagem(veiculo, agora = Date.now()) {
+        const rota = registro.rotas.get(veiculo.rotaId);
+        return N.vaiEVolta(rota.marcos, relogio.horasAbsolutas(agora) + veiculo.deslocamentoHoras);
+    }
+
+    // ---------------------------------------------------------------
+    // Camera
+    // ---------------------------------------------------------------
+    function limitar() {
+        const [xMin, yMin] = N.paraMundo(LIMITES.oeste, LIMITES.norte);
+        const [xMax, yMax] = N.paraMundo(LIMITES.leste, LIMITES.sul);
+        camera.centroX = Math.min(xMax, Math.max(xMin, camera.centroX));
+        camera.centroY = Math.min(yMax, Math.max(yMin, camera.centroY));
+    }
+
+    function atualizarIndicadores() {
+        const nivel = nivelAtual();
+        const textos = {
+            PAIS: 'Nível: País — aproxime para ver estados e rodovias',
+            ESTADOS: 'Nível: Estados — aproxime para ver cidades',
+            CIDADES: 'Nível: Cidades'
+        };
+        document.getElementById('indicador-zoom').textContent = textos[nivel];
+
+        // Barra de escala com um numero redondo perto de 100 pixels de tela.
+        const kmPorPixelDeTela = camera.kmPorPixel * densidade / ampliacao;
+        const bruto = 100 * kmPorPixelDeTela;
+        const potencia = Math.pow(10, Math.floor(Math.log10(bruto)));
+        const redondo = [5, 2, 1].map((n) => n * potencia).find((n) => n <= bruto);
+        document.getElementById('escala-barra').style.width = `${redondo / kmPorPixelDeTela}px`;
+        document.getElementById('escala-texto').textContent =
+            `${Formato.inteiro(redondo)} km · 1 pixel = ${String(camera.kmPorPixel).replace('.', ',')} km`;
+
+        filtros.forEach((caixa) => {
+            const nome = caixa.dataset.camada;
+            const oculta = (nome === 'cidades' && nivel !== 'CIDADES')
+                || (['estados', 'rodovias', 'caminhoes'].includes(nome) && nivel === 'PAIS');
+            caixa.parentElement.classList.toggle('inativa', oculta);
+            caixa.parentElement.title = oculta ? 'Aproxime o mapa para ver esta camada' : '';
+        });
+        document.getElementById('zoom-mais').disabled = camera.kmPorPixel === N.ESCALAS[N.ESCALAS.length - 1];
+        document.getElementById('zoom-menos').disabled = camera.kmPorPixel === N.ESCALAS[0];
+    }
+
+    function moveu() {
+        limitar();
+        baseSuja = true;
+        atualizarIndicadores();
+        desenhar();
+    }
+
+    /** Um degrau de zoom (direcao +1 aproxima), ancorado em um ponto da imagem. */
+    function zoom(direcao, x = camera.largura / 2, y = camera.altura / 2) {
+        const atual = N.ESCALAS.indexOf(camera.kmPorPixel);
+        const novo = Math.min(N.ESCALAS.length - 1, Math.max(0, atual + direcao));
+        if (novo === atual) return;
+        camera = N.mudarEscala(camera, N.ESCALAS[novo], x, y);
+        moveu();
+    }
+
+    function verPais() {
+        camera = {
+            ...camera, ...N.centroDoBrasil(),
+            kmPorPixel: N.escalaQueCabe(camera.largura, camera.altura)
+        };
+        moveu();
+    }
+
+    function redimensionar() {
+        const largura = containerEl.clientWidth;
+        const altura = containerEl.clientHeight;
+        if (!largura || !altura) return;
+        densidade = window.devicePixelRatio || 1;
+        ampliacao = Math.max(2, Math.round(PIXEL_NA_TELA * densidade));
+        tela.width = Math.round(largura * densidade);
+        tela.height = Math.round(altura * densidade);
+        base.width = Math.ceil(tela.width / ampliacao);
+        base.height = Math.ceil(tela.height / ampliacao);
+        camera = {
+            ...(camera || N.centroDoBrasil()),
+            largura: base.width,
+            altura: base.height,
+            kmPorPixel: camera ? camera.kmPorPixel : N.escalaQueCabe(base.width, base.height)
+        };
+        moveu();
+    }
+
+    // ---------------------------------------------------------------
+    // Cliques
+    // ---------------------------------------------------------------
+    /** Posicao do ponteiro em pixels do jogo. */
+    function noJogo(evento) {
+        const caixa = tela.getBoundingClientRect();
+        return [
+            (evento.clientX - caixa.left) * densidade / ampliacao,
+            (evento.clientY - caixa.top) * densidade / ampliacao
+        ];
+    }
+
+    /** Tudo que esta sob o ponto, do mais especifico ao mais geral. */
+    function sob(x, y) {
+        const prioridade = { unidade: 0, veiculo: 1, cidade: 2, porto: 3, aeroporto: 3 };
+        const marcadores = [...alvos];
+        if (visivel('cidades')) {
+            registro.cidades.forEach((cidade) => {
+                const [cx, cy] = N.paraTela(camera, ...cidade.coordenadas);
+                marcadores.push({ tipo: 'cidade', id: cidade.id, nome: cidade.nome, x: cx, y: cy });
+            });
+        }
+        const achados = marcadores
+            .map((alvo) => ({ ...alvo, distancia: Math.hypot(alvo.x - x, alvo.y - y) }))
+            .filter((alvo) => alvo.distancia <= 4.5)
+            .sort((a, b) => prioridade[a.tipo] - prioridade[b.tipo] || a.distancia - b.distancia);
+
+        const [lon, lat] = N.paraGeo(camera, x, y);
+        const [kmX, kmY] = N.paraMundo(lon, lat);
+        if (visivel('rodovias')) {
+            const alcance = 2 * camera.kmPorPixel;
+            for (const estrada of registro.estradas.values()) {
+                const perto = estrada.trechos.some(({ km, caixa }) =>
+                    kmX >= caixa[0] - alcance && kmX <= caixa[2] + alcance
+                    && kmY >= caixa[1] - alcance && kmY <= caixa[3] + alcance
+                    && km.some((p, i) => i > 0
+                        && N.distanciaAoSegmento(kmX, kmY, km[i - 1][0], km[i - 1][1], p[0], p[1]) <= alcance));
+                if (perto) achados.push({ tipo: 'estrada', id: estrada.id, nome: estrada.nome });
+            }
+        }
+        const estado = [...registro.estados.values()].find((e) =>
+            e.poligonos.some(({ aneis }) => N.contem(aneis, kmX, kmY)));
+        if (estado && nivelAtual() === 'PAIS') {
+            achados.push({ tipo: 'pais', id: 'brasil', nome: 'Brasil' });
+        } else if (estado) {
+            achados.push({ tipo: 'estado', id: estado.id, nome: estado.nome });
+        }
+        return achados;
+    }
+
+    function clicar(x, y) {
+        if (ordemPara !== null) {
+            enviarOrdem(...N.paraGeo(camera, x, y));
+            return;
+        }
+        const achados = sob(x, y);
+        if (achados.length === 0) {
+            paineis.fechar();
+            return;
+        }
+        // Clicar de novo no mesmo lugar passa para o item que esta embaixo.
+        const atual = paineis.selecionado();
+        const indice = atual ? achados.findIndex((a) => a.tipo === atual.tipo && a.id === atual.id) : -1;
+        const escolhido = achados[(indice + 1) % achados.length];
+        paineis.abrir(escolhido.tipo, escolhido.id);
+
+        if (escolhido.tipo === 'estado' && nivelAtual() === 'ESTADOS') {
+            const capital = [...registro.cidades.values()]
+                .find((c) => c.estadoId === escolhido.id && c.capital);
+            if (capital) {
+                camera = { ...camera, ...N.cameraNoPonto(...capital.coordenadas), kmPorPixel: 2 };
+                moveu();
+            }
+        }
+    }
+
+    function dica(evento) {
+        const [x, y] = noJogo(evento);
+        const achados = ordemPara === null ? sob(x, y) : [];
+        if (achados.length === 0) {
+            dicaEl.classList.add('oculto');
+            tela.classList.remove('sobre-alvo');
+            return;
+        }
+        const caixa = containerEl.getBoundingClientRect();
+        const extras = achados.filter((a) => !['estado', 'pais'].includes(a.tipo)).length - 1;
+        dicaEl.textContent = achados[0].nome + (extras > 0 ? ` (+${extras})` : '');
+        dicaEl.style.left = `${evento.clientX - caixa.left + 14}px`;
+        dicaEl.style.top = `${evento.clientY - caixa.top + 14}px`;
+        dicaEl.classList.remove('oculto');
+        tela.classList.add('sobre-alvo');
+    }
+
+    let arrasto = null;
+    tela.addEventListener('pointerdown', (evento) => {
+        if (evento.button !== 0 || !camera) return;
+        tela.setPointerCapture(evento.pointerId);
+        arrasto = { x: evento.clientX, y: evento.clientY, moveu: false };
+    });
+    tela.addEventListener('pointermove', (evento) => {
+        if (!camera || !relogio) return;
+        if (!arrasto) {
+            dica(evento);
+            return;
+        }
+        const dx = evento.clientX - arrasto.x;
+        const dy = evento.clientY - arrasto.y;
+        if (!arrasto.moveu && Math.hypot(dx, dy) < 5) return;
+        const kmPorPixelDeTela = camera.kmPorPixel * densidade / ampliacao;
+        camera.centroX -= dx * kmPorPixelDeTela;
+        camera.centroY -= dy * kmPorPixelDeTela;
+        arrasto = { x: evento.clientX, y: evento.clientY, moveu: true };
+        dicaEl.classList.add('oculto');
+        moveu();
+    });
+    tela.addEventListener('pointerup', (evento) => {
+        if (arrasto && !arrasto.moveu && relogio) clicar(...noJogo(evento));
+        arrasto = null;
+    });
+    tela.addEventListener('pointercancel', () => { arrasto = null; });
+    tela.addEventListener('pointerleave', () => dicaEl.classList.add('oculto'));
+
+    let ultimaRoda = 0;
+    tela.addEventListener('wheel', (evento) => {
+        evento.preventDefault();
+        if (!camera || Date.now() - ultimaRoda < 120 || evento.deltaY === 0) return;
+        ultimaRoda = Date.now();
+        zoom(evento.deltaY < 0 ? 1 : -1, ...noJogo(evento));
+    }, { passive: false });
+
+    tela.addEventListener('keydown', (evento) => {
+        const setas = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] };
+        if (setas[evento.key]) {
+            evento.preventDefault();
+            camera.centroX += setas[evento.key][0] * 20 * camera.kmPorPixel;
+            camera.centroY += setas[evento.key][1] * 20 * camera.kmPorPixel;
+            moveu();
+        } else if (evento.key === '+' || evento.key === '=') {
+            zoom(1);
+        } else if (evento.key === '-') {
+            zoom(-1);
+        }
+    });
+    document.addEventListener('keydown', (evento) => {
+        if (evento.key !== 'Escape' || evento.target.closest('input, select, textarea')) return;
+        if (ordemPara !== null) encerrarOrdem();
+        else paineis.fechar();
+    });
+    document.getElementById('zoom-mais').addEventListener('click', () => zoom(1));
+    document.getElementById('zoom-menos').addEventListener('click', () => zoom(-1));
+    document.getElementById('zoom-pais').addEventListener('click', verPais);
+
+    // ---------------------------------------------------------------
+    // Ordens
+    // ---------------------------------------------------------------
+    function pedirDestino(unidadeId) {
+        ordemPara = unidadeId;
+        const unidade = registro.unidades.get(unidadeId);
+        avisoEl.textContent = `Clique no mapa para escolher o destino de ${unidade.nome}. Esc cancela.`;
+        avisoEl.classList.remove('oculto');
+        tela.classList.add('ordenando');
+        dicaEl.classList.add('oculto');
+        tela.focus();
+    }
+
+    function encerrarOrdem() {
+        ordemPara = null;
+        avisoEl.classList.add('oculto');
+        tela.classList.remove('ordenando');
+    }
+
+    async function enviarOrdem(longitude, latitude) {
+        if (enviandoOrdem) return;
+        enviandoOrdem = true;
+        const unidadeId = ordemPara;
+        try {
+            await API.post('/operacoes/ordens',
+                { jogadorId: jogador.id, unidadeId, longitude, latitude });
+            await consultarSituacao();
+            encerrarOrdem();
+            paineis.abrir('unidade', unidadeId);
+        } catch (erro) {
+            // Destino recusado: o aviso explica e o jogador pode clicar outro ponto.
+            avisoEl.textContent = `${erro.message} Clique em outro ponto ou aperte Esc.`;
+        } finally {
+            enviandoOrdem = false;
+        }
+    }
+
+    async function parar(unidadeId) {
+        try {
+            await API.post(`/operacoes/unidades/${unidadeId}/parar`, { jogadorId: jogador.id });
+            await consultarSituacao();
+            paineis.abrir('unidade', unidadeId);
+        } catch (erro) {
+            Interface.mensagem('#mensagem-ordem', erro.message);
+        }
+    }
+
+    // ---------------------------------------------------------------
+    // Dados
+    // ---------------------------------------------------------------
+    const paineis = MapaPaineis.criar({
+        jogador,
+        registro,
+        politica,
+        comando: {
+            pode: () => podeComandar,
+            horasPorSegundo: () => horasPorSegundo,
+            horasRestantes: (u) => u.trajeto[u.trajeto.length - 1][2]
+                - relogio.horasDesde(u.partidaEm, Date.now()),
+            viagem,
+            pedirDestino,
+            parar
+        },
+        aoMudar: () => {
+            const atual = paineis && paineis.selecionado();
+            if (ordemPara !== null && (!atual || atual.id !== ordemPara)) encerrarOrdem();
+            baseSuja = true;
+            desenhar();
+        }
+    });
+
+    function aplicarSituacao(resposta) {
+        relogio = N.relogio(resposta, Date.now());
+        horasPorSegundo = resposta.horasJogoPorSegundo;
+        podeComandar = resposta.podeComandar;
+        resposta.unidades.forEach((u) => registro.unidades.set(u.id, u));
+    }
+
+    async function consultarSituacao() {
+        aplicarSituacao(await API.get(`/operacoes/situacao?jogadorId=${jogador.id}`));
+        paineis.unidadesAtualizadas();
+    }
+
+    const normalizar = (texto) => (texto || '')
+        .normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
+
+    /**
+     * Junta a geometria estatica (arquivos) com o registro vivo da API,
+     * casando por sigla (estado) ou nome e sigla (municipio).
+     */
+    function montarTerritorios(estados, cidades, estradas, territorios) {
+        registro.pais = territorios.paises[0];
+        estados.features.forEach((f) => {
+            const partes = f.geometry.type === 'Polygon' ? [f.geometry.coordinates] : f.geometry.coordinates;
+            const poligonos = partes.map((aneis) => ({ aneis: aneis.map(emKm) }));
+            const rotuloKm = pontoDeRotulo(poligonos);
+            const [lon, lat] = N.paraGeo({ centroX: 0, centroY: 0, kmPorPixel: 1, largura: 0, altura: 0 },
+                ...rotuloKm);
+            registro.estados.set(f.properties.id, {
+                ...f.properties,
+                poligonos,
+                caixa: caixaDe(poligonos.map((p) => p.aneis[0])),
+                rotulo: [lon, lat],
+                api: territorios.estados.find((e) => normalizar(e.sigla) === normalizar(f.properties.sigla))
+            });
+        });
+        cidades.features.forEach((f) => {
+            const estado = registro.estados.get(f.properties.estadoId);
+            registro.cidades.set(f.properties.id, {
+                ...f.properties,
+                coordenadas: f.geometry.coordinates,
+                api: territorios.municipios.find((m) => normalizar(m.nome) === normalizar(f.properties.nome)
+                    && normalizar(m.estado) === normalizar(estado && estado.sigla))
+            });
+        });
+        estradas.features.forEach((f) => {
+            const trechos = f.geometry.coordinates.map((segmento) => {
+                const km = emKm(segmento);
+                return { km, caixa: caixaDe([km]) };
+            });
+            registro.estradas.set(f.properties.id, { ...f.properties, trechos });
+        });
+    }
+
+    function montarMalha(malha) {
+        malha.portos.forEach((p) => registro.portos.set(p.id, p));
+        malha.aeroportos.forEach((a) => registro.aeroportos.set(a.id, a));
+        malha.rotas.forEach((r) => registro.rotas.set(r.id, { ...r, km: emKm(r.marcos) }));
+        malha.veiculos.forEach((v) => registro.veiculos.set(v.id, v));
+    }
+
+    function animar() {
+        let ultimo = 0;
+        const passo = (instante) => {
+            if (instante - ultimo >= QUADRO_MS) {
+                ultimo = instante;
+                desenhar();
+                paineis.unidadesAtualizadas();
+            }
+            requestAnimationFrame(passo);
+        };
+        requestAnimationFrame(passo);
+        setInterval(() => paineis.tique(), 1000);
+        setInterval(async () => {
+            try {
+                await consultarSituacao();
+                Interface.mensagem('#mensagem', '');
             } catch (erro) {
-                Interface.mensagem('#mensagem-decisao-mapa', erro.message);
+                Interface.mensagem('#mensagem', `Sem contato com o servidor: ${erro.message}`);
             }
-        });
+        }, CONSULTA_MS);
     }
 
-    function renderizarPainel() {
-        if (!painelAtual) return;
-        painelEl.classList.remove('oculto');
-
-        if (painelAtual.tipo === 'pais') {
-            const pais = registro.pais;
-            if (!pais || !pais.api) return fecharPainel();
-            const numEstados = [...registro.estados.values()].filter((e) => e.api).length;
-            painelConteudoEl.innerHTML = `
-                <h3>${pais.api.nome}</h3>
-                <p class="painel-tag">País</p>
-                <div class="painel-linha"><span>População</span><strong>${Formato.inteiro(pais.api.populacao)}</strong></div>
-                <div class="painel-linha"><span>Tesouro nacional</span><strong>${formatarMoeda(pais.api.tesouro)}</strong></div>
-                <div class="painel-linha"><span>PIB</span><strong>${formatarMoeda(pais.api.pib)}</strong></div>
-                <div class="painel-linha"><span>Alíquota federal sobre empresas</span><strong>${Formato.percentual(pais.api.aliquotaImpostoEmpresarial, 0)}</strong></div>
-                <div class="painel-linha"><span>Gasto social mensal</span><strong>${formatarMoeda(pais.api.gastoSocialMensal)}</strong></div>
-                <div class="painel-linha"><span>Estabilidade institucional</span><strong>${Formato.numero(pais.api.estabilidade, 0)}</strong></div>
-                <div class="painel-linha"><span>Aprovação do governo</span><strong>${Formato.numero(pais.api.aprovacaoGoverno, 0)}</strong></div>
-                <div class="painel-linha"><span>Desemprego</span><strong>${Formato.percentual(pais.api.desemprego, 1)}</strong></div>
-                <div class="painel-linha"><span>Renda média</span><strong>${formatarMoeda(pais.api.rendaMedia)}</strong></div>
-                <div class="painel-linha"><span>Estados com dado no mapa</span><strong>${numEstados}</strong></div>
-                ${blocoDecisao('FEDERAL', pais.api.id)}
-            `;
-            ligarFormularioDecisao();
-            return;
-        }
-
-        if (painelAtual.tipo === 'estado') {
-            const uf = registro.estados.get(painelAtual.id);
-            if (!uf) return fecharPainel();
-            if (!uf.api) {
-                painelConteudoEl.innerHTML = `
-                    <h3>${uf.nome} (${uf.sigla})</h3>
-                    <p class="painel-tag">Estado</p>
-                    <p class="painel-nota">Este estado ainda não tem território de partida (fora da carga
-                    inicial — ver SeedDados em docs/requisitos.toml, RF-26). A fronteira aparece só por
-                    completude geográfica; população, tesouro e alíquota entram aqui assim que existir um
-                    Estado de verdade nesta UF.</p>
-                `;
-                return;
-            }
-            const numCidades = [...registro.cidades.values()].filter((c) => c.estadoId === uf.id).length;
-            painelConteudoEl.innerHTML = `
-                <h3>${uf.nome} (${uf.sigla})</h3>
-                <p class="painel-tag">Estado</p>
-                <div class="painel-linha"><span>População</span><strong>${Formato.inteiro(uf.api.populacao)}</strong></div>
-                <div class="painel-linha"><span>Tesouro estadual</span><strong>${formatarMoeda(uf.api.tesouro)}</strong></div>
-                <div class="painel-linha"><span>Alíquota estadual</span><strong>${Formato.percentual(uf.api.aliquotaEstadual, 0)}</strong></div>
-                <div class="painel-linha"><span>Investimento em infraestrutura</span><strong>${formatarMoeda(uf.api.investimentoInfraestrutura)}/turno</strong></div>
-                <div class="painel-linha"><span>Índice de desenvolvimento</span><strong>${Formato.numero(uf.api.indiceDesenvolvimento, 1)}</strong></div>
-                <div class="painel-linha"><span>Municípios no mapa</span><strong>${numCidades}</strong></div>
-                ${blocoDecisao('ESTADUAL', uf.api.id)}
-            `;
-            ligarFormularioDecisao();
-            return;
-        }
-
-        if (painelAtual.tipo === 'cidade') {
-            const cidade = registro.cidades.get(painelAtual.id);
-            if (!cidade) return fecharPainel();
-            const uf = registro.estados.get(cidade.estadoId);
-            if (!cidade.api) {
-                painelConteudoEl.innerHTML = `
-                    <h3>${cidade.nome}${cidade.capital ? ' (capital)' : ''}</h3>
-                    <p class="painel-tag">Município — ${uf ? uf.nome : ''}</p>
-                    <p class="painel-nota">Este município ainda não tem território de partida (fora da carga
-                    inicial — ver SeedDados em docs/requisitos.toml, RF-26). O marcador aparece só por
-                    completude geográfica; população, tesouro e alíquota entram aqui assim que existir um
-                    Município de verdade aqui.</p>
-                `;
-                return;
-            }
-            painelConteudoEl.innerHTML = `
-                <h3>${cidade.nome}${cidade.capital ? ' (capital)' : ''}</h3>
-                <p class="painel-tag">Município — ${uf ? uf.nome : cidade.api.estado}</p>
-                <div class="painel-linha"><span>População</span><strong>${Formato.inteiro(cidade.api.populacao)}</strong></div>
-                <div class="painel-linha"><span>Tesouro municipal</span><strong>${formatarMoeda(cidade.api.tesouro)}</strong></div>
-                <div class="painel-linha"><span>Alíquota municipal</span><strong>${Formato.percentual(cidade.api.aliquotaMunicipal, 0)}</strong></div>
-                <div class="painel-linha"><span>Índice de urbanização</span><strong>${Formato.numero(cidade.api.indiceUrbanizacao, 1)}</strong></div>
-                <div class="painel-linha"><span>Demanda imobiliária</span><strong>${Formato.numero(cidade.api.demandaImobiliaria, 0)}</strong></div>
-                <div class="painel-linha"><span>Custo do terreno (m²)</span><strong>${formatarMoeda(cidade.api.custoTerrenoM2)}</strong></div>
-                <div class="painel-linha"><span>Zoneamento</span><strong>${Formato.numero(cidade.api.zoneamento, 0)}</strong></div>
-                ${blocoDecisao('MUNICIPAL', cidade.api.id)}
-            `;
-            ligarFormularioDecisao();
-            return;
-        }
-
-        if (painelAtual.tipo === 'estrada') {
-            const estrada = registro.estradas.get(painelAtual.id);
-            if (!estrada) return fecharPainel();
-            // metricas fica com placeholders (null) no geojson — o backend
-            // ainda não modela infraestrutura viária como território. A
-            // estrutura já está pronta pra receber dado real do motor de
-            // simulação quando essa modelagem existir.
-            const m = estrada.metricas || {};
-            const p = (v) => (v === null || v === undefined) ? '—' : v;
-            const linhaConecta = estrada.cidadesConectadas
-                ? `<div class="painel-linha"><span>Conecta</span><strong>${estrada.cidadesConectadas
-                    .map((id) => registro.cidades.get(id)?.nome ?? id).join(' ↔ ')}</strong></div>`
-                : '';
-            painelConteudoEl.innerHTML = `
-                <h3>${estrada.nome}</h3>
-                <p class="painel-tag">Camada logística — ${estrada.tipo}</p>
-                ${linhaConecta}
-                <div class="painel-linha"><span>Índice de desenvolvimento</span><strong>${p(m.indiceDesenvolvimento)}</strong></div>
-                <div class="painel-linha"><span>Pavimentação</span><strong>${p(m.pavimentacao)}</strong></div>
-                <div class="painel-linha"><span>Capacidade</span><strong>${p(m.capacidade)}</strong></div>
-                <p class="painel-nota">Camada ilustrativa: o backend ainda não modela infraestrutura viária
-                como território, então não há decisão nem dado real associado a rodovia — as métricas acima
-                são placeholders prontos para receber o dado do motor de simulação quando essa modelagem
-                existir (ver RF-26 em docs/requisitos.toml).</p>
-            `;
-            return;
-        }
-    }
-
-    // ---------------------------------------------------------------
-    // Geometria: bbox + interseção, para o lazy loading espacial
-    // ---------------------------------------------------------------
-    const PROFUNDIDADE_POR_TIPO = { Point: 0, LineString: 1, Polygon: 2, MultiLineString: 2, MultiPolygon: 3 };
-
-    function bboxDeGeometria(geometria) {
-        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-        (function visitar(coords, profundidade) {
-            if (profundidade === 0) {
-                const [x, y] = coords;
-                if (x < minX) minX = x;
-                if (x > maxX) maxX = x;
-                if (y < minY) minY = y;
-                if (y > maxY) maxY = y;
-            } else {
-                coords.forEach((c) => visitar(c, profundidade - 1));
-            }
-        })(geometria.coordinates, PROFUNDIDADE_POR_TIPO[geometria.type] ?? 1);
-        return [minX, minY, maxX, maxY];
-    }
-
-    function bboxIntersecta(a, b) {
-        return a[0] <= b[2] && a[2] >= b[0] && a[1] <= b[3] && a[3] >= b[1];
-    }
-
-    // ---------------------------------------------------------------
-    // Camada com lazy loading espacial: só materializa em Leaflet as
-    // features cuja bbox cruza a viewport atual E cujo zoom está na
-    // faixa configurada. Ao sair da vista, a layer é removida (não só
-    // escondida) — simula o que um tile/feature server faria por trás.
-    // ---------------------------------------------------------------
-    function criarCamadaLazy(map, featureCollection, opcoes) {
-        const grupo = L.layerGroup();
-        const camadasAtivas = new Map();
-        const zoomMin = opcoes.zoomMin ?? ZOOM.min;
-        const zoomMax = opcoes.zoomMax ?? ZOOM.max;
-
-        function atualizar() {
-            const zoom = map.getZoom();
-            if (zoom < zoomMin || zoom > zoomMax) {
-                grupo.clearLayers();
-                camadasAtivas.clear();
-                return;
-            }
-
-            const limites = map.getBounds();
-            const bboxTela = [limites.getWest(), limites.getSouth(), limites.getEast(), limites.getNorth()];
-            const idsVisiveis = new Set();
-
-            for (const feature of featureCollection.features) {
-                if (opcoes.filtro && !opcoes.filtro(feature)) continue;
-                const bbox = bboxDeGeometria(feature.geometry);
-                if (!bboxIntersecta(bbox, bboxTela)) continue;
-
-                const id = feature.properties.id;
-                idsVisiveis.add(id);
-                if (!camadasAtivas.has(id)) {
-                    const camada = opcoes.aoRenderizar(feature);
-                    camadasAtivas.set(id, camada);
-                    grupo.addLayer(camada);
-                }
-            }
-
-            for (const [id, camada] of camadasAtivas) {
-                if (!idsVisiveis.has(id)) {
-                    grupo.removeLayer(camada);
-                    camadasAtivas.delete(id);
-                }
-            }
-        }
-
-        grupo.addTo(map);
-        map.on('moveend zoomend', atualizar);
-        atualizar();
-        return { grupo, atualizar, camadasAtivas };
-    }
-
-    // ---------------------------------------------------------------
-    // Mapa Leaflet
-    // ---------------------------------------------------------------
-    const map = L.map('mapa-mapa', {
-        minZoom: ZOOM.min,
-        maxZoom: ZOOM.max, // nível mais profundo estritamente em Cidades
-        zoomControl: true,
-        // A animação de zoom do Leaflet trava no navegador embutido usado
-        // pra testar (ver observação da RF-24 em docs/requisitos.toml); com
-        // ela desligada o flyTo/drill-down volta a completar normalmente.
-        zoomAnimation: false
-    }).setView([-14.235, -51.9253], ZOOM.min);
-
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-        maxZoom: ZOOM.max
-    }).addTo(map);
-
-    // O cabecalho do jogo e montado por js/app.js depois de uma chamada a API,
-    // entao a altura do container muda depois que o Leaflet ja mediu e os
-    // ladrilhos ficam presos num quadrado pequeno.
-    [0, 250, 1000].forEach((atraso) => setTimeout(() => map.invalidateSize(), atraso));
-    window.addEventListener('resize', () => map.invalidateSize());
-
-    const indicadorZoomEl = document.getElementById('indicador-zoom');
-    function atualizarIndicadorZoom() {
-        const zoom = map.getZoom();
-        let nivel = 'País';
-        if (zoom >= ZOOM.max) nivel = 'Cidades (nível máximo)';
-        else if (zoom >= ZOOM.cidades) nivel = 'Estados + Cidades';
-        else if (zoom >= ZOOM.estados) nivel = 'Estados';
-        indicadorZoomEl.textContent = `Zoom ${zoom} — ${nivel}`;
-    }
-    map.on('zoomend', atualizarIndicadorZoom);
-
-    // Preenchimento e borda de baixo contraste, cor neutra — o território é
-    // só contexto geográfico; quem chama atenção na tela é a estrada.
-    function estiloEstado() {
-        return { color: CORES.estado, weight: 1, fillColor: CORES.estadoArea, fillOpacity: 0.35 };
-    }
-
-    function aoRenderizarPais(feature) {
-        const marcador = L.marker(
-            [feature.geometry.coordinates[1], feature.geometry.coordinates[0]],
-            { icon: L.divIcon({ className: 'marcador-pais', html: 'Brasil', iconSize: [70, 26] }) }
-        );
-        marcador.on('click', (ev) => {
-            L.DomEvent.stopPropagation(ev);
-            abrirPainelPais();
-        });
-        return marcador;
-    }
-
-    function aoRenderizarEstado(feature) {
-        const props = feature.properties;
-
-        const layer = L.geoJSON(feature, { style: estiloEstado }).getLayers()[0];
-        layer.bindTooltip(props.nome, { sticky: true });
-        layer.on('click', (ev) => {
-            L.DomEvent.stopPropagation(ev);
-            abrirPainelEstado(props.id);
-            if (map.getZoom() >= ZOOM.cidades) return;
-            const limitesCidades = limitesDasCidadesDoEstado(props.id);
-            let alvoCentro = layer.getBounds().getCenter();
-            let alvoZoom = ZOOM.flyToEstado;
-            if (limitesCidades) {
-                alvoCentro = limitesCidades.getCenter();
-                const zoomParaCaber = map.getBoundsZoom(limitesCidades, false, [40, 40]);
-                alvoZoom = Math.max(ZOOM.cidades, Math.min(zoomParaCaber, ZOOM.max));
-            }
-            map.flyTo(alvoCentro, alvoZoom, { duration: 0.8 });
-        });
-        return layer;
-    }
-
-    function limitesDasCidadesDoEstado(estadoId) {
-        const cidades = [...registro.cidades.values()].filter((c) => c.estadoId === estadoId);
-        if (cidades.length === 0) return null;
-        return L.latLngBounds(cidades.map((c) => [c.coordenadas[1], c.coordenadas[0]]));
-    }
-
-    function aoRenderizarCidade(feature) {
-        const props = feature.properties;
-
-        const [lon, lat] = feature.geometry.coordinates;
-        const marker = L.circleMarker([lat, lon], {
-            radius: props.capital ? 8 : 5,
-            color: CORES.cidade,
-            fillColor: CORES.cidade,
-            fillOpacity: 0.9,
-            weight: 1.5
-        });
-        marker.bindTooltip(props.nome);
-        marker.on('click', (ev) => {
-            L.DomEvent.stopPropagation(ev);
-            abrirPainelCidade(props.id);
-        });
-        return marker;
-    }
-
-    function aoRenderizarEstrada(feature) {
-        const props = feature.properties;
-
-        // MultiLineString: array de segmentos (cada um array de [lon,lat]) —
-        // os segmentos vêm do OSM sem ordem ponta-a-ponta, mas o Leaflet
-        // desenha cada um independente, então isso não importa visualmente.
-        const coords = feature.geometry.type === 'MultiLineString'
-            ? feature.geometry.coordinates.map((segmento) => segmento.map(([lon, lat]) => [lat, lon]))
-            : feature.geometry.coordinates.map(([lon, lat]) => [lat, lon]);
-        const linha = L.polyline(coords, { color: CORES.estrada, weight: 3, opacity: 0.9 });
-        linha.on('mouseover', () => linha.setStyle({ weight: 7 }));
-        linha.on('mouseout', () => linha.setStyle({ weight: 3 }));
-        linha.on('click', (ev) => {
-            L.DomEvent.stopPropagation(ev);
-            abrirPainelEstrada(props.id);
-        });
-        return linha;
-    }
-
-    // País não tem geometria própria no jogo (não há malha territorial de
-    // fronteira nacional aqui) — um único marcador no centro geográfico do
-    // Brasil representa a entidade, visível só na faixa de zoom "País".
-    const paisFC = {
-        type: 'FeatureCollection',
-        features: [{
-            type: 'Feature',
-            properties: { id: 'brasil' },
-            geometry: { type: 'Point', coordinates: [-51.9253, -14.235] }
-        }]
+    const lerArquivo = async (url) => {
+        const resposta = await fetch(url);
+        if (!resposta.ok) throw new Error(`Não foi possível ler ${url}`);
+        return resposta.json();
     };
 
     async function carregar() {
+        carregarCamadas();
         try {
-            const [estadosFC, cidadesFC, estradasFC, territorios, meusMandatos, tipos] = await Promise.all([
-                fetch(URLS.estados).then((r) => r.json()),
-                fetch(URLS.cidades).then((r) => r.json()),
-                fetch(URLS.estradas).then((r) => r.json()),
-                API.get('/politica/territorios'),
-                API.get(`/politica/mandatos/jogador/${jogadorMapa.id}`),
-                API.get('/politica/tipos-projeto')
-            ]);
-            mandatosJogador = meusMandatos;
-            tiposProjeto = tipos;
-            registro.pais = { id: 'brasil', api: territorios.paises[0] };
-
-            // Dados de domínio são registrados uma única vez, na íntegra —
-            // a hierarquia não pode depender de quais features já foram
-            // materializadas no mapa (lazy loading é só visual). As
-            // funções aoRenderizar* só leem este registro. `api` guarda o
-            // registro vivo da partida casado por nome/sigla; sem match
-            // (território fora da carga inicial), o painel simplesmente
-            // não abre pra aquela feature.
-            estadosFC.features.forEach((f) => {
-                const api = territorios.estados.find((e) => normalizar(e.sigla) === normalizar(f.properties.sigla));
-                registro.estados.set(f.properties.id, { ...f.properties, api });
-            });
-            cidadesFC.features.forEach((f) => {
-                const estadoPai = estadosFC.features.find((e) => e.properties.id === f.properties.estadoId);
-                const siglaEstado = estadoPai ? estadoPai.properties.sigla : '';
-                const api = territorios.municipios.find((m) => normalizar(m.nome) === normalizar(f.properties.nome)
-                    && normalizar(m.estado) === normalizar(siglaEstado));
-                registro.cidades.set(f.properties.id, {
-                    ...f.properties,
-                    coordenadas: f.geometry.coordinates, // [lon, lat]
-                    api
-                });
-            });
-            estradasFC.features.forEach((f) => registro.estradas.set(f.properties.id, { ...f.properties }));
-
-            // País: só no nível mais afastado — some por completo assim que
-            // os estados entram em cena (exclusão mútua entre as camadas).
-            criarCamadaLazy(map, paisFC, {
-                zoomMin: ZOOM.min,
-                zoomMax: ZOOM.estados - 1,
-                aoRenderizar: aoRenderizarPais
-            });
-
-            // Estados: entram no nível "Estados" e continuam visíveis até o
-            // zoom máximo (contexto atrás das cidades), mas deixam de
-            // capturar clique de drill-down ao entrar no nível de cidade.
-            criarCamadaLazy(map, estadosFC, {
-                zoomMin: ZOOM.estados,
-                zoomMax: ZOOM.max,
-                aoRenderizar: aoRenderizarEstado
-            });
-
-            // Cidades: lazy loading real — só entram no nível mais profundo,
-            // quando a feature está dentro do viewport.
-            criarCamadaLazy(map, cidadesFC, {
-                zoomMin: ZOOM.cidades,
-                zoomMax: ZOOM.max,
-                aoRenderizar: aoRenderizarCidade
-            });
-
-            // Estradas: destaque visual da malha logística — visíveis em
-            // Estado e Cidade, nunca em País (regra explícita da RF-26).
-            criarCamadaLazy(map, estradasFC, {
-                zoomMin: ZOOM.estados,
-                zoomMax: ZOOM.max,
-                aoRenderizar: aoRenderizarEstrada
-            });
-
-            atualizarIndicadorZoom();
+            const [estados, cidades, estradas, territorios, mandatos, tipos, malha, situacao] =
+                await Promise.all([
+                    lerArquivo(URLS.estados),
+                    lerArquivo(URLS.cidades),
+                    lerArquivo(URLS.estradas),
+                    API.get('/politica/territorios'),
+                    API.get(`/politica/mandatos/jogador/${jogador.id}`),
+                    API.get('/politica/tipos-projeto'),
+                    API.get('/operacoes/malha'),
+                    API.get(`/operacoes/situacao?jogadorId=${jogador.id}`)
+                ]);
+            politica.mandatos = mandatos;
+            politica.tipos = tipos;
+            montarTerritorios(estados, cidades, estradas, territorios);
+            montarMalha(malha);
+            aplicarSituacao(situacao);
+            redimensionar();
+            new ResizeObserver(redimensionar).observe(containerEl);
+            animar();
         } catch (erro) {
             Interface.mensagem('#mensagem', erro.message);
         }
     }
 
     carregar();
-    map.on('click', fecharPainel);
 })();

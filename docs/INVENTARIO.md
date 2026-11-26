@@ -2,11 +2,11 @@
 
 <!-- Arquivo gerado por ferramentas/gerar_documentacao.py. Nao edite a mao: mude docs/requisitos.toml ou o codigo e rode o gerador. -->
 
-Retrato do código na versão `0.9.1`, lido direto dos fontes.
+Retrato do código na versão `0.10.0`, lido direto dos fontes.
 
 ## Endpoints da API
 
-44 públicos e 3 administrativos (estes exigem o cabeçalho `X-Admin-Token`).
+48 públicos e 3 administrativos (estes exigem o cabeçalho `X-Admin-Token`).
 
 | Método | Rota | Controlador | Acesso |
 |---|---|---|---|
@@ -43,6 +43,10 @@ Retrato do código na versão `0.9.1`, lido direto dos fontes.
 | POST | `/api/jogadores/{id}/senha` | JogadorController | jogador |
 | GET | `/api/jogo/estado` | JogoController | jogador |
 | POST | `/api/jogo/turno/avancar` | JogoController | jogador |
+| GET | `/api/operacoes/malha` | OperacoesController | jogador |
+| POST | `/api/operacoes/ordens` | OperacoesController | jogador |
+| GET | `/api/operacoes/situacao` | OperacoesController | jogador |
+| POST | `/api/operacoes/unidades/{id}/parar` | OperacoesController | jogador |
 | GET | `/api/politica/cargos` | PoliticaController | jogador |
 | GET | `/api/politica/leis` | PoliticaController | jogador |
 | GET | `/api/politica/mandatos` | PoliticaController | jogador |
@@ -77,6 +81,7 @@ Retrato do código na versão `0.9.1`, lido direto dos fontes.
 | Pais | `pais` |
 | ProjetoDeLei | `projeto_lei` |
 | SnapshotTurno | `snapshot_turno` |
+| UnidadeMilitar | `unidade_militar` |
 | VotoProjeto | `voto_projeto` |
 
 ## Serviços
@@ -90,6 +95,7 @@ Retrato do código na versão `0.9.1`, lido direto dos fontes.
 | `ServicoEstatistica` |
 | `ServicoInvestimento` |
 | `ServicoJogador` |
+| `ServicoOperacoes` |
 | `ServicoPolitica` |
 | `ServicoRazao` |
 | `ServicoTurno` |
@@ -118,6 +124,6 @@ Retrato do código na versão `0.9.1`, lido direto dos fontes.
 
 | Origem | Quantidade |
 |---|---|
-| Java (JUnit) | 28 |
+| Java (JUnit) | 65 |
 | Python (unittest) | 20 |
-| **Total** | **48** |
+| **Total** | **85** |

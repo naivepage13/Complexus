@@ -4,13 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Mapa - Complexus</title>
-    <link rel="stylesheet" href="vendor/leaflet/leaflet.css">
     <link rel="stylesheet" href="css/app.css">
 </head>
-<body>
+<body class="pagina-mapa">
 <!--
-  Mapa hierarquico: Estados -> Cidades -> Estradas, com zoom semantico.
-  O Leaflet vem da pasta vendor/, nao de CDN: o jogo roda offline.
+  Mapa tatico em pixels, em escala real: fronteiras, rodovias, portos,
+  aeroportos, trafego civil e forcas militares. Tudo e desenhado no proprio
+  navegador a partir de arquivos do jogo, sem ladrilhos nem rede externa.
 -->
 <header class="cabecalho">
     <div class="cabecalho-conteudo">
@@ -42,25 +42,50 @@
     <div id="mensagem" class="oculto"></div>
 
     <div id="mapa-layout">
-        <div id="mapa-mapa"></div>
+        <div id="mapa-mapa">
+            <canvas id="tela-mapa" tabindex="0" aria-label="Mapa do Brasil em pixels. Arraste ou use as setas para mover, + e - para zoom."></canvas>
+
+            <fieldset id="mapa-filtros">
+                <legend>Camadas</legend>
+                <label><input type="checkbox" data-camada="estados" checked><span class="amostra amostra-estados"></span>Estados</label>
+                <label><input type="checkbox" data-camada="cidades" checked><span class="amostra amostra-cidades"></span>Cidades</label>
+                <label><input type="checkbox" data-camada="rodovias" checked><span class="amostra amostra-rodovias"></span>Rodovias</label>
+                <label><input type="checkbox" data-camada="caminhoes" checked><span class="amostra amostra-caminhoes"></span>Caminhões</label>
+                <label><input type="checkbox" data-camada="portos" checked><span class="amostra amostra-portos"></span>Portos</label>
+                <label><input type="checkbox" data-camada="navios" checked><span class="amostra amostra-navios"></span>Navios</label>
+                <label><input type="checkbox" data-camada="aeroportos" checked><span class="amostra amostra-aeroportos"></span>Aeroportos</label>
+                <label><input type="checkbox" data-camada="avioes" checked><span class="amostra amostra-avioes"></span>Aviões</label>
+                <label><input type="checkbox" data-camada="exercito" checked><span class="amostra amostra-exercito"></span>Exército</label>
+                <label><input type="checkbox" data-camada="marinha" checked><span class="amostra amostra-marinha"></span>Marinha</label>
+                <label><input type="checkbox" data-camada="aeronautica" checked><span class="amostra amostra-aeronautica"></span>Força Aérea</label>
+            </fieldset>
+
+            <div id="mapa-zoom">
+                <button class="botao botao-neutro" id="zoom-mais" type="button" aria-label="Aproximar">+</button>
+                <button class="botao botao-neutro" id="zoom-menos" type="button" aria-label="Afastar">&minus;</button>
+                <button class="botao botao-neutro" id="zoom-pais" type="button" aria-label="Ver o país inteiro" title="Ver o país inteiro">&#8962;</button>
+            </div>
+
+            <div id="aviso-ordem" class="oculto" role="status"></div>
+            <div id="dica-mapa" class="oculto"></div>
+
+            <div id="mapa-legenda">
+                <span id="indicador-zoom"></span>
+                <span class="escala"><span id="escala-barra"></span><span id="escala-texto"></span></span>
+                <span class="suave">Rodovias: &copy; colaboradores do OpenStreetMap (ODbL)</span>
+            </div>
+        </div>
 
         <aside id="painel-decisao" class="oculto">
-            <button class="botao botao-neutro botao-pequeno btn-fechar-painel" onclick="fecharPainel()">Fechar</button>
+            <button class="botao botao-neutro botao-pequeno btn-fechar-painel" id="fechar-painel" type="button">Fechar</button>
             <div id="painel-conteudo"></div>
         </aside>
     </div>
-
-    <div id="mapa-legenda">
-        <span class="legenda-item"><span class="legenda-cor cor-pais"></span>País</span>
-        <span class="legenda-item"><span class="legenda-cor cor-estado"></span>Estado</span>
-        <span class="legenda-item"><span class="legenda-cor cor-cidade"></span>Cidade</span>
-        <span class="legenda-item"><span class="legenda-cor cor-estrada"></span>Estrada</span>
-        <span id="indicador-zoom" class="legenda-item suave"></span>
-    </div>
 </main>
 
-<script src="vendor/leaflet/leaflet.js"></script>
 <script src="js/app.js"></script>
+<script src="js/mapa-nucleo.js"></script>
+<script src="js/mapa-paineis.js"></script>
 <script src="js/mapa.js"></script>
 </body>
 </html>

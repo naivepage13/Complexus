@@ -77,16 +77,21 @@ const CATEGORIAS = [
     {
         titulo: 'Mapa',
         html: `
-            <p>O Mapa mostra o territorio em tres niveis de zoom: Estados,
-            Cidades e Estradas.</p>
+            <p>O Mapa e desenhado em pixels, em escala real, e tem tres niveis:
+            Pais, Estados e Cidades. Use a roda do mouse ou os botoes + e - para
+            aproximar e arraste para mover.</p>
             <ul>
-                <li>Clicar num estado leva as cidades daquele estado; clicar numa
-                cidade abre o Painel de Decisao com PIB, infraestrutura e tropas.</li>
-                <li>A aliquota estadual e o investimento em infraestrutura do
-                estado sao herdados por todas as cidades filhas: mudar um valor no
-                estado atualiza o PIB efetivo das cidades na hora.</li>
-                <li>Estradas conectam cidades; bloquear uma rodovia reduz a
-                infraestrutura efetiva das cidades ligadas a ela.</li>
+                <li>A lista de camadas liga e desliga estados, cidades, rodovias,
+                caminhoes, portos, navios, aeroportos, avioes e as tres forcas.</li>
+                <li>Clique em um pais, estado ou cidade para ver os dados e, com
+                mandato ali, propor um projeto de lei.</li>
+                <li>Clique em uma unidade militar, escolha "Dar ordem de movimento"
+                e clique no destino. Tropas vao por terra, usando rodovia quando
+                compensa; navios contornam a costa; aeronaves voam em linha reta.</li>
+                <li>O deslocamento segue o relogio do jogo: uma hora real vale um
+                mes, e as unidades continuam andando com o jogo fechado.</li>
+                <li>Caminhoes, cargueiros e avioes comerciais sao trafego
+                ilustrativo: ainda nao afetam a economia.</li>
             </ul>`
     }
 ];

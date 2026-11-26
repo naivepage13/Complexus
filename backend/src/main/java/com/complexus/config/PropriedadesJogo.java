@@ -12,6 +12,7 @@ public class PropriedadesJogo {
     private Turno turno = new Turno();
     private Analitico analitico = new Analitico();
     private Admin admin = new Admin();
+    private Operacoes operacoes = new Operacoes();
 
     public Turno getTurno() {
         return turno;
@@ -35,6 +36,28 @@ public class PropriedadesJogo {
 
     public void setAdmin(Admin admin) {
         this.admin = admin;
+    }
+
+    public Operacoes getOperacoes() {
+        return operacoes;
+    }
+
+    public void setOperacoes(Operacoes operacoes) {
+        this.operacoes = operacoes;
+    }
+
+    /** Mapa tatico e forcas militares. */
+    public static class Operacoes {
+        /** Quando verdadeiro, so quem ocupa a Presidencia da ordens as forcas. */
+        private boolean comandoExigePresidencia = false;
+
+        public boolean isComandoExigePresidencia() {
+            return comandoExigePresidencia;
+        }
+
+        public void setComandoExigePresidencia(boolean comandoExigePresidencia) {
+            this.comandoExigePresidencia = comandoExigePresidencia;
+        }
     }
 
     public static class Turno {

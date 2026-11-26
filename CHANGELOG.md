@@ -11,7 +11,9 @@ propostas em `docs/redesign/variantes.html`).
 
 ### Alterado
 - Tema escuro e sóbrio em `css/app.css`: novos tokens de cor, dados e rótulos
-  em fonte monoespaçada, ladrilhos do mapa escurecidos.
+  em fonte monoespaçada.
+- Mapa: o painel que abre ao clicar em um alvo virou uma caixa translúcida
+  flutuante sobre o mapa, que passa a ocupar a área toda.
 - Navegação reorganizada em 5 categorias (Operações, Mercado, Governo,
   Informação, Conta) em duas faixas: categorias e páginas da categoria. A
   estrutura vive em `CATEGORIAS` (`js/app.js`) e substitui o menu plano de cada
@@ -20,6 +22,7 @@ propostas em `docs/redesign/variantes.html`).
 ### Acessibilidade
 - Link "Pular para o conteúdo", foco visível amarelo, alvos de clique de 40px
   ou mais, página atual marcada com `aria-current`.
+  Caixas de marcação ficam fora da regra de altura mínima dos campos.
 
 ### Corrigido
 - Os testes do backend só deixavam de usar a partida salva
@@ -28,6 +31,33 @@ propostas em `docs/redesign/variantes.html`).
   arquivo. O Surefire (`backend/pom.xml`) agora também fixa o datasource em H2
   em memória; um `@SpringBootTest(properties=...)` continua tendo precedência.
   A trava cobre apenas o banco e só vale para execuções via Maven.
+
+## [0.10.0] - 2026-11-25
+
+Mapa tático em pixels, offline, com tráfego em movimento e ordens às forças
+militares (RF-29, RF-30 e RF-31).
+
+### Adicionado
+- Mapa desenhado em canvas próprio, em pixels sem suavização e em escala real
+  (de 48 km a 0,5 km por pixel), com barra de escala e arrasto, roda e teclado.
+- Onze camadas que podem ser ligadas e desligadas, lembradas no navegador.
+- Portos, aeroportos e tráfego civil (caminhões nas rodovias, cargueiros entre
+  portos, aviões entre aeroportos), com posição calculada pelo relógio do jogo.
+- Quinze unidades militares fictícias (Exército, Marinha e Força Aérea) e
+  ordens de movimento: tropas usam rodovia quando é mais rápido, navios
+  contornam a costa sem cruzar terra, aeronaves voam em linha reta. Ordens e
+  cancelamentos entram na auditoria e no canal do próprio jogador.
+- Pacote `operacoes` no backend e rotas `/api/operacoes/**`.
+- Propriedade `jogo.operacoes.comando-exige-presidencia` (padrão `false`).
+- Testes: geografia, mundo real do mapa, planejador, ordens e API (Java) e as
+  contas do mapa em pixels (`node --test "tests/web/*.test.js"`).
+
+### Alterado
+- O mapa deixou de usar o Leaflet e os ladrilhos online do OpenStreetMap, que
+  dependiam de rede. O crédito ODbL das rodovias passou a aparecer no rodapé
+  do mapa.
+- Tutorial do mapa reescrito: o texto antigo descrevia herança de alíquota e
+  bloqueio de rodovia que não existem.
 
 ## [0.9.1] - 2026-09-26
 
