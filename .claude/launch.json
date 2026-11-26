@@ -6,6 +6,12 @@
       "runtimeExecutable": "mvn",
       "runtimeArgs": ["-f", "backend/pom.xml", "spring-boot:run"],
       "port": 8080
+    },
+    {
+      "name": "complexus-ao-vivo",
+      "runtimeExecutable": "cmd",
+      "runtimeArgs": ["/c", ".\\IniciarComplexus.bat", "ao-vivo", "sem-navegador"],
+      "port": 8080
     }
   ]
 }

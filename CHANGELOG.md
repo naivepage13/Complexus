@@ -9,6 +9,13 @@ sem uma linha aqui. Ver também [docs/RELATORIO.md](docs/RELATORIO.md).
 Redesign da interface (variante "Terminal Executivo", aprovada entre cinco
 propostas em `docs/redesign/variantes.html`).
 
+### Adicionado
+- Modo ao vivo para desenvolvimento no Windows: `IniciarComplexusAoVivo.bat`
+  (ou `IniciarComplexus.bat ao-vivo`) serve HTML/CSS/JS direto de
+  `src/main/resources` e usa banco em memória, sem tocar na partida salva. A
+  configuração `complexus-ao-vivo` de `.claude/launch.json` sobe o mesmo modo
+  sem abrir o navegador (opção `sem-navegador`).
+
 ### Alterado
 - Tema escuro e sóbrio em `css/app.css`: novos tokens de cor, dados e rótulos
   em fonte monoespaçada, ladrilhos do mapa escurecidos.

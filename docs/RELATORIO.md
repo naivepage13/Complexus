@@ -340,6 +340,10 @@ Interface em <http://localhost:8080>. Conta de demonstração: `demo` / `demo123
 Console administrativo em <http://localhost:8080/admin/auditoria.html>, com o
 token de `jogo.admin.token` (padrão `admin-local`).
 
+No Windows, `IniciarComplexusAoVivo.bat` sobe o modo de desenvolvimento ao
+vivo: HTML, CSS e JavaScript servidos direto do código-fonte e banco em memória,
+sem tocar na partida salva. Detalhes no [README](../README.md).
+
 ## 8. Histórico de versões
 
 | Versão | Data | Entrega |

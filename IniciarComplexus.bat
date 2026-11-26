@@ -4,6 +4,17 @@ chcp 65001 >nul 2>&1
 title Complexus - servidor local
 cd /d "%~dp0"
 
+REM ---------------------------------------------------------------------
+REM  Opcoes, nesta ordem:
+REM    ao-vivo        desenvolvimento: serve HTML/CSS/JS direto do disco
+REM                   (sem recompilar) e usa banco em memoria, sem tocar
+REM                   na partida salva
+REM    sem-navegador  nao abre o navegador do sistema
+REM ---------------------------------------------------------------------
+set "AO_VIVO="
+set "MVN_ARGS="
+if /i "%~1"=="ao-vivo" set "AO_VIVO=1"
+
 echo.
 echo  ==========================================================
 echo    COMPLEXUS - iniciando o servidor local
@@ -15,6 +26,13 @@ REM  Ja esta no ar? Entao so abre o navegador e sai.
 REM ---------------------------------------------------------------------
 netstat -an | findstr /r /c:"TCP.*:8080.*LISTENING" >nul 2>&1
 if not errorlevel 1 (
+    if defined AO_VIVO (
+        echo  [ERRO] A porta 8080 ja esta em uso.
+        echo.
+        echo  O modo ao vivo precisa subir o proprio servidor. Encerre o que
+        echo  esta rodando e tente de novo.
+        goto :erro
+    )
     echo  O servidor ja esta rodando. Abrindo o navegador...
     start "" "http://localhost:8080"
     echo.
@@ -57,6 +75,22 @@ set "PATH=%JAVA_HOME%\bin;%PATH%"
 echo  JDK ......... %JAVA_HOME%
 
 REM ---------------------------------------------------------------------
+REM  Modo ao vivo
+REM
+REM  addResources poe src\main\resources no classpath antes de target, e a
+REM  variavel de ambiente troca o banco em arquivo por um em memoria. Nao
+REM  sobe o servico analitico, para nao deixar processo solto quando quem
+REM  encerra o backend e uma ferramenta, e nao o fechamento da janela.
+REM ---------------------------------------------------------------------
+if defined AO_VIVO (
+    set "SPRING_DATASOURCE_URL=jdbc:h2:mem:complexus-ao-vivo;DB_CLOSE_DELAY=-1"
+    set "MVN_ARGS=-Dspring-boot.run.addResources=true"
+    echo  Modo ........ ao vivo, banco em memoria
+    echo  Analitico ... nao iniciado neste modo
+    goto :navegador
+)
+
+REM ---------------------------------------------------------------------
 REM  Servico analitico em Python (opcional)
 REM
 REM  O jogo funciona sem ele: o backend cai para o calculo equivalente
@@ -75,19 +109,29 @@ if errorlevel 1 (
 REM ---------------------------------------------------------------------
 REM  Abre o navegador assim que a porta 8080 responder
 REM ---------------------------------------------------------------------
+:navegador
+if /i "%~2"=="sem-navegador" goto :backend
 start "" /min powershell -NoProfile -ExecutionPolicy Bypass -Command "$fim=(Get-Date).AddMinutes(5); while((Get-Date) -lt $fim){ try{ $s=New-Object Net.Sockets.TcpClient; $s.Connect('127.0.0.1',8080); $s.Close(); Start-Process 'http://localhost:8080'; break } catch { Start-Sleep -Seconds 2 } }"
 
+:backend
 echo  Backend ..... http://localhost:8080
 echo.
 echo  A primeira vez demora mais porque o Maven baixa as dependencias.
-echo  O navegador abre sozinho quando o servidor estiver pronto.
+if /i not "%~2"=="sem-navegador" echo  O navegador abre sozinho quando o servidor estiver pronto.
+if defined AO_VIVO (
+    echo.
+    echo  Para a pagina recarregar sozinha quando um arquivo mudar, rode uma
+    echo  vez no console do navegador:
+    echo    localStorage.setItem^('complexus.devAutoReload', '1'^)
+    echo  Mudancas em Java ou no application.yml exigem reiniciar.
+)
 echo.
 echo  Para encerrar: feche esta janela ou pressione Ctrl+C.
 echo  ----------------------------------------------------------
 echo.
 
 cd backend
-call mvn spring-boot:run
+call mvn spring-boot:run %MVN_ARGS%
 
 REM ---------------------------------------------------------------------
 REM  Encerramento: derruba o servico analitico junto
