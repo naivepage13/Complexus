@@ -12,6 +12,8 @@ propostas em `docs/redesign/variantes.html`).
 ### Alterado
 - Tema escuro e sóbrio em `css/app.css`: novos tokens de cor, dados e rótulos
   em fonte monoespaçada.
+- Mapa: o painel que abre ao clicar em um alvo virou uma caixa translúcida
+  flutuante sobre o mapa, que passa a ocupar a área toda.
 - Navegação reorganizada em 5 categorias (Operações, Mercado, Governo,
   Informação, Conta) em duas faixas: categorias e páginas da categoria. A
   estrutura vive em `CATEGORIAS` (`js/app.js`) e substitui o menu plano de cada

@@ -575,6 +575,7 @@ input:focus, select:focus, textarea:focus {
     display: flex;
     flex: 1;
     min-height: 0;
+    position: relative;
 }
 
 #mapa-mapa {
@@ -714,6 +715,7 @@ input:focus, select:focus, textarea:focus {
     border-radius: var(--raio);
     font-size: 14px;
     text-align: center;
+    z-index: 4;
 }
 
 #dica-mapa {
@@ -733,14 +735,31 @@ input:focus, select:focus, textarea:focus {
     margin-top: 12px;
 }
 
+/* Caixa flutuante e translucida sobre o mapa: o canvas continua ocupando a
+   area toda. Fica a esquerda dos botoes de zoom e acima da legenda. */
 #painel-decisao {
-    width: 320px;
-    flex-shrink: 0;
-    background: var(--cor-superficie);
-    border-left: 1px solid var(--cor-borda);
-    padding: var(--espaco);
+    position: absolute;
+    top: 12px;
+    right: 60px;
+    width: min(320px, calc(100% - 72px));
+    max-height: calc(100% - 72px);
     overflow-y: auto;
-    position: relative;
+    z-index: 3;
+    padding: var(--espaco);
+    background: rgba(21, 28, 37, 0.74);
+    backdrop-filter: blur(6px);
+    border: 1px solid rgba(227, 233, 241, 0.22);
+    border-radius: 8px;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+    /* texto secundario mais claro para manter o contraste sobre o mapa */
+    --cor-texto-suave: #c3cedc;
+}
+
+@media (prefers-reduced-transparency: reduce) {
+    #painel-decisao {
+        background: var(--cor-superficie);
+        backdrop-filter: none;
+    }
 }
 
 #painel-conteudo h3 {
@@ -789,12 +808,12 @@ input:focus, select:focus, textarea:focus {
 
 @media (max-width: 720px) {
     #painel-decisao {
-        position: absolute;
-        top: 0;
-        right: 0;
-        bottom: 0;
-        width: min(320px, 85vw);
-        z-index: 2;
+        top: auto;
+        left: 8px;
+        right: 8px;
+        bottom: 8px;
+        width: auto;
+        max-height: 60%;
     }
 
     #mapa-filtros {
