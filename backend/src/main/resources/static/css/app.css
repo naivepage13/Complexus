@@ -1,24 +1,31 @@
 /* ==========================================================================
    Complexus - folha de estilo unica do frontend
-   Paleta clara e solida, sem gradientes nem sombras pesadas.
+   Tema "Terminal Executivo": escuro, denso, sobrio. Navegacao em duas faixas
+   (categorias e paginas), dados em fonte monoespacada, contraste minimo 7:1
+   no texto principal, foco sempre visivel.
    Convencao: variaveis no :root, componentes em blocos comentados.
    ========================================================================== */
 
 :root {
-    --cor-fundo: #f4f6f9;
-    --cor-superficie: #ffffff;
-    --cor-superficie-alt: #eef1f6;
-    --cor-borda: #dfe4ec;
-    --cor-texto: #1c2430;
-    --cor-texto-suave: #5b6673;
-    --cor-primaria: #2f6fed;
-    --cor-primaria-escura: #1f51b5;
-    --cor-positiva: #1f9d55;
-    --cor-negativa: #d1495b;
-    --cor-alerta: #c77700;
-    --raio: 6px;
+    color-scheme: dark;
+    --cor-fundo: #0d1218;
+    --cor-barra: #080c11;
+    --cor-superficie: #151c25;
+    --cor-superficie-alt: #1c2530;
+    --cor-borda: #2a3441;
+    --cor-texto: #e3e9f1;
+    --cor-texto-suave: #9aa7b8;
+    --cor-primaria: #6fb1ff;
+    --cor-primaria-escura: #9ccaff;
+    --cor-sobre-primaria: #08121f;
+    --cor-positiva: #4fd18b;
+    --cor-negativa: #ff7b84;
+    --cor-alerta: #f2b84b;
+    --cor-foco: #f2b84b;
+    --fonte-mono: "Cascadia Mono", "IBM Plex Mono", Consolas, "SFMono-Regular", Menlo, monospace;
+    --raio: 3px;
     --espaco: 16px;
-    --largura-maxima: 1180px;
+    --largura-maxima: 1240px;
 }
 
 * {
@@ -43,6 +50,26 @@ a:hover {
     text-decoration: underline;
 }
 
+:focus-visible {
+    outline: 3px solid var(--cor-foco);
+    outline-offset: 2px;
+}
+
+.pular {
+    position: absolute;
+    left: -9999px;
+    top: 8px;
+    z-index: 2000;
+    padding: 10px 14px;
+    background: var(--cor-foco);
+    color: #000000;
+    font-weight: 600;
+}
+
+.pular:focus {
+    left: 8px;
+}
+
 h1, h2, h3 {
     margin: 0 0 12px;
     font-weight: 600;
@@ -58,56 +85,116 @@ h3 { font-size: 16px; }
 .cabecalho {
     position: relative;
     z-index: 1100;
-    background: var(--cor-superficie);
+    background: var(--cor-barra);
     border-bottom: 1px solid var(--cor-borda);
 }
 
 .cabecalho-conteudo {
     max-width: var(--largura-maxima);
     margin: 0 auto;
-    padding: 12px var(--espaco);
+    padding: 8px var(--espaco);
+    min-height: 44px;
     display: flex;
     align-items: center;
-    justify-content: space-between;
     gap: var(--espaco);
     flex-wrap: wrap;
 }
 
 .marca {
-    font-size: 18px;
+    font-family: var(--fonte-mono);
+    font-size: 15px;
     font-weight: 600;
-    color: var(--cor-texto);
-}
-
-.menu {
-    display: flex;
-    gap: 4px;
-    flex-wrap: wrap;
-}
-
-.menu a {
-    padding: 6px 12px;
-    border-radius: var(--raio);
-    color: var(--cor-texto-suave);
-    font-size: 14px;
-}
-
-.menu a:hover {
-    background: var(--cor-superficie-alt);
-    text-decoration: none;
-}
-
-.menu a.ativo {
-    background: var(--cor-primaria);
-    color: #ffffff;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--cor-primaria);
 }
 
 .identificacao {
+    font-family: var(--fonte-mono);
     font-size: 13px;
     color: var(--cor-texto-suave);
     display: flex;
     align-items: center;
     gap: 10px;
+}
+
+/* a primeira identificacao (relogio) empurra o resto para a direita */
+.cabecalho-conteudo .identificacao:first-of-type {
+    margin-left: auto;
+}
+
+/* --------------------------------------------------------------- navegacao */
+
+.categorias {
+    background: var(--cor-superficie);
+    border-top: 1px solid var(--cor-borda);
+    border-bottom: 1px solid var(--cor-borda);
+}
+
+.subnav {
+    background: var(--cor-fundo);
+}
+
+.navegacao-conteudo {
+    max-width: var(--largura-maxima);
+    margin: 0 auto;
+    padding: 0 var(--espaco);
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.categorias a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 18px;
+    font-family: var(--fonte-mono);
+    font-size: 14px;
+    color: var(--cor-texto-suave);
+    border-bottom: 3px solid transparent;
+}
+
+.categorias a:hover {
+    color: var(--cor-texto);
+    text-decoration: none;
+    background: var(--cor-superficie-alt);
+}
+
+.categorias a.ativo {
+    color: var(--cor-texto);
+    font-weight: 600;
+    border-bottom-color: var(--cor-primaria);
+    background: var(--cor-fundo);
+}
+
+.subnav .navegacao-conteudo {
+    gap: 6px;
+    padding-top: 8px;
+    padding-bottom: 8px;
+}
+
+.subnav a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 36px;
+    padding: 0 14px;
+    font-family: var(--fonte-mono);
+    font-size: 13px;
+    color: var(--cor-texto);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+}
+
+.subnav a:hover {
+    background: var(--cor-superficie-alt);
+    text-decoration: none;
+}
+
+.subnav a.ativo {
+    background: var(--cor-primaria);
+    border-color: var(--cor-primaria);
+    color: var(--cor-sobre-primaria);
+    font-weight: 600;
 }
 
 /* ------------------------------------------------------------------ layout */
@@ -174,8 +261,10 @@ h3 { font-size: 16px; }
 }
 
 .indicador .valor {
+    font-family: var(--fonte-mono);
     font-size: 22px;
-    font-weight: 600;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
 }
 
 .indicador .detalhe {
@@ -197,18 +286,19 @@ h3 { font-size: 16px; }
 
 .etiqueta {
     display: inline-block;
-    padding: 2px 8px;
-    border-radius: 999px;
+    padding: 1px 8px;
+    border-radius: var(--raio);
+    font-family: var(--fonte-mono);
     font-size: 12px;
     background: var(--cor-superficie-alt);
     color: var(--cor-texto-suave);
     border: 1px solid var(--cor-borda);
 }
 
-.etiqueta-primaria { background: #e8f0fe; color: var(--cor-primaria-escura); border-color: #cfe0fd; }
-.etiqueta-positiva { background: #e7f6ed; color: var(--cor-positiva); border-color: #cdebd9; }
-.etiqueta-negativa { background: #fdecef; color: var(--cor-negativa); border-color: #f7d4da; }
-.etiqueta-alerta { background: #fdf3e3; color: var(--cor-alerta); border-color: #f5e2c2; }
+.etiqueta-primaria { background: #12253d; color: var(--cor-primaria-escura); border-color: #234a78; }
+.etiqueta-positiva { background: #0f2a1d; color: var(--cor-positiva); border-color: #1f5a3b; }
+.etiqueta-negativa { background: #33151a; color: var(--cor-negativa); border-color: #6b2c35; }
+.etiqueta-alerta { background: #2e2310; color: var(--cor-alerta); border-color: #6b5420; }
 
 /* ------------------------------------------------------------------ tabela */
 
@@ -231,8 +321,10 @@ h3 { font-size: 16px; }
     text-transform: uppercase;
     letter-spacing: 0.04em;
     color: var(--cor-texto-suave);
+    font-family: var(--fonte-mono);
     font-weight: 600;
     background: var(--cor-superficie-alt);
+    border-bottom: 2px solid var(--cor-borda);
 }
 
 .tabela tbody tr:hover {
@@ -267,12 +359,14 @@ input, select, textarea {
     background: var(--cor-superficie);
     border: 1px solid var(--cor-borda);
     border-radius: var(--raio);
-    padding: 8px 10px;
+    padding: 9px 10px;
+    min-height: 40px;
     width: 100%;
 }
 
 input:focus, select:focus, textarea:focus {
-    outline: 2px solid #cfe0fd;
+    outline: 3px solid var(--cor-foco);
+    outline-offset: 1px;
     border-color: var(--cor-primaria);
 }
 
@@ -290,10 +384,12 @@ input:focus, select:focus, textarea:focus {
     justify-content: center;
     gap: 6px;
     padding: 8px 16px;
+    min-height: 40px;
     border: 1px solid var(--cor-primaria);
     border-radius: var(--raio);
     background: var(--cor-primaria);
-    color: #ffffff;
+    color: var(--cor-sobre-primaria);
+    font-weight: 600;
     font: inherit;
     font-size: 14px;
     cursor: pointer;
@@ -302,7 +398,7 @@ input:focus, select:focus, textarea:focus {
 .botao:hover { background: var(--cor-primaria-escura); border-color: var(--cor-primaria-escura); }
 
 .botao-secundario {
-    background: var(--cor-superficie);
+    background: transparent;
     color: var(--cor-primaria);
 }
 
@@ -316,7 +412,7 @@ input:focus, select:focus, textarea:focus {
 
 .botao-neutro:hover { background: var(--cor-superficie-alt); color: var(--cor-texto); }
 
-.botao-pequeno { padding: 4px 10px; font-size: 13px; }
+.botao-pequeno { padding: 4px 10px; min-height: 32px; font-size: 13px; }
 
 .botao:disabled { opacity: 0.55; cursor: not-allowed; }
 
@@ -338,8 +434,8 @@ input:focus, select:focus, textarea:focus {
     margin-bottom: 12px;
 }
 
-.mensagem-erro { background: #fdecef; border-color: #f7d4da; color: #93283a; }
-.mensagem-sucesso { background: #e7f6ed; border-color: #cdebd9; color: #14683a; }
+.mensagem-erro { background: #33151a; border-color: #6b2c35; color: #ffb3b9; }
+.mensagem-sucesso { background: #0f2a1d; border-color: #1f5a3b; color: #8fe5b7; }
 
 /* --------------------------------------------------------------------- barra */
 
@@ -408,7 +504,7 @@ input:focus, select:focus, textarea:focus {
 
 .filtro.ativo {
     background: var(--cor-primaria);
-    color: #ffffff;
+    color: var(--cor-sobre-primaria);
     border-color: var(--cor-primaria);
 }
 
@@ -720,69 +816,6 @@ input:focus, select:focus, textarea:focus {
     font-size: 12px;
 }
 
-/* ------------------------------------------------------- menu de configuracoes */
-
-.config-menu {
-    position: relative;
-}
-
-.config-engrenagem {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 34px;
-    height: 34px;
-    border-radius: 50%;
-    border: 1px solid var(--cor-borda);
-    background: var(--cor-superficie);
-    color: var(--cor-texto-suave);
-    font-size: 17px;
-    cursor: pointer;
-    padding: 0;
-    line-height: 1;
-}
-
-.config-engrenagem:hover,
-.config-engrenagem.aberto {
-    background: var(--cor-superficie-alt);
-    color: var(--cor-texto);
-    border-color: var(--cor-primaria);
-}
-
-.config-dropdown {
-    position: absolute;
-    right: 0;
-    top: calc(100% + 8px);
-    min-width: 190px;
-    background: var(--cor-superficie);
-    border: 1px solid var(--cor-borda);
-    border-radius: var(--raio);
-    box-shadow: 0 8px 24px rgba(20, 30, 48, 0.12);
-    padding: 6px;
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    z-index: 60;
-}
-
-.config-dropdown a {
-    padding: 8px 10px;
-    border-radius: var(--raio);
-    color: var(--cor-texto);
-    font-size: 14px;
-}
-
-.config-dropdown a:hover {
-    background: var(--cor-superficie-alt);
-    text-decoration: none;
-}
-
-.config-dropdown a.ativo {
-    background: #e8f0fe;
-    color: var(--cor-primaria-escura);
-    font-weight: 600;
-}
-
 /* ---------------------------------------------------------------- perfil */
 
 .avatar-linha {
@@ -885,7 +918,7 @@ input:focus, select:focus, textarea:focus {
 }
 
 .envelope-lido {
-    color: #b7c0cc;
+    color: #4a5666;
 }
 
 @keyframes pulso-envelope {
@@ -980,8 +1013,8 @@ input:focus, select:focus, textarea:focus {
 /* ------------------------------------------------------------- zona de risco */
 
 .cartao-perigo {
-    border-color: #f3c1c9;
-    background: #fffafb;
+    border-color: #6b2c35;
+    background: #1d1216;
 }
 
 .cartao-perigo h2 {
@@ -991,12 +1024,12 @@ input:focus, select:focus, textarea:focus {
 .botao-perigo {
     background: var(--cor-negativa);
     border-color: var(--cor-negativa);
-    color: #ffffff;
+    color: #1a0a0c;
 }
 
 .botao-perigo:hover {
-    background: #ac3345;
-    border-color: #ac3345;
+    background: #ff9aa1;
+    border-color: #ff9aa1;
 }
 
 .botao-perigo:disabled {
@@ -1009,7 +1042,7 @@ input:focus, select:focus, textarea:focus {
 .modal-fundo {
     position: fixed;
     inset: 0;
-    background: rgba(20, 26, 38, 0.5);
+    background: rgba(0, 0, 0, 0.7);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1024,7 +1057,7 @@ input:focus, select:focus, textarea:focus {
     padding: 24px;
     width: 100%;
     max-width: 420px;
-    box-shadow: 0 12px 32px rgba(20, 30, 48, 0.18);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
 }
 
 .modal-caixa h2 {
@@ -1038,7 +1071,12 @@ input:focus, select:focus, textarea:focus {
 
 @media (max-width: 640px) {
     .cabecalho-conteudo { flex-direction: column; align-items: flex-start; }
+    .categorias a { padding: 0 12px; }
     .titulo-pagina { flex-direction: column; }
     .item-tempo { grid-template-columns: 1fr; }
     .marca-tempo { flex-direction: row; align-items: center; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .envelope-nao-lido { animation: none; }
 }

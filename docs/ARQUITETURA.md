@@ -174,3 +174,10 @@ manualmente não teleporta unidades.
 
 Em teste (`src/test/resources/application.yml`) o banco é em memória, o
 agendador fica desligado e o serviço Python é dispensado.
+
+Como esse arquivo é o que separa os testes da partida salva, o Surefire
+(`pom.xml`) repete o datasource em memória como propriedade de sistema: se o
+arquivo sumir, o banco não cai em `backend/data/`. Um
+`@SpringBootTest(properties=...)` tem precedência e pode escolher outro banco
+em memória. A segunda trava não cobre agendador nem serviço Python, e não vale
+para testes disparados pela IDE sem passar pelo Maven.

@@ -21,7 +21,7 @@ indicadores macroeconômicos e fecha as estatísticas do período.
 | Testes automatizados | 85 (65 Java + 20 Python) |
 | Endpoints da API | 48 públicos + 3 administrativos |
 | Entidades persistidas | 17 |
-| Páginas do frontend | 14 |
+| Páginas do frontend | 15 |
 
 Situação por requisito em [docs/REQUISITOS.md](docs/REQUISITOS.md); mapa do código em [docs/INVENTARIO.md](docs/INVENTARIO.md).
 <!-- auto:fim:estado -->

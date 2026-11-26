@@ -17,19 +17,19 @@
 ## Números do projeto
 
 <!-- auto:inicio:metricas -->
-Versão `0.10.0` · 85 testes · 51 endpoints · 17 entidades · 11 serviços · 14 páginas.
+Versão `0.10.0` · 85 testes · 51 endpoints · 17 entidades · 11 serviços · 15 páginas.
 
 Linhas de código não vazias, sem contar artefatos de build:
 
 | Linguagem | Linhas |
 |---|---|
 | Java | 8.175 |
-| JavaScript | 3.228 |
+| JavaScript | 3.237 |
 | Python | 2.389 |
-| HTML | 1.605 |
-| CSS | 1.480 |
-| Configuração | 727 |
-| **Total** | **17.604** |
+| HTML | 1.879 |
+| CSS | 1.514 |
+| Configuração | 742 |
+| **Total** | **17.936** |
 <!-- auto:fim:metricas -->
 
 ## Situação dos requisitos
@@ -295,7 +295,8 @@ Linha de auditoria em [AUDITORIA.md](AUDITORIA.md).
 
 | Verificação | Resultado |
 |---|---|
-| `mvn test` (backend) | 22 testes, 0 falhas |
+| `mvn test` (backend) | 28 testes, 0 falhas |
+| Isolamento dos testes | Com e sem `src/test/resources/application.yml`, só H2 em memória e nenhuma pasta `backend/data` criada pelos testes |
 | `python -m unittest` (analytics) | 9 testes, 0 falhas |
 | Subida da aplicação + carga do mundo | OK |
 | Fluxo ponta a ponta pela API | Empresa → turno → IPO → compra → dividendo → lei sancionada → auditoria íntegra |
