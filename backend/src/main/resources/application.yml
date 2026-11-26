@@ -31,6 +31,10 @@ jogo:
   turno:
     duracao-minutos: 60
     processamento-automatico: true
+  operacoes:
+    # false: qualquer jogador move as forcas no mapa (jogo offline).
+    # true: somente quem ocupa a Presidencia.
+    comando-exige-presidencia: false
   analitico:
     habilitado: true
     url: http://localhost:8100

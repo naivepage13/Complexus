@@ -54,7 +54,9 @@ public class ServicoAtualizacoes {
             "OBRA_ATRASADA",
             "PROJETO_PROPOSTO",
             "PROJETO_PAUTADO",
-            "PROJETO_VOTO");
+            "PROJETO_VOTO",
+            "ORDEM_MOVIMENTO",
+            "ORDEM_CANCELADA");
 
     private final ServicoAuditoria auditoria;
     private final RepositorioJogador repositorioJogador;
@@ -134,6 +136,8 @@ public class ServicoAtualizacoes {
             case "OBRA_CONCLUIDA" -> "Obra entregue";
             case "OBRA_INICIADA" -> "Obra iniciada";
             case "OBRA_ATRASADA" -> "Obra atrasada";
+            case "ORDEM_MOVIMENTO" -> "Ordem de movimento";
+            case "ORDEM_CANCELADA" -> "Deslocamento interrompido";
             case "EMPRESA_CAPEX" -> "Aporte de capital";
             case "EMPRESA_CONTRATACAO" -> "Contratacao";
             case "EMPRESA_DEMISSAO" -> "Desligamento";

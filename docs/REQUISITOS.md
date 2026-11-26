@@ -2,7 +2,7 @@
 
 <!-- Arquivo gerado por ferramentas/gerar_documentacao.py. Nao edite a mao: mude docs/requisitos.toml ou o codigo e rode o gerador. -->
 
-Projeto **Complexus**, versão `0.9.1`. 23 de 40 requisitos entregues (58%).
+Projeto **Complexus**, versão `0.10.0`. 25 de 44 requisitos entregues (57%).
 
 Cada requisito declara o critério de aceite, os arquivos que o implementam e os testes que o cobrem. O gerador falha se um arquivo declarado não existir, então a rastreabilidade não envelhece em silêncio.
 
@@ -10,11 +10,11 @@ Cada requisito declara o critério de aceite, os arquivos que o implementam e os
 
 | Situação | Funcionais | Não funcionais | Total |
 |---|---|---|---|
-| Entregue | 16 | 7 | 23 |
-| Parcial | 1 | 0 | 1 |
-| Planejado | 11 | 5 | 16 |
+| Entregue | 18 | 7 | 25 |
+| Parcial | 2 | 0 | 2 |
+| Planejado | 12 | 5 | 17 |
 
-19 dos 23 requisitos entregues têm teste automatizado declarado.
+21 dos 25 requisitos entregues têm teste automatizado declarado.
 
 **Lacunas de cobertura** — entregues sem teste declarado:
 
@@ -57,6 +57,10 @@ Cada requisito declara o critério de aceite, os arquivos que o implementam e os
 | RF-26 | Mapa alimentado pelo backend | entregue | Media | 0.7.0 | 0 |
 | RF-27 | Menu de configurações e páginas de conta | entregue | Media | 0.8.0 | 2 |
 | RF-28 | Exclusão de conta pelo jogador | entregue | Media | 0.9.0 | 2 |
+| RF-29 | Mapa em pixels em escala real com camadas filtráveis | entregue | Alta | 0.10.0 | 1 |
+| RF-30 | Tráfego civil em movimento no mapa | parcial | Media | 0.10.0 | 2 |
+| RF-31 | Ordens de movimento às forças militares | entregue | Alta | 0.10.0 | 3 |
+| RF-32 | Ferrovias e trens no mapa | planejado | Media | - | 0 |
 
 ### RF-01 — Cadastro e identificação de jogadores
 
@@ -417,7 +421,7 @@ Navegar Estados, Cidades e Estradas em três níveis de zoom, com carregamento p
 
 **Testes:** nenhum declarado.
 
-> Veio da main. Integrado ao frontend do jogo na 0.5.0, com Leaflet servido localmente. 
+> Na 0.10.0 o desenho passou a ser o mapa em pixels (RF-29): a hierarquia País > Estados > Cidades permanece, sem Leaflet. Veio da main. Integrado ao frontend do jogo na 0.5.0, com Leaflet servido localmente. 
 A herança de estado só no cliente foi substituída por dados reais da API na RF-26 — os campos mostrados 
 no painel (população, tesouro, alíquota etc.) agora vêm de /api/politica/territorios, e a decisão persiste 
 de verdade via proposta de lei. Ver RF-26. 
@@ -584,6 +588,84 @@ Zona de risco na página de Perfil com um modal de confirmação: o jogador prec
 
 > Exclusão lógica (Jogador.ativo = false), não exclusão física: apagar a linha quebraria as referências da cadeia de auditoria (ADR-06) e o histórico de empresas/investimentos/mandatos do jogador.
 
+### RF-29 — Mapa em pixels em escala real com camadas filtráveis
+
+**Situação:** entregue · **Prioridade:** Alta · **Entregue em:** `0.10.0`
+
+Desenhar o Brasil em pixels, em escala real e sem depender de rede, com hierarquia País, Estados e Cidades e camadas que o jogador liga e desliga.
+
+**Critério de aceite:** O mapa abre sem requisição externa, mostra a escala em quilômetros por pixel e cada camada some ao ser desmarcada.
+
+**Implementação:**
+
+- `backend/src/main/resources/static/mapa.html`
+- `backend/src/main/resources/static/js/mapa.js`
+- `backend/src/main/resources/static/js/mapa-nucleo.js`
+- `backend/src/main/resources/static/js/mapa-paineis.js`
+
+**Testes:**
+
+- `tests/web/mapa-nucleo.test.js`
+
+> Substitui o desenho com Leaflet e ladrilhos online. Projeção equirretangular com paralelo de referência em 15° S: a escala horizontal é exata ali e se afasta disso nos extremos norte e sul. A interação (arrasto, clique, filtros) foi conferida no navegador, sem teste automatizado.
+
+### RF-30 — Tráfego civil em movimento no mapa
+
+**Situação:** parcial · **Prioridade:** Media · **Entregue em:** `0.10.0`
+
+Mostrar caminhões nas rodovias, cargueiros entre portos, aviões entre aeroportos e trens nas ferrovias, andando no ritmo do relógio do jogo.
+
+**Critério de aceite:** Cada tipo de veículo percorre sua rota em velocidade real convertida pelo calendário, e pode ser filtrado.
+
+**Implementação:**
+
+- `backend/src/main/java/com/complexus/operacoes/CartografiaMundo.java`
+- `backend/src/main/java/com/complexus/operacoes/RoteadorMaritimo.java`
+- `backend/src/main/java/com/complexus/operacoes/MalhaViaria.java`
+- `backend/src/main/resources/mundo/operacoes.json`
+
+**Testes:**
+
+- `CartografiaMundoTest`
+- `GeografiaTest`
+
+> Faltam as ferrovias e os trens: o jogo ainda não tem o traçado ferroviário (RF-32). O tráfego é ilustrativo e não afeta a economia. Portos e aeroportos têm coordenadas aproximadas, escritas à mão; Belém e Manaus não têm porto porque navegação fluvial não é modelada.
+
+### RF-31 — Ordens de movimento às forças militares
+
+**Situação:** entregue · **Prioridade:** Alta · **Entregue em:** `0.10.0`
+
+Enviar tropas, navios militares e aeronaves a pontos escolhidos no mapa, com trajeto e tempo de chegada calculados pelo backend.
+
+**Critério de aceite:** Uma ordem válida move a unidade no ritmo do jogo e fica auditada; destino que o ramo não alcança é recusado com explicação.
+
+**Implementação:**
+
+- `backend/src/main/java/com/complexus/operacoes/ServicoOperacoes.java`
+- `backend/src/main/java/com/complexus/operacoes/PlanejadorMovimento.java`
+- `backend/src/main/java/com/complexus/operacoes/OperacoesController.java`
+- `backend/src/main/java/com/complexus/operacoes/UnidadeMilitar.java`
+
+**Testes:**
+
+- `OperacoesTest`
+- `ComandoPresidencialTest`
+- `PlanejadorMovimentoTest`
+
+> Só movimento: não há combate, custo, combustível nem alcance de aeronave (a ligação com o motor de combate é a RF-25). Por padrão qualquer jogador comanda; jogo.operacoes.comando-exige-presidencia=true restringe ao Presidente. Fora da rodovia a tropa anda em linha reta, sem considerar relevo, rios ou fronteiras de países vizinhos.
+
+### RF-32 — Ferrovias e trens no mapa
+
+**Situação:** planejado · **Prioridade:** Media
+
+Incluir o traçado real das ferrovias como camada do mapa, com trens percorrendo as linhas.
+
+**Critério de aceite:** As principais ferrovias aparecem com traçado real e têm trens em movimento que podem ser filtrados.
+
+**Testes:** nenhum declarado.
+
+> Depende de baixar o traçado do OpenStreetMap (Overpass), como foi feito com as rodovias.
+
 ## Requisitos não funcionais
 
 | ID | Título | Situação | Prioridade | Versão | Testes |
@@ -743,14 +825,14 @@ O hash de senha não pode mudar de formato sem migração: contas existentes con
 
 **Situação:** entregue · **Prioridade:** Media · **Entregue em:** `0.2.0`
 
-Interface em HTML, CSS e JavaScript puros, uma página por arquivo e uma única folha de estilo, sem build e sem depender de rede. A única biblioteca externa, o Leaflet do mapa, é servida da pasta vendor.
+Interface em HTML, CSS e JavaScript puros, uma página por arquivo e uma única folha de estilo, sem build e sem depender de rede. O mapa é desenhado por código próprio, sem biblioteca externa.
 
 **Critério de aceite:** Subir o backend entrega a interface pronta, sem etapa de compilação e sem buscar nada em CDN.
 
 **Implementação:**
 
 - `backend/src/main/resources/static/css/app.css`
-- `backend/src/main/resources/static/vendor/leaflet/leaflet.js`
+- `backend/src/main/resources/static/js/mapa-nucleo.js`
 
 **Testes:** nenhum declarado.
 

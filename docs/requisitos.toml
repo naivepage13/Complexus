@@ -356,7 +356,9 @@ implementacao = [
   "backend/src/main/resources/static/dados/mapa/estados.geojson",
 ]
 testes = []
-observacao = """Veio da main. Integrado ao frontend do jogo na 0.5.0, com Leaflet servido localmente. \nA herança de estado só no cliente foi substituída por dados reais da API na RF-26 — os campos mostrados \nno painel (população, tesouro, alíquota etc.) agora vêm de /api/politica/territorios, e a decisão persiste \nde verdade via proposta de lei. Ver RF-26. \nO travamento de zoom/drill-down no navegador embutido de teste foi corrigido de vez: `zoomAnimation: false` \nno L.map() (aplicado na RF-26), como a observação anterior já indicava."""
+observacao = """Na 0.10.0 o desenho passou a ser o mapa em pixels (RF-29): a hierarquia País > Estados > Cidades \
+permanece, sem Leaflet. \
+Veio da main. Integrado ao frontend do jogo na 0.5.0, com Leaflet servido localmente. \nA herança de estado só no cliente foi substituída por dados reais da API na RF-26 — os campos mostrados \nno painel (população, tesouro, alíquota etc.) agora vêm de /api/politica/territorios, e a decisão persiste \nde verdade via proposta de lei. Ver RF-26. \nO travamento de zoom/drill-down no navegador embutido de teste foi corrigido de vez: `zoomAnimation: false` \nno L.map() (aplicado na RF-26), como a observação anterior já indicava."""
 
 [[requisito]]
 id = "RF-25"
@@ -431,6 +433,69 @@ observacao = "Exclusão lógica (Jogador.ativo = false), não exclusão física:
 # ---------------------------------------------------------------------------
 # Requisitos não funcionais
 # ---------------------------------------------------------------------------
+
+[[requisito]]
+id = "RF-29"
+titulo = "Mapa em pixels em escala real com camadas filtráveis"
+status = "IMPLEMENTADO"
+prioridade = "ALTA"
+versao = "0.10.0"
+descricao = "Desenhar o Brasil em pixels, em escala real e sem depender de rede, com hierarquia País, Estados e Cidades e camadas que o jogador liga e desliga."
+criterio = "O mapa abre sem requisição externa, mostra a escala em quilômetros por pixel e cada camada some ao ser desmarcada."
+implementacao = [
+  "backend/src/main/resources/static/mapa.html",
+  "backend/src/main/resources/static/js/mapa.js",
+  "backend/src/main/resources/static/js/mapa-nucleo.js",
+  "backend/src/main/resources/static/js/mapa-paineis.js",
+]
+testes = ["tests/web/mapa-nucleo.test.js"]
+observacao = "Substitui o desenho com Leaflet e ladrilhos online. Projeção equirretangular com paralelo de referência em 15° S: a escala horizontal é exata ali e se afasta disso nos extremos norte e sul. A interação (arrasto, clique, filtros) foi conferida no navegador, sem teste automatizado."
+
+[[requisito]]
+id = "RF-30"
+titulo = "Tráfego civil em movimento no mapa"
+status = "PARCIAL"
+prioridade = "MEDIA"
+versao = "0.10.0"
+descricao = "Mostrar caminhões nas rodovias, cargueiros entre portos, aviões entre aeroportos e trens nas ferrovias, andando no ritmo do relógio do jogo."
+criterio = "Cada tipo de veículo percorre sua rota em velocidade real convertida pelo calendário, e pode ser filtrado."
+implementacao = [
+  "backend/src/main/java/com/complexus/operacoes/CartografiaMundo.java",
+  "backend/src/main/java/com/complexus/operacoes/RoteadorMaritimo.java",
+  "backend/src/main/java/com/complexus/operacoes/MalhaViaria.java",
+  "backend/src/main/resources/mundo/operacoes.json",
+]
+testes = ["CartografiaMundoTest", "GeografiaTest"]
+observacao = "Faltam as ferrovias e os trens: o jogo ainda não tem o traçado ferroviário (RF-32). O tráfego é ilustrativo e não afeta a economia. Portos e aeroportos têm coordenadas aproximadas, escritas à mão; Belém e Manaus não têm porto porque navegação fluvial não é modelada."
+
+[[requisito]]
+id = "RF-31"
+titulo = "Ordens de movimento às forças militares"
+status = "IMPLEMENTADO"
+prioridade = "ALTA"
+versao = "0.10.0"
+descricao = "Enviar tropas, navios militares e aeronaves a pontos escolhidos no mapa, com trajeto e tempo de chegada calculados pelo backend."
+criterio = "Uma ordem válida move a unidade no ritmo do jogo e fica auditada; destino que o ramo não alcança é recusado com explicação."
+implementacao = [
+  "backend/src/main/java/com/complexus/operacoes/ServicoOperacoes.java",
+  "backend/src/main/java/com/complexus/operacoes/PlanejadorMovimento.java",
+  "backend/src/main/java/com/complexus/operacoes/OperacoesController.java",
+  "backend/src/main/java/com/complexus/operacoes/UnidadeMilitar.java",
+]
+testes = ["OperacoesTest", "ComandoPresidencialTest", "PlanejadorMovimentoTest"]
+observacao = "Só movimento: não há combate, custo, combustível nem alcance de aeronave (a ligação com o motor de combate é a RF-25). Por padrão qualquer jogador comanda; jogo.operacoes.comando-exige-presidencia=true restringe ao Presidente. Fora da rodovia a tropa anda em linha reta, sem considerar relevo, rios ou fronteiras de países vizinhos."
+
+[[requisito]]
+id = "RF-32"
+titulo = "Ferrovias e trens no mapa"
+status = "PLANEJADO"
+prioridade = "MEDIA"
+versao = ""
+descricao = "Incluir o traçado real das ferrovias como camada do mapa, com trens percorrendo as linhas."
+criterio = "As principais ferrovias aparecem com traçado real e têm trens em movimento que podem ser filtrados."
+implementacao = []
+testes = []
+observacao = "Depende de baixar o traçado do OpenStreetMap (Overpass), como foi feito com as rodovias."
 
 [[requisito]]
 id = "RNF-01"
@@ -558,11 +623,11 @@ titulo = "Frontend sem dependência externa"
 status = "IMPLEMENTADO"
 prioridade = "MEDIA"
 versao = "0.2.0"
-descricao = "Interface em HTML, CSS e JavaScript puros, uma página por arquivo e uma única folha de estilo, sem build e sem depender de rede. A única biblioteca externa, o Leaflet do mapa, é servida da pasta vendor."
+descricao = "Interface em HTML, CSS e JavaScript puros, uma página por arquivo e uma única folha de estilo, sem build e sem depender de rede. O mapa é desenhado por código próprio, sem biblioteca externa."
 criterio = "Subir o backend entrega a interface pronta, sem etapa de compilação e sem buscar nada em CDN."
 implementacao = [
   "backend/src/main/resources/static/css/app.css",
-  "backend/src/main/resources/static/vendor/leaflet/leaflet.js",
+  "backend/src/main/resources/static/js/mapa-nucleo.js",
 ]
 testes = []
 

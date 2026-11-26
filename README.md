@@ -14,13 +14,13 @@ indicadores macroeconômicos e fecha as estatísticas do período.
 <!-- auto:inicio:estado -->
 | Indicador | Valor |
 |---|---|
-| Versão | `0.9.1` |
-| Requisitos entregues | 23 de 40 (58%) |
-| Requisitos funcionais | 28 |
+| Versão | `0.10.0` |
+| Requisitos entregues | 25 de 44 (57%) |
+| Requisitos funcionais | 32 |
 | Requisitos não funcionais | 12 |
-| Testes automatizados | 48 (28 Java + 20 Python) |
-| Endpoints da API | 44 públicos + 3 administrativos |
-| Entidades persistidas | 16 |
+| Testes automatizados | 85 (65 Java + 20 Python) |
+| Endpoints da API | 48 públicos + 3 administrativos |
+| Entidades persistidas | 17 |
 | Páginas do frontend | 14 |
 
 Situação por requisito em [docs/REQUISITOS.md](docs/REQUISITOS.md); mapa do código em [docs/INVENTARIO.md](docs/INVENTARIO.md).
@@ -87,6 +87,12 @@ python -m unittest discover -s ferramentas -p "testes_*.py"
 python -m unittest discover -s tests
 ```
 
+```bash
+node --test "tests/web/*.test.js"
+```
+
+O último testa as contas do mapa em pixels e pede Node.js 22 ou superior.
+
 ## O que dá para fazer no jogo
 
 - **Empresas** — fundar, aportar capital, contratar, demitir, ajustar marketing,
@@ -100,10 +106,10 @@ python -m unittest discover -s tests
   dividendos mensais lastreados no lucro e acompanhar o retorno da carteira.
 - **Estatísticas** — PIB, inflação, juros, desemprego, aprovação do governo,
   índice de mercado e séries históricas por turno e por setor.
-- **Mapa** — mapa hierárquico Estados → Cidades → Estradas, com zoom semântico,
-  carregamento por viewport e painel de decisão. A alíquota estadual e o
-  investimento em infraestrutura são herdados do estado pai, então mexer no
-  estado muda o PIB efetivo das cidades filhas na hora.
+- **Mapa** — mapa em pixels, em escala real e sem internet, com camadas que
+  ligam e desligam: rodovias, portos, aeroportos, caminhões, navios, aviões e
+  forças militares. Dá para mandar tropas, navios e aeronaves a qualquer ponto
+  que eles alcancem, e propor leis pelo painel de país, estado ou cidade.
 - **Atualizações** — canal com o que acontece no mundo: fechamentos de turno,
   leis, empresas e cargos, mais as suas próprias ações.
 

@@ -4,6 +4,33 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 Este arquivo é a linha de auditoria do desenvolvimento: nenhuma entrega entra
 sem uma linha aqui. Ver também [docs/RELATORIO.md](docs/RELATORIO.md).
 
+## [0.10.0] - 2026-11-25
+
+Mapa tático em pixels, offline, com tráfego em movimento e ordens às forças
+militares (RF-29, RF-30 e RF-31).
+
+### Adicionado
+- Mapa desenhado em canvas próprio, em pixels sem suavização e em escala real
+  (de 48 km a 0,5 km por pixel), com barra de escala e arrasto, roda e teclado.
+- Onze camadas que podem ser ligadas e desligadas, lembradas no navegador.
+- Portos, aeroportos e tráfego civil (caminhões nas rodovias, cargueiros entre
+  portos, aviões entre aeroportos), com posição calculada pelo relógio do jogo.
+- Quinze unidades militares fictícias (Exército, Marinha e Força Aérea) e
+  ordens de movimento: tropas usam rodovia quando é mais rápido, navios
+  contornam a costa sem cruzar terra, aeronaves voam em linha reta. Ordens e
+  cancelamentos entram na auditoria e no canal do próprio jogador.
+- Pacote `operacoes` no backend e rotas `/api/operacoes/**`.
+- Propriedade `jogo.operacoes.comando-exige-presidencia` (padrão `false`).
+- Testes: geografia, mundo real do mapa, planejador, ordens e API (Java) e as
+  contas do mapa em pixels (`node --test "tests/web/*.test.js"`).
+
+### Alterado
+- O mapa deixou de usar o Leaflet e os ladrilhos online do OpenStreetMap, que
+  dependiam de rede. O crédito ODbL das rodovias passou a aparecer no rodapé
+  do mapa.
+- Tutorial do mapa reescrito: o texto antigo descrevia herança de alíquota e
+  bloqueio de rodovia que não existem.
+
 ## [0.9.1] - 2026-09-26
 
 Correções encontradas testando o menu de configurações na página do Mapa, mais

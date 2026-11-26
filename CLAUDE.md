@@ -55,6 +55,7 @@ cd backend && mvn test                                    # Java: JUnit
 cd analytics && python -m unittest discover -p "testes_*.py"
 python -m unittest discover -s ferramentas -p "testes_*.py"  # doc-generator self-tests
 python -m unittest discover -s tests                       # combat engine tests
+node --test "tests/web/*.test.js"                          # pixel map math (Node 22+)
 ```
 Run a single Java test class: `mvn test -Dtest=FluxoDoJogoTest`.
 Run a single Python test: `python -m unittest tests.test_combate.NomeDoTeste`.
@@ -89,8 +90,10 @@ mappers) · `config` (game properties, world seed data) · `core` (game clock,
 turn engine, scheduler) · `economia` (sectors, companies, ventures, the
 simulation engine) · `estatistica` (per-turn snapshots) · `integracao`
 (Python analytics HTTP client) · `investimento` (stocks, portfolio,
-dividends, ledger) · `jogador` (player accounts) · `politica` (territories,
-offices, mandates, bills, votes).
+dividends, ledger) · `jogador` (player accounts) · `operacoes` (tactical map:
+static world data, road/sea routing, military units and movement orders —
+positions are derived from the departure instant, never ticked, see ADR-10) ·
+`politica` (territories, offices, mandates, bills, votes).
 
 ### The turn engine — `ServicoTurno.processarTurno`
 Synchronous, transactional, and order-dependent — laws enacted in step 3 take
@@ -137,8 +140,10 @@ and the source used (`PYTHON`/`FALLBACK_JAVA`) is recorded in the turn report.
 
 ### Frontend
 One HTML page per file, one shared `css/app.css`, one JS file per page, no
-build step, no framework, no CDN dependencies (Leaflet for the map is vendored
-under `static/vendor/`, not loaded from a CDN — this app must run offline).
+build step, no framework, no CDN dependencies — this app must run offline. The
+map is the one page with several scripts: `mapa-nucleo.js` (pure, Node-tested),
+`mapa-paineis.js` (side panel) and `mapa.js` (pixel canvas). `static/vendor/`
+still holds Leaflet, which nothing loads anymore.
 
 ## The self-updating documentation system
 
@@ -184,8 +189,11 @@ own rule — nothing ships without a trail):
 
 - `src/combate/` and `data/paises.json` are fully functional but **not called
   from the backend** — this is intentional pending RF-25, not an oversight.
-- `mapa.html` reads static GeoJSON under `static/dados/mapa/`, not live
-  territory data from the API — intentional pending RF-26.
+- `mapa.html` takes only geometry from the static GeoJSON under
+  `static/dados/mapa/`; game data comes from the API (RF-26). The backend reads
+  the same files for routing, plus `resources/mundo/operacoes.json`.
+- Civilian trucks, ships and planes are illustrative and don't touch the
+  economy; military units only move — combat is pending RF-25.
 - `GET /api/empresas/{id}` returns any company's full financials regardless
   of who's asking (no real auth yet — `jogadorId` travels in the request
   body). Known and tracked as L-02/L-07 in `docs/RELATORIO.md`, blocked on

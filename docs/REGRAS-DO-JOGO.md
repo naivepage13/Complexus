@@ -195,3 +195,27 @@ confiança por setor. O cálculo combina sazonalidade de 12 turnos, ruído com
 semente derivada do turno (resultado reproduzível) e reação a inflação e juros.
 Com o serviço indisponível, o Java aplica a mesma fórmula e registra
 `fonteModificadores: FALLBACK_JAVA` no relatório do turno.
+
+## 7. Operações no mapa (`operacoes/`)
+
+| Regra | Valor |
+|---|---|
+| Ritmo do deslocamento | 720 horas de jogo por turno (com turno de 60 min: 1 s real = 12 min de jogo) |
+| Quem comanda | Qualquer jogador; com `comando-exige-presidencia`, só o Presidente |
+| Nova ordem | Parte da posição atual da unidade |
+| Parar | A unidade fica no ponto em que estiver |
+
+| Unidade (`TipoUnidade`) | km/h na rodovia ou em cruzeiro | km/h fora da rodovia | Destino aceito |
+|---|---|---|---|
+| Brigada de infantaria | 60 | 25 | Terra |
+| Brigada blindada | 45 | 20 | Terra |
+| Fragata | 50 | — | Mar, dentro da área de operações |
+| Submarino | 30 | — | Mar, dentro da área de operações |
+| Navio-patrulha | 40 | — | Mar, dentro da área de operações |
+| Esquadrão de caça | 900 | — | Terra ou mar da área |
+| Esquadrão de transporte | 700 | — | Terra ou mar da área |
+
+Tropas comparam a ida em linha reta com a ida pela rodovia (saindo dela no ponto
+que dá a menor viagem) e usam a mais rápida. Navios vão direto quando não há
+terra no caminho; do contrário, pelo corredor ao largo da costa. Tráfego civil:
+caminhão 70 km/h, cargueiro 28 km/h, avião 800 km/h, sem efeito na economia.

@@ -21,6 +21,17 @@ const ICONE_ENVELOPE_ABERTO = `
 
 const VERSOES = [
     {
+        versao: '0.10.0',
+        titulo: 'Mapa tatico em pixels',
+        data: '25/11/2026',
+        itens: [
+            'Mapa redesenhado em pixels, em escala real, funcionando sem internet.',
+            'Camadas que podem ser ligadas e desligadas: rodovias, portos, aeroportos, veiculos e forcas.',
+            'Caminhoes, navios cargueiros e avioes se movem no relogio do jogo.',
+            'Ordens de movimento para tropas, navios militares e aeronaves.'
+        ]
+    },
+    {
         versao: '0.6.0',
         titulo: 'Organizacao do repositorio',
         data: '25/09/2026',

@@ -145,6 +145,19 @@ investimentos, porque o investidor precisa dele para decidir.
 Uma página por arquivo, um CSS único, um JS por página. Sem build, sem
 dependência externa: abrir o backend já entrega a interface pronta.
 
+### ADR-09 — Mapa em pixels desenhado pelo próprio jogo
+O mapa é um canvas de baixa resolução ampliado sem suavização: cada pixel vale
+uma quantidade fixa de quilômetros. Substitui o Leaflet com ladrilhos online,
+que quebrava a regra de funcionar sem rede. Projeção, rasterização e contas de
+clique são funções puras em `js/mapa-nucleo.js`, testadas com `node --test`.
+
+### ADR-10 — Posição derivada do relógio, não atualizada
+Uma ordem grava o trajeto (marcos com hora de jogo) e o instante de partida; a
+posição é calculada quando alguém pergunta. Não há tarefa periódica nem escrita
+por segundo, e a unidade continua andando com o jogo fechado. O ritmo segue o
+calendário (um turno = 720 horas), medido no relógio de parede: avançar turno
+manualmente não teleporta unidades.
+
 ## 7. Configuração
 
 `backend/src/main/resources/application.yml`:
@@ -153,6 +166,7 @@ dependência externa: abrir o backend já entrega a interface pronta.
 |---|---|---|
 | `jogo.turno.duracao-minutos` | 60 | Intervalo real entre turnos |
 | `jogo.turno.processamento-automatico` | true | Liga/desliga o agendador |
+| `jogo.operacoes.comando-exige-presidencia` | false | Só o Presidente dá ordens às forças |
 | `jogo.analitico.habilitado` | true | Usa o serviço Python |
 | `jogo.analitico.url` | http://localhost:8100 | Endereço do serviço |
 | `jogo.analitico.timeout-ms` | 1500 | Tempo máximo de espera |

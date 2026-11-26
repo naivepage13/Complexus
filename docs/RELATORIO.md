@@ -17,19 +17,19 @@
 ## Números do projeto
 
 <!-- auto:inicio:metricas -->
-Versão `0.9.1` · 48 testes · 47 endpoints · 16 entidades · 10 serviços · 14 páginas.
+Versão `0.10.0` · 85 testes · 51 endpoints · 17 entidades · 11 serviços · 14 páginas.
 
 Linhas de código não vazias, sem contar artefatos de build:
 
 | Linguagem | Linhas |
 |---|---|
-| Java | 6.402 |
+| Java | 8.175 |
+| JavaScript | 3.228 |
 | Python | 2.389 |
-| JavaScript | 2.352 |
-| HTML | 1.583 |
-| CSS | 1.368 |
-| Configuração | 662 |
-| **Total** | **14.756** |
+| HTML | 1.605 |
+| CSS | 1.480 |
+| Configuração | 727 |
+| **Total** | **17.604** |
 <!-- auto:fim:metricas -->
 
 ## Situação dos requisitos
@@ -37,11 +37,11 @@ Linhas de código não vazias, sem contar artefatos de build:
 <!-- auto:inicio:requisitos -->
 | Situação | Funcionais | Não funcionais | Total |
 |---|---|---|---|
-| Entregue | 16 | 7 | 23 |
-| Parcial | 1 | 0 | 1 |
-| Planejado | 11 | 5 | 16 |
+| Entregue | 18 | 7 | 25 |
+| Parcial | 2 | 0 | 2 |
+| Planejado | 12 | 5 | 17 |
 
-19 dos 23 requisitos entregues têm teste automatizado declarado.
+21 dos 25 requisitos entregues têm teste automatizado declarado.
 
 **Lacunas de cobertura** — entregues sem teste declarado:
 
@@ -259,6 +259,22 @@ Linha de auditoria em [AUDITORIA.md](AUDITORIA.md).
   avatar, estado de leitura de Novidades) e redireciona para `login.html`; a
   conta desativada deixa de autenticar (`ServicoJogador.autenticar`).
 
+### 3.13 Mapa tático em pixels e operações (entregue na 0.10.0)
+- Decisão do responsável: o mapa passa a ser em **pixels**, em escala real, e o
+  jogo segue **offline**. O desenho é um canvas próprio de baixa resolução
+  ampliado sem suavização; Leaflet e ladrilhos online saíram.
+- Camadas filtráveis: estados, cidades, rodovias, caminhões, portos, navios,
+  aeroportos, aviões e as três forças.
+- Tráfego civil em movimento em 16 rotas rodoviárias, 9 marítimas e 14 aéreas.
+  Velocidades reais convertidas pelo calendário (1 hora real = 1 mês).
+- Quinze unidades militares fictícias com ordens de movimento pelo mapa. O
+  backend planeja o trajeto: malha rodoviária (grafo montado do GeoJSON, com
+  emenda de falhas) para tropas, corredor ao largo da costa para navios, linha
+  reta para aeronaves. A posição sai do instante da partida, sem tarefa
+  periódica.
+- Ficaram de fora: ferrovias e trens (RF-32, dependem de baixar dado), combate
+  (RF-25), custos e efeito do tráfego na economia.
+
 ### 3.8 Identidade do projeto (entregue na 0.3.0)
 - O jogo passou a se chamar **Complexus**, em todas as camadas: pacote Java
   (`com.complexus`), artefato Maven (`complexus-backend`), banco local,
@@ -288,6 +304,9 @@ Linha de auditoria em [AUDITORIA.md](AUDITORIA.md).
 | Renomeação para Complexus | Build, 22 testes, login de conta anterior e cadeia de auditoria íntegra após o rename |
 | Separação de visibilidade | `/api/admin/auditoria` responde 403 sem token e 200 com token; canal de atualizações sem hash, ator ou detalhe interno |
 | Mapa alimentado pelo backend | Conta demo, mandato de Deputado Estadual assumido em Minas Gerais, projeto de alíquota estadual proposto pelo painel do mapa e confirmado via `GET /api/politica/projetos` como `RASCUNHO` persistido no H2; município, painel de País (dado real de `Pais`), Goiás sem território (fallback correto), painel de estrada com placeholders, as 10 rodovias reais renderizando com traçado sinuoso (não mais linha reta) e capital sem dado (Goiânia) com fallback correto também conferidos ao vivo no navegador |
+| `mvn test` na 0.10.0 | 65 testes, 0 falhas, em banco em memória |
+| `node --test` (contas do mapa) | 14 testes, 0 falhas |
+| Mapa em pixels no navegador (0.10.0) | Visões País, Estados e Cidades; filtro de camada; ordem a navio (com recusa de destino em terra) e a tropa seguindo rodovia; proposta de lei pelo painel do país salva como `RASCUNHO`; largura de celular; nenhuma requisição externa |
 
 Balanceamento observado após a calibragem (7 empresas do mundo inicial):
 receita agregada ≈ R$ 3,9 mi/mês, lucro agregado ≈ R$ 150–235 mil/mês,
@@ -323,6 +342,8 @@ margem líquida de 4% a 6% e retorno sobre o capital investido entre 8% e 13% ao
 | L-06 | Balanceamento é inicial | Pode exigir ajuste com jogadores reais | Parâmetros centralizados em `Setor` e `MotorSimulacao` |
 | L-07 | `GET /api/empresas/{id}` devolve o balanço completo de qualquer empresa | Um jogador curioso pode consultar o detalhe de um concorrente pela API | Depende de RNF-01: com autenticação, o detalhe completo fica restrito ao dono |
 | L-08 | Rodovias no mapa são só geometria ilustrativa, sem território nem estado de jogo | Jogador não decide nada sobre infraestrutura viária pelo mapa | Precisaria de um domínio novo no backend (malha viária como território) — sem RF aberta ainda |
+| L-10 | Unidades militares só se movem | Sem combate, custo, combustível ou alcance; tropa fora da estrada ignora relevo e fronteiras | RF-25 |
+| L-11 | A malha rodoviária do mapa tem só 10 rodovias federais | Algumas viagens dão volta grande ou saem cedo da estrada (ex.: falta a BR-163) | Ampliar o dado das rodovias |
 | L-09 | Avatar do perfil e estado de leitura de Novidades vivem só em `localStorage` | Trocar de navegador ou de máquina perde o avatar e volta todas as versões a "não lida" | Precisaria de upload real (armazenamento de arquivo) e de uma tabela de notificações no backend |
 
 ## 7. Como rodar
@@ -343,6 +364,7 @@ token de `jogo.admin.token` (padrão `admin-local`).
 
 | Versão | Data | Entrega |
 |---|---|---|
+| 0.10.0 | 25/11/2026 | Mapa tático em pixels e offline, com camadas, tráfego civil em movimento e ordens às forças militares (RF-29 a RF-31) |
 | 0.7.0 | 25/09/2026 | RF-26: mapa passa a mostrar território real (via API) e a persistir decisão como projeto de lei de verdade, no lugar do dado ilustrativo e da herança só-no-cliente da 0.5.0; hierarquia ganha o nível País e os 27 estados passam a ter fronteira real |
 | 0.6.0 | 25/09/2026 | Limpeza e organização: pasta `legado/` removida (incluindo os três arquivos Python já documentados como quebrados/obsoletos), correção de versão desalinhada entre pom.xml e changelog, renomeação da pasta raiz do projeto para `Complexus` |
 | 0.5.0 | 24/09/2026 | Integração do motor de combate e do mapa interativo, que corriam em paralelo na `main` |

@@ -84,6 +84,20 @@ Erros seguem um formato único:
 | POST | `/politica/projetos/{id}/sancionar` | `{jogadorId, sancionar, justificativa}` |
 | POST | `/politica/projetos/{id}/derrubar-veto` | `{jogadorId, mandatoId}` |
 
+## Operações (mapa tático)
+
+| Método | Rota | Descrição |
+|---|---|---|
+| GET | `/operacoes/malha` | Parte fixa: `portos`, `aeroportos`, `rotas` civis e `veiculos` |
+| GET | `/operacoes/situacao?jogadorId=` | `agora` (ms), `horasJogoPorSegundo`, `podeComandar` e `unidades` |
+| POST | `/operacoes/ordens` | `{jogadorId, unidadeId, longitude, latitude}` — devolve a unidade já em movimento |
+| POST | `/operacoes/unidades/{id}/parar` | `{jogadorId}` — a unidade fica onde estiver |
+
+Posições são `[longitude, latitude]`. Um trajeto é uma lista de marcos
+`[longitude, latitude, hora]`, com a hora de jogo contada da partida; o cliente
+interpola a posição entre eles. Cada veículo civil vai e volta na sua rota, na
+fase dada por `deslocamentoHoras`. Destino que o ramo não alcança devolve **422**.
+
 ## Atualizações (canal do jogador)
 
 | Método | Rota | Descrição |

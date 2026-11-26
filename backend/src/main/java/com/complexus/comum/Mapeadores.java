@@ -9,6 +9,10 @@ import com.complexus.estatistica.EstatisticaSetor;
 import com.complexus.estatistica.SnapshotTurno;
 import com.complexus.investimento.LancamentoFinanceiro;
 import com.complexus.jogador.Jogador;
+import com.complexus.operacoes.CartografiaMundo;
+import com.complexus.operacoes.Ponto;
+import com.complexus.operacoes.ServicoOperacoes;
+import com.complexus.operacoes.Trajeto;
 import com.complexus.politica.Estado;
 import com.complexus.politica.Mandato;
 import com.complexus.politica.Municipio;
@@ -329,5 +333,71 @@ public final class Mapeadores {
         mapa.put("custoTerrenoM2", municipio.getCustoTerrenoM2());
         mapa.put("zoneamento", municipio.getZoneamento());
         return mapa;
+    }
+
+    public static Map<String, Object> porto(CartografiaMundo.Porto porto) {
+        Map<String, Object> mapa = new LinkedHashMap<>();
+        mapa.put("id", porto.id());
+        mapa.put("nome", porto.nome());
+        mapa.put("posicao", coordenada(porto.posicao()));
+        return mapa;
+    }
+
+    public static Map<String, Object> aeroporto(CartografiaMundo.Aeroporto aeroporto) {
+        Map<String, Object> mapa = new LinkedHashMap<>();
+        mapa.put("id", aeroporto.id());
+        mapa.put("nome", aeroporto.nome());
+        mapa.put("posicao", coordenada(aeroporto.posicao()));
+        return mapa;
+    }
+
+    public static Map<String, Object> rotaCivil(CartografiaMundo.RotaCivil rota) {
+        Map<String, Object> mapa = new LinkedHashMap<>();
+        mapa.put("id", rota.id());
+        mapa.put("tipo", rota.tipo().name());
+        mapa.put("rotulo", rota.tipo().rotulo());
+        mapa.put("nome", rota.nome());
+        mapa.put("velocidadeKmH", rota.tipo().velocidade());
+        mapa.put("marcos", marcos(rota.trajeto()));
+        return mapa;
+    }
+
+    public static Map<String, Object> veiculo(CartografiaMundo.Veiculo veiculo) {
+        Map<String, Object> mapa = new LinkedHashMap<>();
+        mapa.put("id", veiculo.id());
+        mapa.put("rotaId", veiculo.rotaId());
+        mapa.put("deslocamentoHoras", veiculo.deslocamentoHoras());
+        return mapa;
+    }
+
+    public static Map<String, Object> unidadeMilitar(ServicoOperacoes.Situacao situacao) {
+        Map<String, Object> mapa = new LinkedHashMap<>();
+        mapa.put("id", situacao.unidade().getId());
+        mapa.put("nome", situacao.unidade().getNome());
+        mapa.put("tipo", situacao.unidade().getTipo().name());
+        mapa.put("tipoRotulo", situacao.unidade().getTipo().rotulo());
+        mapa.put("ramo", situacao.unidade().getTipo().ramo().name());
+        mapa.put("ramoRotulo", situacao.unidade().getTipo().ramo().getRotulo());
+        mapa.put("velocidadeKmH", situacao.unidade().getTipo().velocidadeEstrada());
+        mapa.put("posicao", coordenada(situacao.posicao()));
+        mapa.put("emMovimento", situacao.emMovimento());
+        if (situacao.emMovimento()) {
+            mapa.put("trajeto", marcos(situacao.trajeto()));
+            mapa.put("partidaEm", situacao.unidade().getPartidaEm().toEpochMilli());
+            mapa.put("horasRestantes", situacao.trajeto().duracaoHoras() - situacao.horasDecorridas());
+        }
+        return mapa;
+    }
+
+    /** [longitude, latitude], na mesma ordem do GeoJSON. */
+    private static double[] coordenada(Ponto ponto) {
+        return new double[] {ponto.lon(), ponto.lat()};
+    }
+
+    /** [longitude, latitude, horas de jogo desde a partida] por marco. */
+    private static List<double[]> marcos(Trajeto trajeto) {
+        return trajeto.marcos().stream()
+                .map(m -> new double[] {m.ponto().lon(), m.ponto().lat(), Math.round(m.horas() * 10_000) / 10_000.0})
+                .toList();
     }
 }

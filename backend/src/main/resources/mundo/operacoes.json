@@ -1,0 +1,82 @@
+{
+  "_nota": "Dados do mapa tatico. Coordenadas [longitude, latitude] aproximadas, escritas a mao; as unidades militares sao ficticias e posicionadas para o jogo.",
+  "portos": [
+    {"id": "rio-grande", "nome": "Porto do Rio Grande", "posicao": [-52.09, -32.06], "ancoradouro": [-51.90, -32.30]},
+    {"id": "itajai", "nome": "Porto de Itajaí", "posicao": [-48.66, -26.90], "ancoradouro": [-48.45, -26.92]},
+    {"id": "paranagua", "nome": "Porto de Paranaguá", "posicao": [-48.51, -25.50], "ancoradouro": [-48.15, -25.68]},
+    {"id": "santos", "nome": "Porto de Santos", "posicao": [-46.31, -23.97], "ancoradouro": [-46.30, -24.15]},
+    {"id": "rio", "nome": "Porto do Rio de Janeiro", "posicao": [-43.18, -22.89], "ancoradouro": [-43.12, -23.15]},
+    {"id": "vitoria", "nome": "Porto de Vitória", "posicao": [-40.29, -20.32], "ancoradouro": [-40.10, -20.40]},
+    {"id": "salvador", "nome": "Porto de Salvador", "posicao": [-38.52, -12.96], "ancoradouro": [-38.45, -13.15]},
+    {"id": "suape", "nome": "Porto de Suape", "posicao": [-34.96, -8.39], "ancoradouro": [-34.75, -8.42]},
+    {"id": "fortaleza", "nome": "Porto de Fortaleza", "posicao": [-38.48, -3.71], "ancoradouro": [-38.45, -3.50]},
+    {"id": "itaqui", "nome": "Porto do Itaqui", "posicao": [-44.37, -2.57], "ancoradouro": [-43.90, -1.85]}
+  ],
+  "aeroportos": [
+    {"id": "GRU", "nome": "Guarulhos", "posicao": [-46.473, -23.432]},
+    {"id": "VCP", "nome": "Viracopos", "posicao": [-47.134, -23.007]},
+    {"id": "GIG", "nome": "Galeão", "posicao": [-43.250, -22.809]},
+    {"id": "BSB", "nome": "Brasília", "posicao": [-47.921, -15.871]},
+    {"id": "CNF", "nome": "Confins", "posicao": [-43.972, -19.624]},
+    {"id": "SSA", "nome": "Salvador", "posicao": [-38.331, -12.911]},
+    {"id": "REC", "nome": "Recife", "posicao": [-34.923, -8.126]},
+    {"id": "FOR", "nome": "Fortaleza", "posicao": [-38.532, -3.776]},
+    {"id": "BEL", "nome": "Belém", "posicao": [-48.476, -1.379]},
+    {"id": "MAO", "nome": "Manaus", "posicao": [-60.050, -3.039]},
+    {"id": "CWB", "nome": "Curitiba", "posicao": [-49.176, -25.532]},
+    {"id": "POA", "nome": "Porto Alegre", "posicao": [-51.171, -29.994]},
+    {"id": "CGB", "nome": "Cuiabá", "posicao": [-56.117, -15.653]},
+    {"id": "PVH", "nome": "Porto Velho", "posicao": [-63.902, -8.709]},
+    {"id": "CGR", "nome": "Campo Grande", "posicao": [-54.673, -20.469]},
+    {"id": "RBR", "nome": "Rio Branco", "posicao": [-67.894, -9.868]}
+  ],
+  "corredorMaritimo": [
+    [-51.0, -33.9], [-50.0, -32.6], [-49.0, -31.0], [-48.0, -29.5], [-47.8, -28.0], [-47.6, -26.9],
+    [-47.0, -25.8], [-45.8, -24.8], [-44.0, -23.9], [-42.0, -23.5], [-40.6, -22.9], [-39.6, -21.5],
+    [-38.7, -20.0], [-38.1, -18.5], [-38.0, -16.5], [-38.0, -14.5], [-37.5, -13.3], [-36.3, -11.8],
+    [-35.0, -10.3], [-34.2, -8.7], [-34.0, -7.0], [-34.2, -5.5], [-34.9, -4.4], [-36.5, -3.8],
+    [-38.0, -2.9], [-40.0, -2.0], [-42.0, -1.5], [-44.0, -0.6], [-45.5, 0.3], [-47.0, 1.2],
+    [-48.5, 2.3], [-49.4, 3.6], [-50.0, 4.8]
+  ],
+  "areaMaritima": [
+    [-52.9, -34.0], [-48.0, -37.5], [-30.0, -35.0], [-22.0, -22.0], [-22.0, -2.0], [-38.0, 7.0],
+    [-50.8, 5.8], [-51.2, 4.4], [-49.0, 0.5], [-52.0, 0.0], [-49.0, -3.0], [-45.0, -4.0],
+    [-40.0, -6.0], [-37.0, -9.0], [-41.0, -15.0], [-42.0, -20.0], [-47.0, -24.0], [-50.0, -27.0],
+    [-53.2, -31.5], [-53.3, -33.4], [-52.9, -34.0]
+  ],
+  "rotasRodoviarias": [
+    ["sp-capital", "rj-capital"], ["rj-capital", "mg-capital"], ["mg-capital", "df-capital"],
+    ["df-capital", "go-capital"], ["sp-capital", "pr-capital"], ["pr-capital", "rs-capital"],
+    ["rj-capital", "es-capital"], ["es-capital", "ba-capital"], ["ba-capital", "pe-capital"],
+    ["pe-capital", "rn-capital"], ["ba-capital", "ce-capital"], ["df-capital", "mt-capital"],
+    ["mt-capital", "ro-capital"], ["ro-capital", "ac-capital"], ["mg-capital", "ms-capital"],
+    ["sp-capital", "df-capital"]
+  ],
+  "rotasMaritimas": [
+    ["santos", "rio"], ["santos", "paranagua"], ["itajai", "rio-grande"], ["santos", "salvador"],
+    ["salvador", "suape"], ["suape", "fortaleza"], ["fortaleza", "itaqui"], ["rio", "vitoria"],
+    ["santos", "suape"]
+  ],
+  "rotasAereas": [
+    ["GRU", "GIG"], ["GRU", "BSB"], ["GRU", "REC"], ["GRU", "POA"], ["GIG", "SSA"],
+    ["BSB", "MAO"], ["BSB", "FOR"], ["BSB", "BEL"], ["CNF", "GRU"], ["MAO", "BEL"],
+    ["CWB", "BSB"], ["CGB", "PVH"], ["GRU", "CGR"], ["PVH", "RBR"]
+  ],
+  "unidades": [
+    {"nome": "Brigada Planalto", "tipo": "BRIGADA_INFANTARIA", "posicao": [-47.93, -15.78]},
+    {"nome": "Brigada Sudeste", "tipo": "BRIGADA_INFANTARIA", "posicao": [-46.66, -23.57]},
+    {"nome": "Brigada Leste", "tipo": "BRIGADA_INFANTARIA", "posicao": [-43.35, -22.87]},
+    {"nome": "Brigada Sul", "tipo": "BRIGADA_BLINDADA", "posicao": [-53.81, -29.69]},
+    {"nome": "Brigada Amazônia", "tipo": "BRIGADA_INFANTARIA", "posicao": [-60.02, -3.07]},
+    {"nome": "Brigada Nordeste", "tipo": "BRIGADA_INFANTARIA", "posicao": [-35.00, -8.06]},
+    {"nome": "Brigada Oeste", "tipo": "BRIGADA_BLINDADA", "posicao": [-54.65, -20.46]},
+    {"nome": "Fragata Guanabara", "tipo": "FRAGATA", "posicao": [-42.95, -23.35]},
+    {"nome": "Fragata Todos-os-Santos", "tipo": "FRAGATA", "posicao": [-38.10, -13.25]},
+    {"nome": "Submarino Atlântico Sul", "tipo": "SUBMARINO", "posicao": [-45.60, -25.20]},
+    {"nome": "Patrulha Potiguar", "tipo": "NAVIO_PATRULHA", "posicao": [-34.70, -5.60]},
+    {"nome": "Esquadrão Anápolis", "tipo": "CACA", "posicao": [-48.964, -16.229]},
+    {"nome": "Esquadrão Santa Cruz", "tipo": "CACA", "posicao": [-43.719, -22.932]},
+    {"nome": "Esquadrão Canoas", "tipo": "CACA", "posicao": [-51.144, -29.946]},
+    {"nome": "Transporte Galeão", "tipo": "TRANSPORTE_AEREO", "posicao": [-43.30, -22.80]}
+  ]
+}
